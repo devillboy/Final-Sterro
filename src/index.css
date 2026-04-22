@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-bg-main: #050814;
+  --color-surface: #0a1021;
+  --color-surface-hover: #131b2f;
+  --color-border: #1a233a;
+  --color-text-dim: #94A3B8;
+}
+
+@layer base {
+  body {
+    @apply bg-[var(--color-bg-main)] text-white font-sans antialiased;
+  }
+}
+
+@layer utilities {
+  .text-primary-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400;
+  }
+  
+  .glass-card {
+    @apply bg-[var(--color-surface)] border border-[var(--color-border)];
+  }
+}
