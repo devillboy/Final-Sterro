@@ -191,8 +191,8 @@ app.post("/api/auth/logout", (req, res) => {
   });
 });
 
-async function createPterodactylUser(email: string, username: string, firstName: string, lastName: string) {
-  const password = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8) + "!";
+async function createPterodactylUser(email: string, username: string, firstName: string, lastName: string, passwordInput?: string) {
+  const password = passwordInput || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8) + "!";
   const response = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/users`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -204,7 +204,7 @@ async function createPterodactylUser(email: string, username: string, firstName:
     if (errorText.includes('has already been taken')) {
        // Ideally we fetch the user, but for now randomly mutate username/email if collision to succeed creating the server
        const rnd = Math.floor(Math.random()*1000);
-       return createPterodactylUser(`${rnd}${email}`, `${username}${rnd}`, firstName, lastName);
+       return createPterodactylUser(`${rnd}${email}`, `${username}${rnd}`, firstName, lastName, passwordInput);
     }
     throw new Error(`Failed to create Pterodactyl User: ${errorText}`);
   }
@@ -213,8 +213,8 @@ async function createPterodactylUser(email: string, username: string, firstName:
   return { id: data.attributes.id, password };
 }
 
-async function createPterodactylServer(userId: number, planName: string, serverName: string, nodeIdStr?: string) {
-  const limits = PLAN_LIMITS[planName] || PLAN_LIMITS["Plan One"];
+async function createPterodactylServer(userId: number, planName: string, serverName: string, nodeIdStr?: string, dynamicLimits?: any) {
+  const limits = dynamicLimits || PLAN_LIMITS[planName] || PLAN_LIMITS["Plan One"];
   const nodeId = parseInt(nodeIdStr || "1", 10);
   
   const response = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/servers`, {
@@ -289,27 +289,14 @@ app.post("/api/trial/send-otp", async (req, res) => {
 });
 
 app.post("/api/trial/claim", async (req, res) => {
-  const { email, otp, username, nodeId } = req.body;
+  const { email, password, username, nodeId } = req.body;
 
-  if (!email || !otp) {
-    res.status(400).json({ error: "Email and OTP are required" });
+  if (!email || !password) {
+    res.status(400).json({ error: "Email and password are required" });
     return;
   }
 
-  let isValid = false;
-  try {
-      const otpDoc = await getDoc(doc(db, 'otps', email));
-      if (otpDoc.exists() && otpDoc.data().otp === otp) {
-        if (otpDoc.data().expiresAt > Date.now()) {
-          isValid = true;
-        } else {
-          res.status(400).json({ error: "OTP has expired." });
-          return;
-        }
-      }
-  } catch(e) {
-      if ((global as any).memOtps && (global as any).memOtps[email] === otp) isValid = true;
-  }
+  let isValid = true; // Human verification is handled on frontend simply for this flow
 
   if (!isValid) {
     res.status(400).json({ error: "Invalid verification code." });
@@ -318,11 +305,11 @@ app.post("/api/trial/claim", async (req, res) => {
 
   try {
       // Create user and server
-      const userRes = await createPterodactylUser(email, username || email.split("@")[0], "Trial", "User");
+      const userRes = await createPterodactylUser(email, username || email.split("@")[0], "Trial", "User", password);
       let serverRes = null;
       let extError = null;
       try {
-          serverRes = await createPterodactylServer(userRes.id, "1 Hour Free Trial", "Sterro Trial Server", nodeId);
+          serverRes = await createPterodactylServer(userRes.id, "1 Hour Free Trial", "Sterro Trial Server", nodeId, { memory: 4096, cpu: 150, disk: 102400, databases: 1, backups: 0, ports: 1 });
           
           if (serverRes && serverRes.id) {
               // Automatically suspend after 1 hour
@@ -368,7 +355,7 @@ app.post("/api/trial/claim", async (req, res) => {
 
 app.post("/api/verify-payment", upload.single("screenshot"), async (req, res) => {
   try {
-    const { utrId, upiId, date, planName, email, username, nodeId } = req.body;
+    const { utrId, upiId, date, planName, email, username, nodeId, password, ram, cpu, storage, databases, backups, ports } = req.body;
     const file = req.file;
 
     if (!file || !utrId || !date || !planName || !email) {
@@ -463,13 +450,22 @@ app.post("/api/verify-payment", upload.single("screenshot"), async (req, res) =>
       await setDoc(doc(db, 'payments', utrId), { utrId, upiId, date, planName, email, verifiedAt: new Date().toISOString() });
     } catch(e) { console.warn("Failed recording to DB", e); }
 
+    const dynamicLimits = {
+      memory: parseInt((ram || '').replace(/[^0-9]/g, '')) * (String(ram).includes('GB') ? 1024 : 1) || PLAN_LIMITS[planName]?.memory || 2048,
+      cpu: parseInt((cpu || '').replace(/[^0-9]/g, '')) || PLAN_LIMITS[planName]?.cpu || 100,
+      disk: parseInt((storage || '').replace(/[^0-9]/g, '')) * (String(storage).includes('GB') ? 1024 : 1) || PLAN_LIMITS[planName]?.disk || 10240,
+      databases: parseInt((databases || '').replace(/[^0-9]/g, '')) || PLAN_LIMITS[planName]?.databases || 1,
+      backups: parseInt((backups || '').replace(/[^0-9]/g, '')) || PLAN_LIMITS[planName]?.backups || 0,
+      ports: parseInt((ports || '').replace(/[^0-9]/g, '')) || PLAN_LIMITS[planName]?.ports || 1
+    };
+
     try {
-      const userRes = await createPterodactylUser(email, username || email.split("@")[0], "New", "User");
+      const userRes = await createPterodactylUser(email, username || email.split("@")[0], "New", "User", password);
       
       let serverRes = null;
       let serverCreationError = null;
       try {
-        serverRes = await createPterodactylServer(userRes.id, planName, `${planName} Server`, nodeId);
+        serverRes = await createPterodactylServer(userRes.id, planName, `${planName} Server`, nodeId, dynamicLimits);
       } catch (err: any) {
         console.error("Server Creation Failed: ", err);
         serverCreationError = `User Account created successfully, but Server provisioning was delayed due to Panel Allocation limits (Need to map correct Egg/Node IDs). Error: ${err.message}`;

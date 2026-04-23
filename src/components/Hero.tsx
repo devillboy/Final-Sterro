@@ -4,7 +4,7 @@ import { db } from "../lib/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 
 export default function Hero() {
-  const [bgUrl, setBgUrl] = useState("https://images.unsplash.com/photo-1587573089734-09cb99c5f068?auto=format&fit=crop&q=80&w=1920");
+  const [bgUrl, setBgUrl] = useState("/hero-bg.jpg");
 
   useEffect(() => {
     async function loadAssets() {
@@ -12,10 +12,11 @@ export default function Hero() {
         const q = query(collection(db, "assets"), where("key", "==", "HERO_BG"));
         const snap = await getDocs(q);
         if (!snap.empty) {
-          setBgUrl(snap.docs[0].data().url);
+          const url = snap.docs[0].data().url;
+          if (url) setBgUrl(url);
         }
       } catch (e) {
-        console.warn("Dynamic asset load failed, using fallback.");
+        console.warn("Dynamic asset load failed, using fallback:", e);
       }
     }
     loadAssets();
@@ -25,10 +26,10 @@ export default function Hero() {
     <section className="relative pt-24 pb-32 px-6 overflow-hidden flex items-center border-b border-[var(--color-border)] min-h-[90vh]">
       {/* Background Layer */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/80 to-black z-20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/80 z-20" />
         
         {/* Animated Grid Pattern */}
-        <div className="absolute inset-0 z-10 opacity-20" 
+        <div className="absolute inset-0 z-10 opacity-10" 
              style={{ 
                backgroundImage: 'linear-gradient(#00F0FF 1px, transparent 1px), linear-gradient(90deg, #00F0FF 1px, transparent 1px)',
                backgroundSize: '40px 40px',
@@ -63,7 +64,14 @@ export default function Hero() {
         <img 
           src={bgUrl} 
           alt="Minecraft Landscape" 
-          className="w-full h-full object-cover opacity-50 scale-105"
+          className="w-full h-full object-cover opacity-90"
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            if (bgUrl !== "/hero-bg.jpg") {
+              console.error("Hero BG failed to load, falling back to local asset");
+              setBgUrl("/hero-bg.jpg");
+            }
+          }}
         />
       </div>
 

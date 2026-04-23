@@ -13,6 +13,7 @@ interface PaymentFormData {
   date: string;
   email: string;
   username: string;
+  password?: string;
   nodeLocation: string;
 }
 
@@ -83,9 +84,7 @@ export default function PricingList() {
   }, []);
 
   // Trial specific states
-  const [trialStep, setTrialStep] = useState<1 | 2>(1);
-  const [trialOtp, setTrialOtp] = useState("");
-  const [simulatedOtp, setSimulatedOtp] = useState<string | null>(null);
+  const [isHumanVerified, setIsHumanVerified] = useState(false);
   const [isSkeletonLoading, setIsSkeletonLoading] = useState(false);
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<PaymentFormData>();
@@ -125,7 +124,16 @@ export default function PricingList() {
     formData.append('date', data.date);
     formData.append('email', data.email);
     formData.append('username', data.username);
+    if (data.password) formData.append('password', data.password);
     formData.append('planName', selectedPlan.name);
+    // Dynamic specs
+    formData.append('ram', selectedPlan.ram || '');
+    formData.append('cpu', selectedPlan.cpu || '');
+    formData.append('storage', selectedPlan.storage || '');
+    formData.append('databases', selectedPlan.db || '0');
+    formData.append('backups', selectedPlan.backups || '0');
+    formData.append('ports', selectedPlan.ports || '0');
+    
     if ((data as any).nodeLocation) {
       formData.append('nodeId', (data as any).nodeLocation);
     }
@@ -156,52 +164,18 @@ export default function PricingList() {
       setScreenshot(null);
       setPreviewUrl(null);
       setVerificationResult(null);
-      setTrialStep(1);
       setBillingStep(1);
-      setTrialOtp("");
-      setSimulatedOtp(null);
+      setIsHumanVerified(false);
     }
   }
 
-  const handleSendTrialOtp = async () => {
-    const email = watch("email");
-    if (!email) return;
-    setIsSkeletonLoading(true);
-    setVerificationResult(null);
-
-    try {
-      // Artificial 6-second delay as requested
-      await new Promise(resolve => setTimeout(resolve, 6000));
-
-      const response = await fetch('/api/trial/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-
-      const result = await response.json();
-      if (response.ok) {
-        if (result.otp) {
-          setSimulatedOtp(result.otp);
-        }
-        setTrialStep(2);
-      } else {
-        setVerificationResult({ error: result.error || 'Failed to send OTP.' });
-      }
-    } catch (error) {
-      setVerificationResult({ error: 'Connection error while contacting Verification Service.' });
-    } finally {
-      setIsSkeletonLoading(false);
-    }
-  };
-
   const handleClaimTrial = async (data: PaymentFormData) => {
-    if (!trialOtp || !data.email) return;
+    if (!data.email || !isHumanVerified) return;
     setIsSkeletonLoading(true);
     setVerificationResult(null);
 
     try {
-      // Artificial 6-second delay as requested
+      // Artificial delay as requested
       await new Promise(resolve => setTimeout(resolve, 6000));
 
       const response = await fetch('/api/trial/claim', {
@@ -209,8 +183,8 @@ export default function PricingList() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           email: data.email, 
-          otp: trialOtp, 
           username: data.username,
+          password: data.password,
           nodeId: (data as any).nodeLocation
         }),
       });
@@ -299,6 +273,12 @@ export default function PricingList() {
               transition={{ duration: 0.15, ease: "easeOut" }}
               className={`bg-[var(--color-surface)] border shadow-3d-lg preserve-3d ${p.highlight ? 'border-[#00F0FF] glow-primary-strong relative z-10' : 'border-[var(--color-border)]'} rounded-4xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 justify-between hover:border-[#00F0FF]/60 transition-colors cursor-default group overflow-hidden`}
             >
+              {p.imageUrl && (
+                <div className="absolute inset-0 z-0 opacity-[0.08] mix-blend-screen pointer-events-none transition-opacity duration-500 group-hover:opacity-20 flex items-center justify-center overflow-hidden">
+                   <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover scale-110" />
+                   <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-surface)] via-[var(--color-surface)]/80 to-transparent" />
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-br from-[#00F0FF]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
               
               <div className="flex-1 w-full relative z-10">
@@ -320,11 +300,17 @@ export default function PricingList() {
               </div>
 
               <div className="flex flex-col items-end gap-5 w-full md:w-auto mt-6 md:mt-0 pt-6 md:pt-0 border-t md:border-t-0 border-[var(--color-border)] shrink-0 pl-0 md:pl-8">
-                <button 
-                  onClick={() => setSelectedPlan(p)}
-                  className={`w-full md:w-auto px-10 py-3.5 rounded-lg font-bold text-white transition-colors text-sm shadow-lg ${(p as any).isTrial ? 'bg-[#5865F2] hover:bg-[#4752C4] shadow-[#5865F2]/20' : (p.highlight ? 'bg-[#00F0FF] text-black hover:bg-[#00D8E6] shadow-[#00F0FF]/20' : 'bg-black hover:bg-[#0e0e0e] border border-[#00F0FF]/30 hover:border-[#00F0FF]')} `}>
-                  {(p as any).isTrial ? 'Claim Free Trial' : 'Buy Plan'}
-                </button>
+               <button 
+                 onClick={() => {
+                   if (p.type === 'vps') {
+                     window.open('https://discord.gg/sterrocloud', '_blank');
+                   } else {
+                     setSelectedPlan(p);
+                   }
+                 }}
+                 className={`w-full md:w-auto px-10 py-3.5 rounded-lg font-bold text-white transition-colors text-sm shadow-lg ${(p as any).isTrial ? 'bg-[#5865F2] hover:bg-[#4752C4] shadow-[#5865F2]/20' : (p.highlight ? 'bg-[#00F0FF] text-black hover:bg-[#00D8E6] shadow-[#00F0FF]/20' : 'bg-black hover:bg-[#0e0e0e] border border-[#00F0FF]/30 hover:border-[#00F0FF]')} `}>
+                 {(p as any).isTrial ? 'Claim Free Trial' : p.type === 'vps' ? 'Buy on Discord' : 'Buy Plan'}
+               </button>
               </div>
             </motion.div>
           ))}
@@ -345,6 +331,12 @@ export default function PricingList() {
               transition={{ duration: 0.15, ease: "easeOut" }}
               className={`bg-[var(--color-surface)] border shadow-3d-lg preserve-3d ${p.highlight ? 'border-[#00F0FF] glow-primary-strong relative z-10' : 'border-[var(--color-border)]'} rounded-4xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 justify-between hover:border-[#00F0FF]/60 transition-colors cursor-default group overflow-hidden`}
            >
+              {p.imageUrl && (
+                <div className="absolute inset-0 z-0 opacity-[0.08] mix-blend-screen pointer-events-none transition-opacity duration-500 group-hover:opacity-20 flex items-center justify-center overflow-hidden">
+                   <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover scale-110" />
+                   <div className="absolute inset-0 bg-gradient-to-l from-[var(--color-surface)] via-[var(--color-surface)]/80 to-transparent" />
+                </div>
+              )}
              <div className="absolute inset-0 bg-gradient-to-bl from-[#00F0FF]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
              
              <div className="flex-1 w-full relative z-10">
@@ -367,9 +359,15 @@ export default function PricingList() {
                   <span className="font-black text-4xl tracking-tighter leading-none text-white whitespace-nowrap">XEON</span>
                 </div>
                <button 
-                 onClick={() => setSelectedPlan(p)}
+                 onClick={() => {
+                   if (p.type === 'vps') {
+                     window.open('https://discord.gg/sterrocloud', '_blank');
+                   } else {
+                     setSelectedPlan(p);
+                   }
+                 }}
                  className={`w-full md:w-auto px-10 py-3.5 rounded-lg font-bold text-white transition-colors text-sm shadow-lg ${p.highlight ? 'bg-[#00F0FF] text-black hover:bg-[#00D8E6] shadow-[#00F0FF]/20' : 'bg-[var(--color-bg-main)] hover:bg-[#00F0FF]/10 border border-[#00F0FF]/30 hover:border-[#00F0FF]'} `}>
-                 Buy Plan
+                 Buy on Discord
                </button>
              </div>
            </motion.div>
@@ -467,61 +465,36 @@ export default function PricingList() {
                               <div className="h-32 w-full bg-white/5 animate-skeleton rounded-2xl" />
                               <div className="h-14 w-full bg-white/5 animate-skeleton rounded-xl" />
                            </div>
-                         ) : trialStep === 1 ? (
-                           <form onSubmit={(e) => { e.preventDefault(); handleSendTrialOtp(); }} className="space-y-6 text-left">
-                             <div className="text-center">
-                                <h3 className="text-2xl font-black text-white mb-2">FREE TRIAL <span className="text-[#00F0FF]">VERIFICATION</span></h3>
-                                <p className="text-sm text-[var(--color-text-dim)]">Enter your email to receive a 6-digit verification code.</p>
-                             </div>
-                             <div className="bg-[#00F0FF]/5 border border-[#00F0FF]/20 rounded-2xl p-6 mb-6 space-y-4">
-                                <Input label="Email Address" {...register("email", {required: true})} type="email" placeholder="you@example.com" />
-                                <p className="text-[10px] text-[var(--color-text-dim)] flex items-center gap-2 italic">
-                                  <Info size={12} /> Verification is required to prevent multiple claims.
-                                </p>
-                             </div>
-                             <button 
-                               type="submit"
-                               disabled={isSkeletonLoading || !watch("email")}
-                               className="w-full h-14 bg-[#00F0FF] hover:bg-[#00D8E6] disabled:opacity-50 text-black font-black rounded-xl uppercase tracking-widest flex items-center justify-center gap-2"
-                             >
-                               {isSkeletonLoading ? <Loader2 size={20} className="animate-spin" /> : 'Send Verification Code'}
-                             </button>
-                           </form>
                          ) : (
                             <form onSubmit={handleSubmit(handleClaimTrial)} className="space-y-6">
                                <div className="text-center">
-                                  <h3 className="text-2xl font-black text-[#00F0FF] mb-2 uppercase tracking-tighter">Submit OTP</h3>
-                                  <p className="text-sm text-[var(--color-text-dim)]">Check your email for the code.</p>
+                                  <h3 className="text-2xl font-black text-[#00F0FF] mb-2 uppercase tracking-tighter">HUMAN VERIFICATION</h3>
+                                  <p className="text-sm text-[var(--color-text-dim)]">Create your account to claim trial.</p>
                                </div>
                                <div className="grid grid-cols-2 gap-4">
                                   <div className="col-span-2 space-y-2">
                                      <label className="text-xs font-black uppercase tracking-widest text-white/60">Choose Node Location</label>
                                      <WorldMap selectedId={currentNodeLocation} onSelect={(id) => setValue("nodeLocation", id)} />
                                   </div>
-                               <div className="col-span-2">
-                                     <Input label="6-Digit OTP" value={trialOtp} onChange={(e: any) => setTrialOtp(e.target.value)} maxLength={6} placeholder="123456" className="text-center tracking-[0.5em] text-xl border-[#00F0FF]" />
-                                     {simulatedOtp && (
-                                       <div className="mt-6 p-5 bg-cyan-950/30 border-2 border-dashed border-[#00F0FF]/30 rounded-2xl relative overflow-hidden group">
-                                          <div className="absolute inset-0 bg-[#00F0FF]/5 animate-pulse" />
-                                          <div className="relative z-10">
-                                            <p className="text-[10px] font-black uppercase text-[#00F0FF] tracking-[0.2em] mb-2 text-center flex items-center justify-center gap-2">
-                                              <Settings size={10} className="animate-spin-slow" /> Incoming Verification Code
-                                            </p>
-                                            <div className="flex items-center justify-center gap-4 bg-black/40 rounded-xl py-3 border border-white/5">
-                                              <span className="text-3xl font-black text-white tracking-[0.2em]">{simulatedOtp}</span>
-                                            </div>
-                                            <p className="text-[9px] text-white/40 mt-3 text-center italic">This is a simulated email inbox for demo purposes.</p>
-                                          </div>
-                                       </div>
-                                     )}
+                                  <div className="col-span-2">
+                                    <Input label="Email Address" {...register("email", {required: true})} type="email" placeholder="you@example.com" />
                                   </div>
                                   <Input label="Panel Username" {...register("username", {required: true})} />
-                                  <div className="flex flex-col justify-end">
-                                    <span className="text-[9px] text-[var(--color-text-dim)] mb-1 uppercase font-bold tracking-widest">Verifying Email</span>
-                                    <div className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-xs text-white/40 truncate">{watch("email")}</div>
-                                  </div>
+                                  <Input label="Panel Password" {...register("password", {required: true})} type="password" />
                                </div>
-                               <button type="submit" disabled={isSkeletonLoading} className="w-full h-14 bg-[#00F0FF] text-black font-black rounded-xl flex items-center justify-center gap-2 uppercase tracking-widest shadow-3d hover:bg-[#00D8E6]">
+                               
+                               {/* Human Verification Simple Checkbox */}
+                               <div className="bg-[#080C14] border border-[#121B2B] rounded-2xl p-4 flex items-center justify-between cursor-pointer" onClick={() => setIsHumanVerified(!isHumanVerified)}>
+                                 <div className="flex items-center gap-3">
+                                   <div className={`w-8 h-8 rounded border-2 flex items-center justify-center transition-colors ${isHumanVerified ? 'bg-green-500 border-green-500' : 'bg-transparent border-[#121B2B]'}`}>
+                                     {isHumanVerified && <CheckCircle2 className="text-white" size={20} />}
+                                   </div>
+                                   <span className="font-medium text-white">I am human</span>
+                                 </div>
+                                 <Shield className="text-[#00F0FF]/50" size={24} />
+                               </div>
+
+                               <button type="submit" disabled={isSkeletonLoading || !isHumanVerified} className="w-full h-14 bg-[#00F0FF] disabled:opacity-50 text-black font-black rounded-xl flex items-center justify-center gap-2 uppercase tracking-widest shadow-3d hover:bg-[#00D8E6]">
                                   {isSkeletonLoading ? <Loader2 className="animate-spin" /> : 'Claim Trial Server'}
                                 </button>
                             </form>
@@ -559,6 +532,9 @@ export default function PricingList() {
                                 <div className="grid grid-cols-2 gap-4">
                                    <Input label="Control Panel Email" {...register("email", {required: true})} type="email" />
                                    <Input label="Panel Username" {...register("username", {required: true})} />
+                                   <div className="col-span-2">
+                                      <Input label="Panel Password" {...register("password", {required: true})} type="password" />
+                                   </div>
                                 </div>
                              </div>
 

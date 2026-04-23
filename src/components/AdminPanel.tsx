@@ -19,7 +19,8 @@ import {
   Square,
   CheckSquare,
   Layers,
-  CheckCircle
+  CheckCircle,
+  Info
 } from 'lucide-react';
 import { db, auth } from '../lib/firebase';
 import { 
@@ -63,6 +64,7 @@ interface Plan {
   type: 'minecraft' | 'vps';
   highlight: boolean;
   order: number;
+  imageUrl?: string;
 }
 
 interface Asset {
@@ -122,6 +124,7 @@ export default function AdminPanel() {
       type: formData.get('type') as 'minecraft' | 'vps',
       highlight: formData.get('highlight') === 'on',
       order: Number(formData.get('order')),
+      imageUrl: formData.get('imageUrl') as string || '',
     };
 
     try {
@@ -345,6 +348,30 @@ export default function AdminPanel() {
                     <p className="text-[var(--color-text-dim)] font-medium">Define, edit, and scale your hosting offerings.</p>
                   </div>
                   <div className="flex gap-4">
+                    {plans.length === 0 && !loading && (
+                      <button 
+                         onClick={async () => {
+                           const fallbackMinecraftPlans = [
+                             { name: 'Starter Node', price: 249, ram: '2GB', storage: '10GB NVMe', cpu: '1 vCore', ports: '1 Port', order: 1, type: 'minecraft' },
+                             { name: 'Performance Node', price: 469, ram: '4GB', storage: '20GB NVMe', cpu: '2 vCores', ports: '2 Ports', highlight: true, order: 2, type: 'minecraft' },
+                             { name: 'Extreme Node', price: 900, ram: '8GB', storage: '40GB NVMe', cpu: '3 vCores', ports: '3 Ports', order: 3, type: 'minecraft' }
+                           ];
+                           const fallbackVpsPlans = [
+                             { name: 'XEON Starter', price: 599, ram: '2GB', storage: '20GB NVMe', cpu: '2 vCores', ports: 'Full Root', order: 1, type: 'vps' },
+                             { name: 'XEON Pro', price: 899, ram: '4GB', storage: '40GB NVMe', cpu: '4 vCores', ports: 'Full Root', highlight: true, order: 2, type: 'vps' },
+                             { name: 'XEON Ultra', price: 1599, ram: '8GB', storage: '80GB NVMe', cpu: '6 vCores', ports: 'Full Root', order: 3, type: 'vps' }
+                           ];
+                           
+                           for (const p of [...fallbackMinecraftPlans, ...fallbackVpsPlans]) {
+                             await addDoc(collection(db, 'plans'), p);
+                           }
+                           fetchData();
+                         }}
+                         className="h-12 px-8 bg-green-500 text-white font-black rounded-xl hover:bg-green-600 transition-all flex items-center gap-2 uppercase tracking-tighter"
+                      >
+                         <RefreshCw size={20} /> Load Defaults
+                      </button>
+                    )}
                     {selectedPlanIds.length > 0 && (
                       <div className="flex items-center gap-2 px-6 py-2 bg-[#00F0FF]/10 border border-[#00F0FF]/30 rounded-xl mr-4">
                          <span className="text-[#00F0FF] text-[10px] font-black uppercase tracking-widest">{selectedPlanIds.length} Selected</span>
@@ -577,6 +604,12 @@ export default function AdminPanel() {
                   <Input label="Throughput" name="throughput" defaultValue={isEditingPlan?.throughput} />
                   <Input label="Ports" name="ports" defaultValue={isEditingPlan?.ports} />
                   <Input label="Display Order" name="order" type="number" defaultValue={isEditingPlan?.order || 0} />
+                  <div className="col-span-2">
+                    <Input label="Image URL (Screenshot/Background)" name="imageUrl" defaultValue={isEditingPlan?.imageUrl} />
+                    <p className="text-[10px] text-[var(--color-text-dim)] mt-2 flex items-center gap-2">
+                      <Info size={12} /> You can use image hosting like Imgur, Postimages, or Discord links. E.g., https://imgur.com/your-image.png
+                    </p>
+                  </div>
                   
                   <div className="flex flex-col gap-2">
                     <label className="text-xs font-black uppercase tracking-widest text-[var(--color-text-dim)]">Server Type</label>

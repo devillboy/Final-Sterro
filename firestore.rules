@@ -35,7 +35,8 @@ service cloud.firestore {
              (!data.keys().hasAny(['throughput']) || (data.throughput is string && data.throughput.size() <= 50)) &&
              (!data.keys().hasAny(['ports']) || (data.ports is string && data.ports.size() <= 50)) &&
              (!data.keys().hasAny(['highlight']) || data.highlight is bool) &&
-             (!data.keys().hasAny(['order']) || data.order is number);
+             (!data.keys().hasAny(['order']) || data.order is number) &&
+             (!data.keys().hasAny(['imageUrl']) || (data.imageUrl is string && data.imageUrl.size() <= 1000));
     }
 
     // -- ASSET VALIDATION --
