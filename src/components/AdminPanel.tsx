@@ -286,9 +286,19 @@ export default function AdminPanel() {
                     <p className="text-[var(--color-text-dim)] font-medium">Real-time infrastructure and sales intelligence.</p>
                   </div>
                   <div className="flex gap-4">
-                    <StatBox label="Live Plans" value={plans.length.toString()} delta="ACTIVE" color="#00F0FF" />
-                    <StatBox label="Revenue" value={`₹${transactions.filter(t => t.isVerified).length * 500}`} delta="ESTIMATED" color="#10B981" />
-                    <StatBox label="Verification Rate" value={`${Math.round((transactions.filter(t => t.isVerified).length / (transactions.length || 1)) * 100)}%`} delta="AI-VERIFIED" color="#00F0FF" />
+                    {loading ? (
+                      <>
+                        <div className="w-24 h-12 rounded-xl animate-skeleton opacity-50" />
+                        <div className="w-24 h-12 rounded-xl animate-skeleton opacity-50" />
+                        <div className="w-24 h-12 rounded-xl animate-skeleton opacity-50" />
+                      </>
+                    ) : (
+                      <>
+                        <StatBox label="Live Plans" value={plans.length.toString()} delta="ACTIVE" color="#00F0FF" />
+                        <StatBox label="Revenue" value={`₹${transactions.filter(t => t.isVerified).length * 500}`} delta="ESTIMATED" color="#10B981" />
+                        <StatBox label="Verification Rate" value={`${Math.round((transactions.filter(t => t.isVerified).length / (transactions.length || 1)) * 100)}%`} delta="AI-VERIFIED" color="#00F0FF" />
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -363,51 +373,55 @@ export default function AdminPanel() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {plans.map(plan => (
-                    <div 
-                      key={plan.id} 
-                      className={`bg-[#080C14] border rounded-3xl p-6 flex flex-col shadow-3d group transition-all relative overflow-hidden ${selectedPlanIds.includes(plan.id) ? 'border-[#00F0FF] ring-1 ring-[#00F0FF]' : 'border-[#121B2B] hover:border-[#00F0FF]/30'}`}
-                    >
-                      {/* Selection Overlay */}
-                      <button 
-                        onClick={() => setSelectedPlanIds(prev => prev.includes(plan.id) ? prev.filter(id => id !== plan.id) : [...prev, plan.id])}
-                        className={`absolute top-4 left-4 z-10 p-1.5 rounded-lg transition-all ${selectedPlanIds.includes(plan.id) ? 'bg-[#00F0FF] text-black' : 'bg-white/5 text-white/40 hover:text-white group-hover:opacity-100 opacity-0'}`}
+                  {loading ? (
+                    Array.from({ length: 6 }).map((_, i) => <AdminSkeleton key={i} />)
+                  ) : (
+                    plans.map(plan => (
+                      <div 
+                        key={plan.id} 
+                        className={`bg-[#080C14] border rounded-3xl p-6 flex flex-col shadow-3d group transition-all relative overflow-hidden ${selectedPlanIds.includes(plan.id) ? 'border-[#00F0FF] ring-1 ring-[#00F0FF]' : 'border-[#121B2B] hover:border-[#00F0FF]/30'}`}
                       >
-                        {selectedPlanIds.includes(plan.id) ? <CheckSquare size={16} /> : <Square size={16} />}
-                      </button>
+                        {/* Selection Overlay */}
+                        <button 
+                          onClick={() => setSelectedPlanIds(prev => prev.includes(plan.id) ? prev.filter(id => id !== plan.id) : [...prev, plan.id])}
+                          className={`absolute top-4 left-4 z-10 p-1.5 rounded-lg transition-all ${selectedPlanIds.includes(plan.id) ? 'bg-[#00F0FF] text-black' : 'bg-white/5 text-white/40 hover:text-white group-hover:opacity-100 opacity-0'}`}
+                        >
+                          {selectedPlanIds.includes(plan.id) ? <CheckSquare size={16} /> : <Square size={16} />}
+                        </button>
 
-                      <div className="flex justify-between items-start mb-6 pt-2">
-                        <div className="flex items-center gap-2 pl-8">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${plan.type === 'minecraft' ? 'bg-green-500/10 text-green-500' : 'bg-purple-500/10 text-purple-500'}`}>
-                            {plan.type}
-                          </span>
+                        <div className="flex justify-between items-start mb-6 pt-2">
+                          <div className="flex items-center gap-2 pl-8">
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${plan.type === 'minecraft' ? 'bg-green-500/10 text-green-500' : 'bg-purple-500/10 text-purple-500'}`}>
+                              {plan.type}
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={() => setIsEditingPlan(plan)} className="p-2 bg-white/5 rounded-lg text-white/40 hover:text-[#00F0FF] hover:bg-[#00F0FF]/10 transition-all">
+                              <Edit2 size={16} />
+                            </button>
+                            <button onClick={() => handleDeletePlan(plan.id)} className="p-2 bg-white/5 rounded-lg text-white/40 hover:text-red-500 hover:bg-red-500/10 transition-all">
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          <button onClick={() => setIsEditingPlan(plan)} className="p-2 bg-white/5 rounded-lg text-white/40 hover:text-[#00F0FF] hover:bg-[#00F0FF]/10 transition-all">
-                            <Edit2 size={16} />
-                          </button>
-                          <button onClick={() => handleDeletePlan(plan.id)} className="p-2 bg-white/5 rounded-lg text-white/40 hover:text-red-500 hover:bg-red-500/10 transition-all">
-                            <Trash2 size={16} />
-                          </button>
+                        <h4 className="text-xl font-bold text-white mb-1 truncate">{plan.name}</h4>
+                        <p className="text-[#00F0FF] font-black text-2xl mb-6">₹{plan.price}<span className="text-[var(--color-text-dim)] text-xs font-medium ml-1">/month</span></p>
+                        
+                        <div className="grid grid-cols-2 gap-y-4 gap-x-2 text-xs border-t border-[#121B2B] pt-6 mb-6">
+                          <PlanDetail label="RAM" value={plan.ram} />
+                          <PlanDetail label="CPU" value={plan.cpu} />
+                          <PlanDetail label="DISK" value={plan.storage} />
+                          <PlanDetail label="INDEX" value={plan.order} />
                         </div>
-                      </div>
-                      <h4 className="text-xl font-bold text-white mb-1 truncate">{plan.name}</h4>
-                      <p className="text-[#00F0FF] font-black text-2xl mb-6">₹{plan.price}<span className="text-[var(--color-text-dim)] text-xs font-medium ml-1">/month</span></p>
-                      
-                      <div className="grid grid-cols-2 gap-y-4 gap-x-2 text-xs border-t border-[#121B2B] pt-6 mb-6">
-                        <PlanDetail label="RAM" value={plan.ram} />
-                        <PlanDetail label="CPU" value={plan.cpu} />
-                        <PlanDetail label="DISK" value={plan.storage} />
-                        <PlanDetail label="INDEX" value={plan.order} />
-                      </div>
 
-                      {plan.highlight && (
-                        <div className="mt-auto bg-[#00F0FF]/10 text-[#00F0FF] text-[10px] font-black tracking-widest uppercase py-2 text-center rounded-lg border border-[#00F0FF]/25 mb-4">
-                          HIGHLIGHTED PLAN
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        {plan.highlight && (
+                          <div className="mt-auto bg-[#00F0FF]/10 text-[#00F0FF] text-[10px] font-black tracking-widest uppercase py-2 text-center rounded-lg border border-[#00F0FF]/25 mb-4">
+                            HIGHLIGHTED PLAN
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -428,37 +442,43 @@ export default function AdminPanel() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {assets.map(asset => (
-                    <div key={asset.id} className="bg-[#080C14] border border-[#121B2B] rounded-3xl p-8 flex flex-col group shadow-3d h-72 relative overflow-hidden">
-                      <div className="absolute inset-0 opacity-10 blur-sm scale-110 -z-10 bg-no-repeat bg-cover" style={{ backgroundImage: `url(${asset.url})` }} />
-                      
-                      <div className="flex justify-between items-start mb-auto">
-                        <div className="min-w-0">
-                          <h4 className="text-xs font-black uppercase tracking-widest text-[#00F0FF] mb-1 truncate">{asset.key}</h4>
-                          <h3 className="text-xl font-bold text-white truncate">{asset.label}</h3>
+                  {loading ? (
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="bg-[#080C14] border border-[#121B2B] rounded-3xl p-8 h-72 animate-skeleton opacity-30" />
+                    ))
+                  ) : (
+                    assets.map(asset => (
+                      <div key={asset.id} className="bg-[#080C14] border border-[#121B2B] rounded-3xl p-8 flex flex-col group shadow-3d h-72 relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-10 blur-sm scale-110 -z-10 bg-no-repeat bg-cover" style={{ backgroundImage: `url(${asset.url})` }} />
+                        
+                        <div className="flex justify-between items-start mb-auto">
+                          <div className="min-w-0">
+                            <h4 className="text-xs font-black uppercase tracking-widest text-[#00F0FF] mb-1 truncate">{asset.key}</h4>
+                            <h3 className="text-xl font-bold text-white truncate">{asset.label}</h3>
+                          </div>
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => setIsEditingAsset(asset)}
+                              className="p-2 bg-white/5 border border-white/10 text-white/40 hover:text-[#00F0FF] hover:bg-[#00F0FF]/10 rounded-lg transition-all"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteAsset(asset.id)}
+                              className="p-2 bg-white/5 border border-white/10 text-white/40 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={() => setIsEditingAsset(asset)}
-                            className="p-2 bg-white/5 border border-white/10 text-white/40 hover:text-[#00F0FF] hover:bg-[#00F0FF]/10 rounded-lg transition-all"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteAsset(asset.id)}
-                            className="p-2 bg-white/5 border border-white/10 text-white/40 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
 
-                      <div className="bg-black/80 backdrop-blur-md rounded-xl p-4 border border-white/10 truncate font-mono text-[10px] text-[var(--color-text-dim)] flex items-center gap-3">
-                        <ArrowRight size={12} className="text-[#00F0FF]" />
-                        {asset.url}
+                        <div className="bg-black/80 backdrop-blur-md rounded-xl p-4 border border-white/10 truncate font-mono text-[10px] text-[var(--color-text-dim)] flex items-center gap-3">
+                          <ArrowRight size={12} className="text-[#00F0FF]" />
+                          {asset.url}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -481,32 +501,44 @@ export default function AdminPanel() {
                          </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
-                         {transactions.map(t => (
-                            <tr key={t.id} className="hover:bg-white/[0.02] transition-colors group">
-                               <td className="px-6 py-4">
-                                  <div className="text-xs font-bold text-white uppercase">{t.date?.toDate().toLocaleDateString()}</div>
-                                  <div className="text-[10px] text-white/40">{t.date?.toDate().toLocaleTimeString()}</div>
-                               </td>
-                               <td className="px-6 py-4">
-                                  <div className="text-xs font-bold text-[#00F0FF]">{t.username}</div>
-                                  <div className="text-[10px] text-white/40">{t.email}</div>
-                                  <div className="mt-1 text-[10px] font-black uppercase text-white/20">{t.planName}</div>
-                               </td>
-                               <td className="px-6 py-4">
-                                  <div className="text-xs font-mono text-white/80">{t.utrId}</div>
-                                  <div className="text-[10px] text-white/40">{t.upiId}</div>
-                               </td>
-                               <td className="px-6 py-4">
-                                  <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${t.isVerified ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
-                                     {t.isVerified ? <Check size={8}/> : <X size={8}/>}
-                                     {t.isVerified ? 'Verified' : 'Failed'}
-                                  </div>
-                               </td>
-                               <td className="px-6 py-4 max-w-xs">
-                                  <p className="text-[10px] text-white/60 leading-relaxed italic line-clamp-2">{t.reason}</p>
-                               </td>
-                            </tr>
-                         ))}
+                         {loading ? (
+                           Array.from({ length: 8 }).map((_, i) => (
+                             <tr key={i}>
+                               <td className="px-6 py-4"><div className="h-8 w-24 rounded animate-skeleton opacity-20" /></td>
+                               <td className="px-6 py-4"><div className="h-8 w-32 rounded animate-skeleton opacity-20" /></td>
+                               <td className="px-6 py-4"><div className="h-8 w-32 rounded animate-skeleton opacity-20" /></td>
+                               <td className="px-6 py-4"><div className="h-6 w-16 rounded-full animate-skeleton opacity-20" /></td>
+                               <td className="px-6 py-4"><div className="h-6 w-48 rounded animate-skeleton opacity-20" /></td>
+                             </tr>
+                           ))
+                         ) : (
+                           transactions.map(t => (
+                             <tr key={t.id} className="hover:bg-white/[0.02] transition-colors group">
+                                <td className="px-6 py-4">
+                                   <div className="text-xs font-bold text-white uppercase">{t.date?.toDate().toLocaleDateString()}</div>
+                                   <div className="text-[10px] text-white/40">{t.date?.toDate().toLocaleTimeString()}</div>
+                                </td>
+                                <td className="px-6 py-4">
+                                   <div className="text-xs font-bold text-[#00F0FF]">{t.username}</div>
+                                   <div className="text-[10px] text-white/40">{t.email}</div>
+                                   <div className="mt-1 text-[10px] font-black uppercase text-white/20">{t.planName}</div>
+                                </td>
+                                <td className="px-6 py-4">
+                                   <div className="text-xs font-mono text-white/80">{t.utrId}</div>
+                                   <div className="text-[10px] text-white/40">{t.upiId}</div>
+                                </td>
+                                <td className="px-6 py-4">
+                                   <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${t.isVerified ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+                                      {t.isVerified ? <Check size={8}/> : <X size={8}/>}
+                                      {t.isVerified ? 'Verified' : 'Failed'}
+                                   </div>
+                                </td>
+                                <td className="px-6 py-4 max-w-xs">
+                                   <p className="text-[10px] text-white/60 leading-relaxed italic line-clamp-2">{t.reason}</p>
+                                </td>
+                             </tr>
+                           ))
+                         )}
                       </tbody>
                    </table>
                 </div>
@@ -672,6 +704,31 @@ function Input({ label, ...props }: any) {
     <div className="flex flex-col gap-2">
       <label className="text-xs font-black uppercase tracking-widest text-[var(--color-text-dim)]">{label}</label>
       <input {...props} className="w-full bg-black/40 border border-[#121B2B] rounded-xl px-4 py-3 text-white focus:border-[#00F0FF] outline-none transition-colors" />
+    </div>
+  );
+}
+
+function AdminSkeleton() {
+  return (
+    <div className="bg-[#080C14] border border-[#121B2B] rounded-3xl p-8 flex flex-col h-full animate-in fade-in duration-500 opacity-50">
+      <div className="flex justify-between mb-8">
+        <div className="w-6 h-6 rounded animate-skeleton" />
+        <div className="w-20 h-6 rounded-full animate-skeleton" />
+        <div className="flex gap-2">
+          <div className="w-8 h-8 rounded-lg animate-skeleton" />
+          <div className="w-8 h-8 rounded-lg animate-skeleton" />
+        </div>
+      </div>
+      <div className="w-32 h-6 rounded animate-skeleton mb-4" />
+      <div className="w-24 h-8 rounded animate-skeleton mb-8" />
+      <div className="grid grid-cols-2 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="flex flex-col gap-1">
+            <div className="w-10 h-3 rounded animate-skeleton" />
+            <div className="w-16 h-4 rounded animate-skeleton" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -250,96 +250,90 @@ async function createPterodactylServer(userId: number, planName: string, serverN
   return data.attributes;
 }
 
-app.post("/api/discord/send-otp", async (req, res) => {
-  const { discordId } = req.body;
-  if (!discordId) {
-    res.status(400).json({ error: "Discord User ID is required" });
+app.post("/api/trial/send-otp", async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    res.status(400).json({ error: "Email address is required" });
     return;
   }
 
   try {
+    // Check if trial already claimed by this email
     try {
-      const trialDoc = await getDoc(doc(db, 'trials', discordId));
+      const trialDoc = await getDoc(doc(db, 'trials', email));
       if (trialDoc.exists()) {
-        res.status(400).json({ error: "You have already claimed a free trial!" });
+        res.status(400).json({ error: "This email has already claimed a free trial!" });
         return;
       }
     } catch(e) { 
       console.warn("DB check fail", e);
     }
 
-    const dmRes = await fetch("https://discord.com/api/v10/users/@me/channels", {
-      method: "POST",
-      headers: { "Authorization": `Bot ${DISCORD_BOT_TOKEN}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ recipient_id: discordId })
-    });
-
-    if (!dmRes.ok) {
-        res.status(400).json({ error: "Could not DM user. Ensure Developer Mode is on, you provided a valid 18-digit User ID, and your privacy settings allow DMs from server members." });
-        return;
-    }
-    const dmData = await dmRes.json() as any;
-
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const msgRes = await fetch(`https://discord.com/api/v10/channels/${dmData.id}/messages`, {
-      method: "POST",
-      headers: { "Authorization": `Bot ${DISCORD_BOT_TOKEN}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ content: `👋 Hey! Your Sterro Cloud 1-Hour Free Trial Verification Code is: **${otp}**\n\nThis code expires in 10 minutes. Do not share this code with anyone.` })
-    });
-
-    if (!msgRes.ok) {
-      res.status(400).json({ error: "Failed to send OTP message to your DM." });
-      return;
-    }
+    
+    // In a real app, this would use a service like SendGrid or Nodemailer
+    // For this build, we'll log it to console and simulate success
+    console.log(`[TRIAL OTP] sending to ${email}: ${otp}`);
 
     try {
-        await setDoc(doc(db, 'otps', discordId), { otp, expiresAt: Date.now() + 10*60*1000 });
+        await setDoc(doc(db, 'otps', email), { otp, expiresAt: Date.now() + 10*60*1000 });
     } catch(e) {
         (global as any).memOtps = (global as any).memOtps || {};
-        (global as any).memOtps[discordId] = otp;
+        (global as any).memOtps[email] = otp;
     }
 
-    res.json({ success: true });
+    res.json({ success: true, message: "Verification code sent! (Demo Mode: Check browser console or look below)", otp: otp });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post("/api/discord/claim-trial", async (req, res) => {
-  const { discordId, otp, email, username, nodeId } = req.body;
+app.post("/api/trial/claim", async (req, res) => {
+  const { email, otp, username, nodeId } = req.body;
+
+  if (!email || !otp) {
+    res.status(400).json({ error: "Email and OTP are required" });
+    return;
+  }
 
   let isValid = false;
   try {
-      const otpDoc = await getDoc(doc(db, 'otps', discordId));
-      if (otpDoc.exists() && otpDoc.data().otp === otp) isValid = true;
+      const otpDoc = await getDoc(doc(db, 'otps', email));
+      if (otpDoc.exists() && otpDoc.data().otp === otp) {
+        if (otpDoc.data().expiresAt > Date.now()) {
+          isValid = true;
+        } else {
+          res.status(400).json({ error: "OTP has expired." });
+          return;
+        }
+      }
   } catch(e) {
-      if ((global as any).memOtps && (global as any).memOtps[discordId] === otp) isValid = true;
+      if ((global as any).memOtps && (global as any).memOtps[email] === otp) isValid = true;
   }
 
   if (!isValid) {
-    res.status(400).json({ error: "Invalid or expired OTP." });
+    res.status(400).json({ error: "Invalid verification code." });
     return;
   }
 
   try {
+      // Create user and server
       const userRes = await createPterodactylUser(email, username || email.split("@")[0], "Trial", "User");
       let serverRes = null;
       let extError = null;
       try {
           serverRes = await createPterodactylServer(userRes.id, "1 Hour Free Trial", "Sterro Trial Server", nodeId);
-          // Automatically suspend after 1 hour to enforce trial limits
+          
           if (serverRes && serverRes.id) {
+              // Automatically suspend after 1 hour
               setTimeout(async () => {
-                  console.log(`[Trial] Auto-suspension triggered for server ID: ${serverRes.id}`);
                   try {
-                      // 1. Fetch current server status to see if it's already suspended
                       const getRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/servers/${serverRes.id}`, {
                           headers: { "Authorization": `Bearer ${PTERODACTYL_API_KEY}`, "Accept": "application/json" }
                       });
                       
                       if (getRes.ok) {
                           const serverData = await getRes.json() as any;
-                          // only suspend if not already suspended
                           if (!serverData.attributes.suspended) {
                               await fetch(`${PTERODACTYL_PANEL_URL}/api/application/servers/${serverRes.id}/suspend`, {
                                   method: "POST",
@@ -349,19 +343,18 @@ app.post("/api/discord/claim-trial", async (req, res) => {
                                       "Content-Type": "application/json" 
                                   }
                               });
-                              console.log(`[Trial] Server ${serverRes.id} has been suspended after 1 hour.`);
-                          } else {
-                              console.log(`[Trial] Server ${serverRes.id} was already suspended.`);
+                              console.log(`[Trial] Server ${serverRes.id} auto-suspended.`);
                           }
                       }
                   } catch (error) {
-                      console.error(`[Trial] Failed to auto-suspend server ${serverRes.id}:`, error);
+                      console.error(`[Trial] Auto-suspend failed for ${serverRes.id}:`, error);
                   }
-              }, 60 * 60 * 1000); // 1 Hour delay
+              }, 60 * 60 * 1000);
           }
       } catch(e: any) { extError = e.message; }
 
-      try { await setDoc(doc(db, 'trials', discordId), { claimedAt: new Date().toISOString(), serverId: serverRes?.id || 'unknown' }); } catch(e) {}
+      // Persist trial claim
+      try { await setDoc(doc(db, 'trials', email), { claimedAt: new Date().toISOString(), serverId: serverRes?.id || 'unknown' }); } catch(e) {}
 
       res.json({
           success: true,

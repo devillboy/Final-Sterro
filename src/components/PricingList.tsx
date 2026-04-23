@@ -53,6 +53,7 @@ export default function PricingList() {
   const [activeTab, setActiveTab] = useState<'minecraft' | 'vps'>('minecraft');
   const [minecraftPlans, setMinecraftPlans] = useState<Plan[]>(fallbackMinecraftPlans);
   const [vpsPlans, setVpsPlans] = useState<Plan[]>(fallbackVpsPlans);
+  const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -63,6 +64,7 @@ export default function PricingList() {
 
   useEffect(() => {
     async function loadPlans() {
+      setLoading(true);
       try {
         const q = query(collection(db, "plans"), orderBy("order", "asc"));
         const snap = await getDocs(q);
@@ -73,6 +75,8 @@ export default function PricingList() {
         }
       } catch (e) {
         console.warn("Live plans load failed, using fallbacks.");
+      } finally {
+        setLoading(false);
       }
     }
     loadPlans();
@@ -80,8 +84,9 @@ export default function PricingList() {
 
   // Trial specific states
   const [trialStep, setTrialStep] = useState<1 | 2>(1);
-  const [discordId, setDiscordId] = useState("");
   const [trialOtp, setTrialOtp] = useState("");
+  const [simulatedOtp, setSimulatedOtp] = useState<string | null>(null);
+  const [isSkeletonLoading, setIsSkeletonLoading] = useState(false);
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<PaymentFormData>();
   const currentNodeLocation = watch("nodeLocation");
@@ -96,7 +101,6 @@ export default function PricingList() {
         date: new Date().toISOString().split('T')[0],
         nodeLocation: "1"
       });
-      setDiscordId(user.id);
     }
   }, [user, reset]);
 
@@ -154,49 +158,58 @@ export default function PricingList() {
       setVerificationResult(null);
       setTrialStep(1);
       setBillingStep(1);
-      setDiscordId("");
       setTrialOtp("");
+      setSimulatedOtp(null);
     }
   }
 
-  const handleSendTrialOtp = async (data: PaymentFormData) => {
-    if (!discordId) return;
-    setIsSubmitting(true);
+  const handleSendTrialOtp = async () => {
+    const email = watch("email");
+    if (!email) return;
+    setIsSkeletonLoading(true);
     setVerificationResult(null);
 
     try {
-      const response = await fetch('/api/discord/send-otp', {
+      // Artificial 6-second delay as requested
+      await new Promise(resolve => setTimeout(resolve, 6000));
+
+      const response = await fetch('/api/trial/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ discordId }),
+        body: JSON.stringify({ email }),
       });
 
       const result = await response.json();
       if (response.ok) {
+        if (result.otp) {
+          setSimulatedOtp(result.otp);
+        }
         setTrialStep(2);
       } else {
         setVerificationResult({ error: result.error || 'Failed to send OTP.' });
       }
     } catch (error) {
-      setVerificationResult({ error: 'Connection error while contacting Discord Bot.' });
+      setVerificationResult({ error: 'Connection error while contacting Verification Service.' });
     } finally {
-      setIsSubmitting(false);
+      setIsSkeletonLoading(false);
     }
   };
 
   const handleClaimTrial = async (data: PaymentFormData) => {
-    if (!trialOtp || !discordId) return;
-    setIsSubmitting(true);
+    if (!trialOtp || !data.email) return;
+    setIsSkeletonLoading(true);
     setVerificationResult(null);
 
     try {
-      const response = await fetch('/api/discord/claim-trial', {
+      // Artificial 6-second delay as requested
+      await new Promise(resolve => setTimeout(resolve, 6000));
+
+      const response = await fetch('/api/trial/claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          discordId, 
-          otp: trialOtp, 
           email: data.email, 
+          otp: trialOtp, 
           username: data.username,
           nodeId: (data as any).nodeLocation
         }),
@@ -211,7 +224,7 @@ export default function PricingList() {
     } catch (error) {
       setVerificationResult({ error: 'Connection error while provisioning Trial.' });
     } finally {
-      setIsSubmitting(false);
+      setIsSkeletonLoading(false);
     }
   };
 
@@ -262,9 +275,17 @@ export default function PricingList() {
         </div>
 
         <div className="flex flex-col gap-8 perspective-2000">
-          {activeTab === 'minecraft' && minecraftPlans.map((p, i) => (
-            <motion.div
-              key={`mc-${i}`}
+          {loading ? (
+            <>
+              <PlanSkeleton highlight={false} />
+              <PlanSkeleton highlight={true} />
+              <PlanSkeleton highlight={false} />
+            </>
+          ) : (
+            <>
+              {activeTab === 'minecraft' && minecraftPlans.map((p, i) => (
+                <motion.div
+                  key={`mc-${i}`}
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               whileHover={{ 
@@ -353,7 +374,8 @@ export default function PricingList() {
              </div>
            </motion.div>
           ))}
-
+            </>
+          )}
         </div>
       </div>
 
@@ -438,52 +460,70 @@ export default function PricingList() {
                       </div>
                     ) : selectedPlan.isTrial ? (
                       <div className="max-w-md mx-auto">
-                         {trialStep === 1 ? (
-                           <form onSubmit={handleSubmit(handleSendTrialOtp)} className="space-y-6">
+                         {isSkeletonLoading ? (
+                           <div className="space-y-6">
+                              <div className="h-8 w-48 bg-white/5 animate-skeleton mx-auto rounded-lg" />
+                              <div className="h-4 w-64 bg-white/5 animate-skeleton mx-auto rounded-lg" />
+                              <div className="h-32 w-full bg-white/5 animate-skeleton rounded-2xl" />
+                              <div className="h-14 w-full bg-white/5 animate-skeleton rounded-xl" />
+                           </div>
+                         ) : trialStep === 1 ? (
+                           <form onSubmit={(e) => { e.preventDefault(); handleSendTrialOtp(); }} className="space-y-6 text-left">
                              <div className="text-center">
-                                <h3 className="text-2xl font-black text-white mb-2">FREE TRIAL <span className="text-[#5865F2]">VERIFICATION</span></h3>
-                                <p className="text-sm text-[var(--color-text-dim)]">Enter your Discord User ID to receive an OTP.</p>
+                                <h3 className="text-2xl font-black text-white mb-2">FREE TRIAL <span className="text-[#00F0FF]">VERIFICATION</span></h3>
+                                <p className="text-sm text-[var(--color-text-dim)]">Enter your email to receive a 6-digit verification code.</p>
                              </div>
-                             <div className="bg-[#5865F2]/5 border border-[#5865F2]/20 rounded-2xl p-6 mb-6">
-                               <label className="block text-[10px] font-black uppercase tracking-widest text-[#5865F2] mb-3">Your Discord ID</label>
-                               <input 
-                                 value={discordId} 
-                                 onChange={(e) => setDiscordId(e.target.value)} 
-                                 placeholder="18-digit identifier" 
-                                 className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:border-[#5865F2] outline-none font-mono text-lg"
-                               />
-                               <p className="text-[10px] mt-4 text-white/30 flex items-center gap-2 italic">
-                                 <HelpCircle size={12} /> How to get ID? Settings {'>'} Advanced {'>'} Developer Mode ON {'>'} Right click profile.
-                               </p>
+                             <div className="bg-[#00F0FF]/5 border border-[#00F0FF]/20 rounded-2xl p-6 mb-6 space-y-4">
+                                <Input label="Email Address" {...register("email", {required: true})} type="email" placeholder="you@example.com" />
+                                <p className="text-[10px] text-[var(--color-text-dim)] flex items-center gap-2 italic">
+                                  <Info size={12} /> Verification is required to prevent multiple claims.
+                                </p>
                              </div>
                              <button 
                                type="submit"
-                               disabled={isSubmitting || discordId.length < 17}
-                               className="w-full h-14 bg-[#5865F2] hover:bg-[#4752C4] disabled:opacity-50 text-white font-black rounded-xl uppercase tracking-widest flex items-center justify-center gap-2"
+                               disabled={isSkeletonLoading || !watch("email")}
+                               className="w-full h-14 bg-[#00F0FF] hover:bg-[#00D8E6] disabled:opacity-50 text-black font-black rounded-xl uppercase tracking-widest flex items-center justify-center gap-2"
                              >
-                               {isSubmitting ? <Loader2 size={20} className="animate-spin" /> : 'Request Discord OTP'}
+                               {isSkeletonLoading ? <Loader2 size={20} className="animate-spin" /> : 'Send Verification Code'}
                              </button>
                            </form>
                          ) : (
                             <form onSubmit={handleSubmit(handleClaimTrial)} className="space-y-6">
                                <div className="text-center">
-                                  <h3 className="text-2xl font-black text-[#5865F2] mb-2 uppercase tracking-tighter">Confirm Claim</h3>
-                                  <p className="text-sm text-[var(--color-text-dim)]">Configure your trial node details.</p>
+                                  <h3 className="text-2xl font-black text-[#00F0FF] mb-2 uppercase tracking-tighter">Submit OTP</h3>
+                                  <p className="text-sm text-[var(--color-text-dim)]">Check your email for the code.</p>
                                </div>
                                <div className="grid grid-cols-2 gap-4">
                                   <div className="col-span-2 space-y-2">
-                                     <label className="text-xs font-black uppercase tracking-widest text-white/60">Node Location</label>
+                                     <label className="text-xs font-black uppercase tracking-widest text-white/60">Choose Node Location</label>
                                      <WorldMap selectedId={currentNodeLocation} onSelect={(id) => setValue("nodeLocation", id)} />
                                   </div>
-                                  <div className="col-span-2">
-                                     <Input label="Verification OTP" value={trialOtp} onChange={(e) => setTrialOtp(e.target.value)} maxLength={6} placeholder="123456" className="text-center tracking-[0.5em] text-xl border-[#5865F2]" />
+                               <div className="col-span-2">
+                                     <Input label="6-Digit OTP" value={trialOtp} onChange={(e: any) => setTrialOtp(e.target.value)} maxLength={6} placeholder="123456" className="text-center tracking-[0.5em] text-xl border-[#00F0FF]" />
+                                     {simulatedOtp && (
+                                       <div className="mt-6 p-5 bg-cyan-950/30 border-2 border-dashed border-[#00F0FF]/30 rounded-2xl relative overflow-hidden group">
+                                          <div className="absolute inset-0 bg-[#00F0FF]/5 animate-pulse" />
+                                          <div className="relative z-10">
+                                            <p className="text-[10px] font-black uppercase text-[#00F0FF] tracking-[0.2em] mb-2 text-center flex items-center justify-center gap-2">
+                                              <Settings size={10} className="animate-spin-slow" /> Incoming Verification Code
+                                            </p>
+                                            <div className="flex items-center justify-center gap-4 bg-black/40 rounded-xl py-3 border border-white/5">
+                                              <span className="text-3xl font-black text-white tracking-[0.2em]">{simulatedOtp}</span>
+                                            </div>
+                                            <p className="text-[9px] text-white/40 mt-3 text-center italic">This is a simulated email inbox for demo purposes.</p>
+                                          </div>
+                                       </div>
+                                     )}
                                   </div>
-                                  <Input label="Email" {...register("email", {required: true})} />
-                                  <Input label="Username" {...register("username", {required: true})} />
+                                  <Input label="Panel Username" {...register("username", {required: true})} />
+                                  <div className="flex flex-col justify-end">
+                                    <span className="text-[9px] text-[var(--color-text-dim)] mb-1 uppercase font-bold tracking-widest">Verifying Email</span>
+                                    <div className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-xs text-white/40 truncate">{watch("email")}</div>
+                                  </div>
                                </div>
-                               <button type="submit" disabled={isSubmitting} className="w-full h-14 bg-[#5865F2] text-white font-black rounded-xl flex items-center justify-center gap-2 uppercase tracking-widest">
-                                  {isSubmitting ? <Loader2 className="animate-spin" /> : 'Finalize Trial Provisioning'}
-                               </button>
+                               <button type="submit" disabled={isSkeletonLoading} className="w-full h-14 bg-[#00F0FF] text-black font-black rounded-xl flex items-center justify-center gap-2 uppercase tracking-widest shadow-3d hover:bg-[#00D8E6]">
+                                  {isSkeletonLoading ? <Loader2 className="animate-spin" /> : 'Claim Trial Server'}
+                                </button>
                             </form>
                          )}
                       </div>
@@ -657,6 +697,30 @@ function CredentialItem({ label, value, isPassword }: any) {
               <Copy size={14} />
            </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function PlanSkeleton({ highlight }: { highlight: boolean }) {
+  return (
+    <div className={`bg-[var(--color-surface)] border ${highlight ? 'border-[#00F0FF]/30 glow-primary' : 'border-[var(--color-border)]'} rounded-4xl p-8 flex flex-col md:flex-row items-center gap-8 justify-between opacity-50`}>
+      <div className="flex-1 w-full space-y-6">
+        <div className="flex items-center gap-4">
+          <div className="w-48 h-8 rounded-lg animate-skeleton" />
+          <div className="w-24 h-6 rounded animate-skeleton" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full animate-skeleton" />
+              <div className="w-20 h-4 rounded animate-skeleton" />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto">
+        <div className="flex-1 md:w-44 h-14 rounded-2xl animate-skeleton" />
       </div>
     </div>
   );

@@ -51,6 +51,22 @@
     "/admins/{adminId}": {
       "schema": "Admin",
       "description": "List of authorized administrators"
+    },
+    "/trials/{email}": {
+      "schema": "object",
+      "description": "Trial claim records"
+    },
+    "/otps/{email}": {
+      "schema": "object",
+      "description": "Verification codes"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "object",
+      "description": "Payment and system logs"
+    },
+    "/payments/{utrId}": {
+      "schema": "object",
+      "description": "UTR verification tracking"
     }
   }
 }

@@ -4,7 +4,7 @@ import { db } from "../lib/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 
 export default function Hero() {
-  const [bgUrl, setBgUrl] = useState("https://images.unsplash.com/photo-1510511459019-5dee997dd1db?auto=format&fit=crop&q=80&w=1920");
+  const [bgUrl, setBgUrl] = useState("https://images.unsplash.com/photo-1587573089734-09cb99c5f068?auto=format&fit=crop&q=80&w=1920");
 
   useEffect(() => {
     async function loadAssets() {
@@ -23,17 +23,51 @@ export default function Hero() {
 
   return (
     <section className="relative pt-24 pb-32 px-6 overflow-hidden flex items-center border-b border-[var(--color-border)] min-h-[90vh]">
-      {/* Background Image Overlay */}
+      {/* Background Layer */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#000000]/40 via-[#000000]/60 to-[#000000] z-10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/80 to-black z-20" />
+        
+        {/* Animated Grid Pattern */}
+        <div className="absolute inset-0 z-10 opacity-20" 
+             style={{ 
+               backgroundImage: 'linear-gradient(#00F0FF 1px, transparent 1px), linear-gradient(90deg, #00F0FF 1px, transparent 1px)',
+               backgroundSize: '40px 40px',
+               maskImage: 'radial-gradient(ellipse at center, black, transparent 80%)'
+             }} 
+        />
+
+        {/* Ambient Particles */}
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full bg-[#00F0FF]/20 blur-sm pointer-events-none"
+            initial={{ 
+              x: Math.random() * 100 + "%", 
+              y: Math.random() * 100 + "%", 
+              width: Math.random() * 4 + 2 + "px",
+              height: Math.random() * 4 + 2 + "px"
+            }}
+            animate={{ 
+              y: ["-10%", "110%"],
+              opacity: [0, 1, 0]
+            }}
+            transition={{ 
+              duration: Math.random() * 10 + 10,
+              repeat: Infinity,
+              delay: Math.random() * 10,
+              ease: "linear"
+            }}
+          />
+        ))}
+
         <img 
           src={bgUrl} 
-          alt="Aqua tech landscape" 
-          className="w-full h-full object-cover opacity-60 scale-105"
+          alt="Minecraft Landscape" 
+          className="w-full h-full object-cover opacity-50 scale-105"
         />
       </div>
 
-      <div className="max-w-7xl mx-auto w-full relative z-20 flex flex-col items-center text-center mt-12 perspective-2000">
+      <div className="max-w-7xl mx-auto w-full relative z-30 flex flex-col items-center text-center mt-12 perspective-2000">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

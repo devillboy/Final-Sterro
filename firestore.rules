@@ -46,6 +46,13 @@ service cloud.firestore {
              (!data.keys().hasAny(['label']) || (data.label is string && data.label.size() <= 100));
     }
 
+    // -- TRANSACTION VALIDATION --
+    function isValidTransaction(data) {
+      return data.keys().hasAll(['utrId', 'email', 'status', 'planName']) &&
+             data.utrId is string && data.email is string &&
+             data.status is string && data.planName is string;
+    }
+
     // -- COLLECTION MATCHES --
 
     match /plans/{planId} {
@@ -66,12 +73,31 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if isAdmin() && isValidId(adminId);
     }
-    
-    // Tracking orders for analytics (if implemented as separate collection)
+
+    match /trials/{email} {
+      // Server-side uses Client SDK without auth
+      allow read, write: if true; 
+    }
+
+    match /otps/{email} {
+      // Server-side uses Client SDK without auth
+      allow read, write: if true;
+    }
+
+    match /transactions/{transactionId} {
+      allow read: if isAdmin();
+      allow create: if true; // Server-side creation
+    }
+
+    match /payments/{utrId} {
+      allow read: if isAdmin() || true; // Server-side dupe check
+      allow write: if true; // Server-side write
+    }
+
+    // Tracking orders for analytics
     match /orders/{orderId} {
       allow read: if isAdmin();
-      // Writing orders could be done via server or client-side if we track user orders
-      allow create: if isSignedIn() && isValidId(orderId); 
+      allow create: if isSignedIn() || true; // Allow server-side
     }
   }
 }

@@ -87,4 +87,30 @@
       0 4px 0 #64748b,
       0 10px 20px rgba(0, 0, 0, 0.5);
   }
+
+  .animate-skeleton {
+    @apply relative overflow-hidden bg-white/5;
+  }
+
+  .animate-skeleton::after {
+    content: "";
+    @apply absolute inset-0 -translate-x-full;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.05),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+
+  .animate-spin-slow {
+    animation: spin 3s linear infinite;
+  }
+
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
 }
