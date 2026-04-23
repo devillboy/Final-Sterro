@@ -6,11 +6,11 @@ export default function Hero() {
     <section className="relative pt-24 pb-32 px-6 overflow-hidden flex items-center border-b border-[var(--color-border)] min-h-[85vh]">
       {/* Background Image Overlay */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-bg-main)]/90 via-[var(--color-bg-main)]/70 to-[var(--color-bg-main)] z-10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-bg-main)]/80 via-[var(--color-bg-main)]/60 to-[var(--color-bg-main)] z-10" />
         <img 
-          src="https://images.unsplash.com/photo-1607853202273-797f1c22a38e?auto=format&fit=crop&q=80&w=2000" 
-          alt="Minecraft background" 
-          className="w-full h-full object-cover opacity-30"
+          src="https://i.pinimg.com/originals/d3/8f/4d/d38f4da29234e9188ed3098a83d940aa.jpg" 
+          alt="Pinterest gaming background" 
+          className="w-full h-full object-cover opacity-50"
         />
       </div>
 
@@ -47,16 +47,19 @@ export default function Hero() {
         >
           {/* Active thumb */}
           <div className="h-24 w-36 border-2 border-[#007BFF] rounded-lg overflow-hidden shrink-0 cursor-pointer shadow-[0_0_15px_rgba(0,123,255,0.4)] transition-transform hover:scale-105">
-            <img src="https://images.unsplash.com/photo-1607853202273-797f1c22a38e?auto=format&fit=crop&q=80&w=300" className="w-full h-full object-cover" alt="Minecraft" />
+            <img src="https://images.unsplash.com/photo-1607853202273-797f1c22a38e?auto=format&fit=crop&q=80&w=300" className="w-full h-full object-cover" alt="Minecraft Sword" />
           </div>
           
-          {/* Other thumbs */}
+          {/* Other thumbs: Minecraft & VPS Alternating */}
           {[
-            "https://images.unsplash.com/photo-1558494949253-e5223abfb21a?auto=format&fit=crop&w=300&q=80", // Server
-            "https://images.unsplash.com/photo-1627856013091-fed6e4e048eb?auto=format&fit=crop&w=300&q=80", // Minecraft blocks
-            "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=300&q=80", // Network server rack
-            "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=300&q=80", // More servers
-            "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=300&q=80"  // Gaming setup
+            "https://images.unsplash.com/photo-1558494949253-e5223abfb21a?auto=format&fit=crop&w=300&q=80", // VPS Server Room
+            "https://images.unsplash.com/photo-1627856013091-fed6e4e048eb?auto=format&fit=crop&w=300&q=80", // Minecraft Landscape
+            "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=300&q=80", // VPS Network Rack
+            "https://images.unsplash.com/photo-1605901309584-818e25960b8f?auto=format&fit=crop&w=300&q=80", // Minecraft Grass Block
+            "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=300&q=80", // VPS Data Center
+            "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=300&q=80", // RGB/Gaming PC
+            "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=300&q=80", // VPS Blue Rack Close Up
+            "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=300&q=80"  // Gameplay Setup
           ].map((url, i) => (
             <div key={i} className="h-24 w-36 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden shrink-0 opacity-60 hover:opacity-100 transition-all cursor-pointer hover:scale-105">
               <img src={url} className="w-full h-full object-cover" alt="VPS and Games thumb" />

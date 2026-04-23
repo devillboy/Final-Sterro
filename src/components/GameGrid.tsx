@@ -40,7 +40,9 @@ export default function GameGrid() {
                 className="relative bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden group cursor-pointer w-full md:w-[calc(50%-1rem)] h-80 hover:border-[#007BFF]/50 transition-colors duration-300"
               >
                 <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-main)] via-[var(--color-bg-main)]/60 to-transparent z-10" />
-                <div className="absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity bg-cover bg-center duration-500 group-hover:scale-105" style={{ backgroundImage: `url(${game.imgUrl})`}} />
+                <div className="absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity duration-500 group-hover:scale-105">
+                  <img src={game.imgUrl} className="w-full h-full object-cover" alt={game.name} />
+                </div>
                 
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center pt-24">
                   <div className="w-16 h-16 mb-4 bg-white/5 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10 group-hover:-translate-y-2 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all duration-300">
