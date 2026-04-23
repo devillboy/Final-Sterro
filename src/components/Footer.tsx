@@ -15,7 +15,7 @@ export default function Footer() {
                 className="w-12 h-12 rounded-xl"
               />
               <div className="flex flex-col">
-                <span className="text-2xl font-bold tracking-tight text-white">Sterro <span className="text-aqua">Cloud</span></span>
+                <span className="text-2xl font-bold tracking-tight text-white">Sterro <span className="text-[#00F0FF]">Cloud</span></span>
                 <span className="text-xs uppercase tracking-[0.3em] text-white/40 font-medium leading-none mt-1">IT Solution</span>
               </div>
             </div>
@@ -69,7 +69,7 @@ export default function Footer() {
 
 function FooterLink({ children }: { children: React.ReactNode }) {
   return (
-    <a href="#" className="hover:text-aqua transition-colors cursor-pointer">
+    <a href="#" className="hover:text-[#00F0FF] transition-colors cursor-pointer">
       {children}
     </a>
   );
@@ -77,7 +77,7 @@ function FooterLink({ children }: { children: React.ReactNode }) {
 
 function SocialIcon({ icon }: { icon: React.ReactNode }) {
   return (
-    <a href="#" className="w-10 h-10 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center hover:bg-aqua hover:text-dark transition-all duration-300">
+    <a href="#" className="w-10 h-10 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center hover:bg-[#00F0FF] hover:text-black transition-all duration-300">
       {icon}
     </a>
   );

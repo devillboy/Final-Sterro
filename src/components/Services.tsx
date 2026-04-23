@@ -5,17 +5,17 @@ import { Gamepad2, Cloud, Server } from "lucide-react";
 export default function Services() {
   const servicesList = [
     {
-      icon: <Gamepad2 size={40} className="text-[#007BFF]" strokeWidth={1.5} />,
+      icon: <Gamepad2 size={40} className="text-[#00F0FF]" strokeWidth={1.5} />,
       title: "Game Servers",
       desc: "Hosting your own game server shouldn't be hard. Choose from a variety of supported games and we'll get you up and running within minutes."
     },
     {
-      icon: <Cloud size={40} className="text-[#007BFF]" strokeWidth={1.5} />,
+      icon: <Cloud size={40} className="text-[#00F0FF]" strokeWidth={1.5} />,
       title: "Root Servers",
       desc: "Built on Ryzen processors and NVMe SSDs, our unique VPS platform is built for those needing serious processing power from their instances."
     },
     {
-      icon: <Server size={40} className="text-[#007BFF]" strokeWidth={1.5} />,
+      icon: <Server size={40} className="text-[#00F0FF]" strokeWidth={1.5} />,
       title: "Dedicated Servers",
       desc: "Need dedicated, raw performance? Unmanaged or managed hosting for your most demanding workloads.",
       tag: "Coming Soon"
@@ -27,22 +27,29 @@ export default function Services() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-            Our <span className="text-[#007BFF]">Services</span>
+            Our <span className="text-[#00F0FF]">Services</span>
           </h2>
           <p className="text-[var(--color-text-dim)] font-medium max-w-2xl mx-auto">
             High-performance hosting solutions for game servers, root servers, and dedicated servers - optimized for maximum performance.
           </p>
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 perspective-2000">
           {servicesList.map((s, i) => (
             <motion.div 
               key={i}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              whileHover={{ 
+                scale: 1.01, 
+                rotateX: -0.5, 
+                rotateY: 0.5, 
+                z: 10,
+                boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.4)"
+              }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.5 }}
-              className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-8 flex flex-col md:flex-row gap-8 items-start relative hover:border-[#007BFF]/30 transition-colors group cursor-pointer"
+              transition={{ duration: 0.2 }}
+              className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-8 flex flex-col md:flex-row gap-8 items-start relative hover:border-[#00F0FF]/30 transition-colors group cursor-pointer preserve-3d shadow-3d"
             >
               <div className="shrink-0 group-hover:scale-110 transition-transform duration-300">
                 {s.icon}

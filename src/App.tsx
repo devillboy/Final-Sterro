@@ -13,7 +13,11 @@ import Features from "./components/Features";
 import Protection from "./components/Protection";
 import FAQ from "./components/FAQ";
 import Footer from "./components/Footer";
+import CursorGlow from "./components/CursorGlow";
+import AdminPanel from "./components/AdminPanel";
 import { motion, useScroll, useSpring } from "motion/react";
+import { AuthProvider } from "./contexts/AuthContext";
+import { useState, useEffect } from "react";
 
 export default function App() {
   const { scrollYProgress } = useScroll();
@@ -23,28 +27,46 @@ export default function App() {
     restDelta: 0.001
   });
 
+  const [showAdmin, setShowAdmin] = useState(false);
+
+  useEffect(() => {
+    const handleOpenAdmin = () => setShowAdmin(true);
+    window.addEventListener('OPEN_ADMIN_PANEL', handleOpenAdmin);
+    return () => window.removeEventListener('OPEN_ADMIN_PANEL', handleOpenAdmin);
+  }, []);
+
   return (
-    <div className="relative selection:bg-[#007BFF] selection:text-white bg-[var(--color-bg-main)]">
-      {/* Progress Bar */}
-      <motion.div 
-        className="fixed top-0 left-0 right-0 h-[2px] bg-[#007BFF] z-[100] origin-left" 
-        style={{ scaleX }} 
-      />
+    <AuthProvider>
+      <CursorGlow />
+      {showAdmin && <AdminPanel />}
+      <div className="relative selection:bg-[#00F0FF] selection:text-black bg-[var(--color-bg-main)] min-h-screen overflow-x-hidden perspective-1000">
+        {/* Animated Background Glow */}
+        <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#00F0FF]/10 blur-[120px] rounded-full animate-pulse" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-600/10 blur-[120px] rounded-full animate-pulse delay-1000" />
+        </div>
 
-      <Navbar />
-      
-      <main>
-        <Hero />
-        <GameGrid />
-        <Services />
-        <PricingList />
-        <Features />
-        <Protection />
-        <FAQ />
-      </main>
+        {/* Progress Bar */}
+        <motion.div 
+          className="fixed top-0 left-0 right-0 h-[2px] bg-[#00F0FF] z-[100] origin-left" 
+          style={{ scaleX }} 
+        />
 
-      <Footer />
-    </div>
+        <Navbar />
+        
+        <main>
+          <Hero />
+          <GameGrid />
+          <Services />
+          <PricingList />
+          <Features />
+          <Protection />
+          <FAQ />
+        </main>
+
+        <Footer />
+      </div>
+    </AuthProvider>
   );
 }
 

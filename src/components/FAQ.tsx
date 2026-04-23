@@ -25,25 +25,28 @@ export default function FAQ() {
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-            Your Questions, <span className="text-[#007BFF]">Our Answers</span>
+            Your Questions, <span className="text-[#00F0FF]">Our Answers</span>
           </h2>
           <p className="text-[var(--color-text-dim)] font-medium text-lg">Everything you need to know to launch your own server</p>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4 perspective-2000">
           {faqs.map((faq, index) => (
-            <div 
+            <motion.div 
               key={index} 
-              className="border-b border-[var(--color-border)] overflow-hidden"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl overflow-hidden shadow-3d hover:border-[#00F0FF]/30 transition-all group preserve-3d"
             >
               <button 
                 onClick={() => setActiveIndex(activeIndex === index ? null : index)}
-                className="w-full py-5 pr-4 flex items-center justify-between text-left group"
+                className="w-full px-6 py-5 flex items-center justify-between text-left group"
               >
-                <span className="text-base font-semibold tracking-tight text-white/90 group-hover:text-white transition-colors">{faq.question}</span>
+                <span className="text-base font-bold tracking-tight text-white/90 group-hover:text-[#00F0FF] transition-colors">{faq.question}</span>
                 <ChevronDown 
                   size={18} 
-                  className={`text-[var(--color-text-dim)] transition-transform duration-300 ${activeIndex === index ? 'rotate-180 text-white' : ''}`} 
+                  className={`text-[var(--color-text-dim)] transition-transform duration-200 ${activeIndex === index ? 'rotate-180 text-[#00F0FF]' : ''}`} 
                 />
               </button>
               
@@ -53,15 +56,15 @@ export default function FAQ() {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    <div className="pb-6 pr-8 text-[var(--color-text-dim)] font-medium text-sm leading-relaxed">
+                    <div className="px-6 pb-6 text-[var(--color-text-dim)] font-medium text-sm leading-relaxed border-t border-[var(--color-border)] pt-4 mt-1">
                       {faq.answer}
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

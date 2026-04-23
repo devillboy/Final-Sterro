@@ -1,43 +1,70 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Gamepad2, Server } from 'lucide-react';
-
-const games = [
-  { 
-    name: "Minecraft Java", 
-    icon: Gamepad2, 
-    imgUrl: "https://images.unsplash.com/photo-1607853202273-797f1c22a38e?auto=format&fit=crop&w=600&q=80" 
-  },
-  { 
-    name: "VPS Hosting", 
-    icon: Server, 
-    imgUrl: "https://images.unsplash.com/photo-1558494949253-e5223abfb21a?auto=format&fit=crop&w=600&q=80" 
-  },
-];
+import { db } from "../lib/firebase";
+import { collection, getDocs } from "firebase/firestore";
 
 export default function GameGrid() {
+  const [games, setGames] = useState([
+    { 
+      name: "Minecraft Java", 
+      icon: Gamepad2, 
+      imgUrl: "https://images.unsplash.com/photo-1607853202273-797f1c22a38e?auto=format&fit=crop&w=600&q=80",
+      key: "MC_THUMB"
+    },
+    { 
+      name: "VPS Hosting", 
+      icon: Server, 
+      imgUrl: "https://images.unsplash.com/photo-1558494949253-e5223abfb21a?auto=format&fit=crop&w=600&q=80",
+      key: "VPS_THUMB"
+    },
+  ]);
+
+  useEffect(() => {
+    async function syncAssets() {
+      try {
+        const snap = await getDocs(collection(db, "assets"));
+        const assetMap = new Map();
+        snap.forEach(doc => assetMap.set(doc.data().key, doc.data().url));
+        
+        setGames(prev => prev.map(game => ({
+          ...game,
+          imgUrl: assetMap.get(game.key) || game.imgUrl
+        })));
+      } catch (e) {
+        console.warn("Games custom assets load failed.");
+      }
+    }
+    syncAssets();
+  }, []);
   return (
     <section className="py-24 px-6 bg-[var(--color-bg-main)]">
       <div className="max-w-7xl mx-auto text-center">
-        <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
+        <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight text-white">
           Your favorite games &amp; services<br/>
-          <span className="text-[#007BFF]">Ready to deploy instantly.</span>
+          <span className="text-[#00F0FF]">Ready to deploy instantly.</span>
         </h2>
         <p className="text-[var(--color-text-dim)] mb-16 max-w-2xl mx-auto text-lg font-medium">
           Choose your service and get started instantly. We take care of setup, performance, and stability.
         </p>
 
-        <div className="flex flex-wrap justify-center gap-4">
+        <div className="flex flex-wrap justify-center gap-6 perspective-2000">
           {games.map((game, i) => {
             const Icon = game.icon;
             return (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.05 }}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                whileHover={{ 
+                  scale: 1.01, 
+                  rotateY: i % 2 === 0 ? 1 : -1,
+                  z: 20,
+                  boxShadow: "0 25px 50px -12px rgba(0, 240, 255, 0.25)"
+                }}
+                transition={{ duration: 0.2 }}
                 viewport={{ once: true }}
-                className="relative bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden group cursor-pointer w-full md:w-[calc(50%-1rem)] h-80 hover:border-[#007BFF]/50 transition-colors duration-300"
+                className="relative bg-[var(--color-surface)] border border-[var(--color-border)] rounded-4xl overflow-hidden group cursor-pointer w-full md:w-[calc(50%-1rem)] h-80 hover:border-[#00F0FF]/50 transition-colors duration-300 preserve-3d shadow-3d"
               >
                 <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-main)] via-[var(--color-bg-main)]/60 to-transparent z-10" />
                 <div className="absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity duration-500 group-hover:scale-105">

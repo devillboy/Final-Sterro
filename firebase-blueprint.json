@@ -1,0 +1,56 @@
+{
+  "entities": {
+    "Plan": {
+      "title": "Hosting Plan",
+      "description": "Details for a Minecraft or VPS hosting plan",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "ram": { "type": "string" },
+        "cpu": { "type": "string" },
+        "storage": { "type": "string" },
+        "throughput": { "type": "string" },
+        "ports": { "type": "string" },
+        "type": { "type": "string", "enum": ["minecraft", "vps"] },
+        "highlight": { "type": "boolean" },
+        "order": { "type": "number" }
+      },
+      "required": ["name", "price", "type"]
+    },
+    "Asset": {
+      "title": "Website Asset",
+      "description": "Configurable images or links for the website",
+      "type": "object",
+      "properties": {
+        "key": { "type": "string" },
+        "label": { "type": "string" },
+        "url": { "type": "string" }
+      },
+      "required": ["key", "url"]
+    },
+    "Admin": {
+      "title": "Administrator",
+      "description": "Users with access to the admin panel",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" }
+      },
+      "required": ["email"]
+    }
+  },
+  "firestore": {
+    "/plans/{planId}": {
+      "schema": "Plan",
+      "description": "Available hosting plans"
+    },
+    "/assets/{assetId}": {
+      "schema": "Asset",
+      "description": "Website assets like hero image, etc."
+    },
+    "/admins/{adminId}": {
+      "schema": "Admin",
+      "description": "List of authorized administrators"
+    }
+  }
+}

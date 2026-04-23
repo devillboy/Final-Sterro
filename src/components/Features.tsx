@@ -17,8 +17,8 @@ export default function Features() {
     <section className="py-24 px-6 bg-[var(--color-bg-main)]">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight">
-            Everything <span className="text-[#007BFF]">your server needs</span>
+          <h2 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight text-white">
+            Everything <span className="text-[#00F0FF]">your server needs</span>
           </h2>
           <p className="text-[var(--color-text-dim)] font-medium text-lg">Features, tools, settings, and support bundled in one place.</p>
         </div>
@@ -31,13 +31,13 @@ export default function Features() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.05 }}
-              className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-10 flex flex-col group hover:border-[#007BFF]/40 transition-colors"
+              className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-10 flex flex-col group hover:border-[#00F0FF]/40 transition-colors"
             >
               <div className="w-full h-40 mb-8 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border)] flex flex-col items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity bg-gradient-to-b from-[#0a1021] to-[#050814] relative overflow-hidden">
                  {/* Abstract visual representation */}
                  <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)]" style={{backgroundSize: '20px 20px'}}></div>
-                 <div className="w-16 h-16 bg-[#007BFF]/10 rounded-lg border border-[#007BFF]/30 flex items-center justify-center">
-                    <div className="w-8 h-8 rounded bg-[#007BFF]/40 animate-pulse" />
+                 <div className="w-16 h-16 bg-[#00F0FF]/10 rounded-lg border border-[#00F0FF]/30 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded bg-[#00F0FF]/40 animate-pulse" />
                  </div>
               </div>
               <h3 className="text-2xl font-bold mb-3 tracking-tight text-white">{f.title}</h3>

@@ -7,15 +7,15 @@ export default function Protection() {
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4 leading-tight tracking-tight">
-            Always <span className="text-[#007BFF]">Protected.</span><br/>
-            Always <span className="text-[#007BFF]">Recoverable.</span>
+            Always <span className="text-[#00F0FF]">Protected.</span><br/>
+            Always <span className="text-[#00F0FF]">Recoverable.</span>
           </h2>
           <p className="text-[var(--color-text-dim)] max-w-2xl mx-auto font-medium text-lg">
             Network-level security and instant snapshots work together to keep your VPS safe and quickly restorable.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-6 text-white font-bold">
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -23,8 +23,8 @@ export default function Protection() {
             className="bg-[#0a1024] border border-[var(--color-border)] rounded-2xl p-8 flex flex-col"
           >
             <div className="h-48 bg-[#050814] rounded-xl border border-[var(--color-border)] mb-8 flex items-center justify-center relative overflow-hidden group">
-               <div className="absolute inset-0 bg-gradient-to-tr from-[#007BFF]/5 to-transparent" />
-               <button className="w-56 h-12 bg-[#2a4394] border border-[#3b5ab4] text-white/90 rounded font-bold transition-all shadow-[0_0_20px_rgba(42,67,148,0.4)] group-hover:bg-[#3454b8] group-hover:scale-105 z-10 flex items-center justify-center">
+               <div className="absolute inset-0 bg-gradient-to-tr from-[#00F0FF]/5 to-transparent" />
+               <button className="w-56 h-12 bg-[#00F0FF] border border-[#00D8E6] text-black rounded font-black transition-all shadow-[0_0_20px_rgba(0,240,255,0.4)] group-hover:bg-[#00D8E6] group-hover:scale-105 z-10 flex items-center justify-center uppercase tracking-tighter">
                   Restore My Server
                </button>
             </div>
@@ -43,9 +43,9 @@ export default function Protection() {
             <div className="h-48 bg-[#050814] rounded-xl border border-[var(--color-border)] mb-8 flex items-center justify-center relative overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#ff004c]/10 via-[#050814] to-[#050814]" />
               
-              <div className="w-24 h-24 rounded-full border-4 border-[#007BFF]/20 flex flex-col gap-2 items-center justify-center z-10 bg-[#0a1024]/50 backdrop-blur">
-                <div className="w-8 h-3 bg-[#007BFF] rounded-sm shadow-[0_0_10px_rgba(0,123,255,0.8)]" />
-                <div className="w-8 h-3 bg-[#007BFF] rounded-sm shadow-[0_0_10px_rgba(0,123,255,0.8)]" />
+              <div className="w-24 h-24 rounded-full border-4 border-[#00F0FF]/20 flex flex-col gap-2 items-center justify-center z-10 bg-[#0a1024]/50 backdrop-blur">
+                <div className="w-8 h-3 bg-[#00F0FF] rounded-sm shadow-[0_0_10px_rgba(0,240,255,0.8)]" />
+                <div className="w-8 h-3 bg-[#00F0FF] rounded-sm shadow-[0_0_10px_rgba(0,240,255,0.8)]" />
               </div>
               
               {/* Little red triangles around */}
