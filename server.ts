@@ -1,5 +1,4 @@
 import express from "express";
-import { createServer as createViteServer } from "vite";
 import multer from "multer";
 import { GoogleGenAI } from "@google/genai";
 import path from "node:path";
@@ -195,7 +194,7 @@ app.post("/api/verify-payment", upload.single("screenshot"), async (req, res) =>
         serverRes = await createPterodactylServer(userRes.id, planName, `${planName} Server`, nodeId);
       } catch (err: any) {
         console.error("Server Creation Failed: ", err);
-        serverCreationError = \`User Account created successfully, but Server provisioning was delayed due to Panel Allocation limits (Need to map correct Egg/Node IDs). Error: \${err.message}\`;
+        serverCreationError = `User Account created successfully, but Server provisioning was delayed due to Panel Allocation limits (Need to map correct Egg/Node IDs). Error: ${err.message}`;
       }
 
       res.json({
@@ -215,6 +214,7 @@ app.post("/api/verify-payment", upload.single("screenshot"), async (req, res) =>
 
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({ server: { middlewareMode: true }, appType: "spa" });
     app.use(vite.middlewares);
   } else {
@@ -224,4 +224,10 @@ async function startServer() {
   }
   app.listen(PORT, "0.0.0.0", () => console.log(`Server running on http://localhost:${PORT}`));
 }
-startServer();
+
+// Only start the server natively if we are not running in a Vercel Serverless environment
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+export default app;
