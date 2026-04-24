@@ -55,7 +55,7 @@ const ai = new GoogleGenAI({
 });
 
 // Pterodactyl Config
-const PTERODACTYL_API_KEY = process.env.PTERODACTYL_API_KEY || 'ptla_yDDZ3d0e8Gn4tpZ4h9pGveVxIFcahxrI97VgVDO29hU';
+const PTERODACTYL_API_KEY = process.env.PTERODACTYL_API_KEY || 'ptla_WKMXC7QZlIfhBJJckJmIfqVDvr9UbUgU9NUJHZ2SQVN';
 const PTERODACTYL_PANEL_URL = process.env.PTERODACTYL_PANEL_URL || "https://panel.sterro.cloud"; 
 const DefaultEggId = parseInt(process.env.PTERODACTYL_EGG_ID || "4", 10);
 const DefaultNestId = parseInt(process.env.PTERODACTYL_NEST_ID || "1", 10);
@@ -83,113 +83,6 @@ const PLAN_LIMITS: Record<string, any> = {
 };
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
-
-// Discord OAuth Routes
-app.get("/api/auth/url", (req, res) => {
-  if (!DISCORD_CLIENT_ID) {
-    return res.status(500).json({ error: "DISCORD_CLIENT_ID not configured" });
-  }
-
-  const params = new URLSearchParams({
-    client_id: DISCORD_CLIENT_ID,
-    redirect_uri: DISCORD_REDIRECT_URI,
-    response_type: "code",
-    scope: "identify email",
-  });
-
-  const authUrl = `https://discord.com/api/oauth2/authorize?${params}`;
-  res.json({ url: authUrl });
-});
-
-app.get(["/api/auth/callback", "/api/auth/callback/"], async (req, res) => {
-  const { code } = req.query;
-  if (!code) {
-    return res.status(400).send("Login failed: No code provided");
-  }
-
-  try {
-    // 1. Exchange code for access token
-    const tokenResponse = await fetch("https://discord.com/api/oauth2/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: DISCORD_CLIENT_ID!,
-        client_secret: DISCORD_CLIENT_SECRET!,
-        grant_type: "authorization_code",
-        code: code as string,
-        redirect_uri: DISCORD_REDIRECT_URI,
-      }),
-    });
-
-    if (!tokenResponse.ok) {
-      const errorData = await tokenResponse.json();
-      console.error("Discord Token Error:", errorData);
-      return res.status(500).send("Failed to exchange code for token");
-    }
-
-    const { access_token } = (await tokenResponse.json()) as any;
-
-    // 2. Fetch user data
-    const userResponse = await fetch("https://discord.com/api/users/@me", {
-      headers: { Authorization: `Bearer ${access_token}` },
-    });
-
-    if (!userResponse.ok) {
-      return res.status(500).send("Failed to fetch user data");
-    }
-
-    const userData = (await userResponse.json()) as any;
-
-    // 3. Save to session
-    (req.session as any).user = {
-      id: userData.id,
-      username: userData.username,
-      discriminator: userData.discriminator,
-      global_name: userData.global_name,
-      avatar: userData.avatar,
-      email: userData.email,
-    };
-
-    // 4. Return success page to close popup
-    res.send(`
-      <html>
-        <body>
-          <script>
-            if (window.opener) {
-              window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS' }, '*');
-              window.close();
-            } else {
-              window.location.href = '/';
-            }
-          </script>
-          <p>Authentication successful. Accessing Sterro Clouds...</p>
-        </body>
-      </html>
-    `);
-  } catch (err) {
-    console.error("OAuth Error:", err);
-    res.status(500).send("Internal server error during authentication");
-  }
-});
-
-app.get("/api/auth/me", (req, res) => {
-  const user = (req.session as any).user;
-  if (user) {
-    res.json({ user });
-  } else {
-    res.status(401).json({ error: "Not authenticated" });
-  }
-});
-
-app.post("/api/auth/logout", (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: "Could not log out" });
-    }
-    res.clearCookie("connect.sid");
-    res.json({ success: true });
-  });
-});
 
 async function createPterodactylUser(email: string, username: string, firstName: string, lastName: string, passwordInput?: string) {
   const password = passwordInput || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8) + "!";
@@ -234,10 +127,7 @@ async function createPterodactylServer(userId: number, planName: string, serverN
       },
       limits: { memory: limits.memory, swap: 0, disk: limits.disk, io: 500, cpu: limits.cpu },
       feature_limits: { databases: limits.databases, backups: limits.backups, allocations: limits.ports },
-      allocation: {
-        default: 1 // Note: Some panels allow omitting default allocation and using deploy: { locations: [1], port_range: [], dedicated_ip: false }
-      },
-      deploy: { // Attempt auto-deploy if specific allocation 1 fails
+      deploy: {
         locations: [nodeId],
         dedicated_ip: false,
         port_range: []
@@ -418,17 +308,23 @@ app.post("/api/verify-payment", upload.single("screenshot"), async (req, res) =>
       }
     };
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: { parts: [imagePart, textPart] },
-      config: { 
-        responseMimeType: "application/json"
-      }
-    });
+    let verificationResult;
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: { parts: [imagePart, textPart] },
+        config: { 
+          responseMimeType: "application/json"
+        }
+      });
 
-    const responseText = response.text || "{}";
-    const cleanJson = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-    const verificationResult = JSON.parse(cleanJson);
+      const responseText = response.text || "{}";
+      const cleanJson = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+      verificationResult = JSON.parse(cleanJson);
+    } catch (aiError: any) {
+      console.error("AI Verification Failed:", aiError);
+      return res.status(500).json({ error: "AI Verification Gateway is currently unreachable. Please try again later.", reason: aiError.message });
+    }
 
     // LOG TRANSACTION
     try {

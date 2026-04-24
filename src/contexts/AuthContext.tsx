@@ -4,20 +4,10 @@ import { onAuthStateChanged, signInWithPopup, signOut, User as FirebaseUser } fr
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
-interface DiscordUser {
-  id: string;
-  username: string;
-  global_name: string | null;
-  avatar: string | null;
-  email: string | null;
-}
-
 interface AuthContextType {
-  discordUser: DiscordUser | null;
   firebaseUser: FirebaseUser | null;
   isAdmin: boolean;
   loading: boolean;
-  loginDiscord: () => Promise<void>;
   loginGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -25,7 +15,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [discordUser, setDiscordUser] = useState<DiscordUser | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -48,24 +37,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const refreshDiscordUser = async () => {
-    try {
-      const response = await fetch('/api/auth/me');
-      if (response.ok) {
-        const data = await response.json();
-        setDiscordUser(data.user);
-      } else {
-        setDiscordUser(null);
-      }
-    } catch (error) {
-      setDiscordUser(null);
-    }
-  };
-
   useEffect(() => {
-    // Sync Discord
-    refreshDiscordUser();
-
     // Sync Firebase
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setFirebaseUser(user);
@@ -73,29 +45,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
     });
 
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
-        refreshDiscordUser();
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
     return () => {
-      window.removeEventListener('message', handleMessage);
       unsubscribe();
     };
   }, []);
-
-  const loginDiscord = async () => {
-    try {
-      const response = await fetch('/api/auth/url');
-      if (!response.ok) throw new Error('Failed to get auth URL');
-      const { url } = await response.json();
-      window.open(url, 'discord_oauth', 'width=500,height=800');
-    } catch (error) {
-      console.error('Discord login error:', error);
-    }
-  };
 
   const loginGoogle = async () => {
     try {
@@ -107,10 +60,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     try {
-      // Logout Discord
-      await fetch('/api/auth/logout', { method: 'POST' });
-      setDiscordUser(null);
-      
       // Logout Firebase
       await signOut(auth);
       setFirebaseUser(null);
@@ -122,11 +71,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   return (
     <AuthContext.Provider value={{ 
-      discordUser, 
       firebaseUser, 
       isAdmin, 
       loading, 
-      loginDiscord, 
       loginGoogle, 
       logout 
     }}>

@@ -1,61 +1,50 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import { Menu, X, ChevronDown, ShoppingCart, Tag, LogOut, User as UserIcon, Shield } from "lucide-react";
+import { Menu, X, Shield, LogOut, User as UserIcon } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const { discordUser, firebaseUser, isAdmin, loginDiscord, loginGoogle, logout, loading } = useAuth();
+  const { firebaseUser, isAdmin, loginGoogle, logout, loading } = useAuth();
 
-  const user = firebaseUser || (discordUser ? { 
-    uid: discordUser.id,
-    photoURL: discordUser.avatar ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png` : null, 
-    displayName: discordUser.global_name || discordUser.username,
-    email: discordUser.email
-  } : null);
+  const user = firebaseUser;
+
+  const scrollTo = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    setIsOpen(false);
+  };
 
   return (
     <>
       {/* Top Banner */}
-      <div className="bg-[#080d1e] border-b border-[var(--color-border)] text-[var(--color-text-dim)] py-2 text-xs flex justify-between px-6 items-center">
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1"><Tag size={12}/> Special Offer</span>
-          <span className="hidden sm:inline">Get 50% off on all hosting plans!</span>
-          <span className="bg-[#00F0FF] text-black font-bold px-2 py-0.5 rounded ml-2">STERRO50</span>
-        </div>
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-1 cursor-pointer hover:text-white relative">
-            <ShoppingCart size={14} />
-            <span className="absolute -top-2 -right-2 bg-[#00F0FF] text-black text-[9px] w-4 h-4 flex items-center justify-center rounded-full leading-none font-bold">1</span>
-          </div>
-          <div className="flex items-center gap-1 cursor-pointer hover:text-white">
-            <img src="https://flagcdn.com/w20/gb.png" alt="English" className="h-3 rounded-[1px] opacity-80" />
-            English <ChevronDown size={12} />
-          </div>
-        </div>
+      <div className="bg-[#00F0FF]/10 border-b border-[#00F0FF]/20 text-[#00F0FF] py-2.5 text-xs flex justify-center px-6 items-center">
+        <a href="https://discord.gg/yourdiscord" target="_blank" rel="noreferrer" className="flex items-center gap-2 font-semibold hover:text-white transition-colors">
+          Join our Discord community for more information and instant support &rarr;
+        </a>
       </div>
 
-      <nav className="sticky top-0 z-50 bg-[var(--color-bg-main)]/90 backdrop-blur-xl border-b border-[var(--color-border)]">
+      <nav className="sticky top-0 z-50 bg-[#050914]/80 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-3 group cursor-pointer preserve-3d">
+          <div className="flex items-center gap-3 group cursor-pointer" onClick={(e) => scrollTo("root", e)}>
             <motion.img 
-              whileHover={{ rotateY: 20, translateZ: 10 }}
+              whileHover={{ scale: 1.05 }}
               src="https://cdn.discordapp.com/icons/1391758924687999006/9d09b6eae193f8156683b959fd116e68.webp?size=2048" 
               alt="Sterro Cloud Logo" 
-              className="w-8 h-8 rounded shadow-lg"
+              className="w-8 h-8 rounded-lg shadow-lg"
             />
-            <span className="text-xl font-bold tracking-tight text-white flex items-center mt-1 preserve-3d">
-              <span className="text-3d-white">STERRO</span>
-              <span className="font-normal text-[var(--color-text-dim)] ml-1 text-3d-white" style={{ textShadow: 'none' }}>CLOUD</span>
+            <span className="text-xl font-bold tracking-tight text-white flex items-center">
+              <span>STERRO</span>
+              <span className="font-medium text-[#00F0FF] ml-1">CLOUD</span>
             </span>
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden lg:flex items-center gap-8 text-sm font-medium">
-            <a href="#" className="text-white hover:text-white transition-colors">Home</a>
-            <NavLink label="Game Servers" hasDropdown />
-            <NavLink label="Root Servers" hasDropdown />
+          <div className="hidden lg:flex items-center gap-8 text-sm font-semibold">
+            <a href="#" onClick={(e) => scrollTo("root", e)} className="text-zinc-300 hover:text-white transition-colors">Home</a>
+            <a href="#games" onClick={(e) => scrollTo("games", e)} className="text-zinc-300 hover:text-white transition-colors">Game Servers</a>
+            <a href="#pricing" onClick={(e) => scrollTo("pricing", e)} className="text-zinc-300 hover:text-white transition-colors">Root Servers</a>
             {isAdmin && (
               <button 
                 onClick={() => window.dispatchEvent(new CustomEvent('OPEN_ADMIN_PANEL'))}
@@ -73,7 +62,7 @@ export default function Navbar() {
             ) : user ? (
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 group cursor-pointer relative py-2">
-                  <div className="w-8 h-8 rounded-full border border-[var(--color-border)] overflow-hidden bg-[var(--color-surface)]">
+                  <div className="w-8 h-8 rounded-full border border-white/10 overflow-hidden bg-black/40">
                     {user.photoURL ? (
                       <img 
                         src={user.photoURL} 
@@ -88,12 +77,12 @@ export default function Navbar() {
                   </div>
                   <div className="flex flex-col items-start leading-tight">
                     <span className="text-white text-sm font-bold truncate max-w-[100px]">{user.displayName}</span>
-                    <span className="text-[var(--color-text-dim)] text-[10px] uppercase font-bold tracking-wider">{isAdmin ? 'Admin' : 'Member'}</span>
+                    <span className="text-cyan-400 text-[10px] uppercase font-bold tracking-wider">{isAdmin ? 'Admin' : 'Member'}</span>
                   </div>
                   
                   {/* Dropdown for desktop user */}
-                  <div className="absolute top-full right-0 mt-1 w-48 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all shadow-2xl z-[60]">
-                    <div className="px-4 py-2 border-b border-[var(--color-border)] mb-1 text-white text-xs font-bold truncate">
+                  <div className="absolute top-full right-0 mt-1 w-48 bg-[#0a101f] border border-white/10 rounded-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all shadow-2xl z-[60]">
+                    <div className="px-4 py-2 border-b border-white/5 mb-1 text-white text-xs font-bold truncate">
                       {user.email || 'Cloud User'}
                     </div>
                     {isAdmin && (
@@ -104,12 +93,9 @@ export default function Navbar() {
                         <Shield size={14} /> Admin Panel
                       </button>
                     )}
-                    <button className="w-full text-left px-4 py-2 text-sm text-[var(--color-text-dim)] hover:text-white hover:bg-white/5 flex items-center gap-2 transition-colors">
-                      <UserIcon size={14} /> My Profile
-                    </button>
                     <button 
                       onClick={logout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/5 flex items-center gap-2 transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 flex items-center gap-2 transition-colors"
                     >
                       <LogOut size={14} /> Logout
                     </button>
@@ -119,16 +105,11 @@ export default function Navbar() {
             ) : (
               <div className="flex gap-2">
                 <button 
-                  onClick={loginDiscord}
-                  className="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-4 py-2 rounded-md transition-all text-sm font-bold"
-                >
-                  Discord
-                </button>
-                <button 
                   onClick={loginGoogle}
-                  className="bg-[#00F0FF] hover:bg-[#00D8E6] text-black px-4 py-2 rounded-md transition-all text-sm font-bold shadow-lg shadow-[#00F0FF]/20"
+                  className="bg-white text-black hover:bg-zinc-200 px-5 py-2.5 rounded-lg transition-all text-sm font-bold shadow-md flex items-center gap-2"
                 >
-                  Google Login
+                  <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 7.368l6.817 5.281C43.518 35.803 48 29.5 48 24c0-1.353-.167-2.673-.448-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.368l6.19 5.238C36.971 39.205 44 34 44 24c0-1.353-.167-2.673-.448-3.917z"/></svg>
+                  Login with Google
                 </button>
               </div>
             )}
@@ -148,12 +129,12 @@ export default function Navbar() {
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="lg:hidden bg-[var(--color-surface)] border-b border-[var(--color-border)] p-6 absolute w-full left-0 top-16 shadow-2xl"
+            className="lg:hidden bg-[#050914] border-b border-white/5 p-6 absolute w-full left-0 top-16 shadow-2xl"
           >
             <div className="flex flex-col gap-6 font-medium">
-              <a href="#" className="text-white">Home</a>
-              <MobileNavLink label="Game Servers" />
-              <MobileNavLink label="Root Servers" />
+              <a href="#" onClick={(e) => scrollTo("root", e)} className="text-white">Home</a>
+              <a href="#games" onClick={(e) => scrollTo("games", e)} className="text-zinc-300">Game Servers</a>
+              <a href="#pricing" onClick={(e) => scrollTo("pricing", e)} className="text-zinc-300">Root Servers</a>
               {isAdmin && (
                 <button 
                   onClick={() => { setIsOpen(false); window.dispatchEvent(new CustomEvent('OPEN_ADMIN_PANEL')); }} 
@@ -162,13 +143,13 @@ export default function Navbar() {
                   Admin Panel
                 </button>
               )}
-              <div className="pt-4 border-t border-[var(--color-border)] flex flex-col gap-4">
+              <div className="pt-4 border-t border-white/5 flex flex-col gap-4">
                 {loading ? (
                   <div className="h-10 bg-white/5 animate-pulse rounded-md" />
                 ) : user ? (
                   <div className="flex flex-col gap-4">
-                    <div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg">
-                      <div className="w-10 h-10 rounded-full border border-[var(--color-border)] overflow-hidden bg-[var(--color-surface)]">
+                    <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                      <div className="w-10 h-10 rounded-full border border-white/10 overflow-hidden bg-black">
                         {user.photoURL ? (
                           <img 
                             src={user.photoURL} 
@@ -183,12 +164,12 @@ export default function Navbar() {
                       </div>
                       <div className="flex flex-col overflow-hidden">
                         <span className="text-white text-sm font-bold truncate">{user.displayName}</span>
-                        <span className="text-[var(--color-text-dim)] text-xs truncate">{user.email || 'Cloud User'}</span>
+                        <span className="text-zinc-400 text-xs truncate">{user.email || 'Cloud User'}</span>
                       </div>
                     </div>
                     <button 
                       onClick={logout}
-                      className="border border-red-500/30 text-red-400 py-2 rounded-md hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2"
+                      className="border border-red-500/30 text-red-400 py-2.5 rounded-lg hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2 font-bold"
                     >
                       <LogOut size={16} /> Logout
                     </button>
@@ -196,16 +177,11 @@ export default function Navbar() {
                 ) : (
                   <div className="flex flex-col gap-2">
                     <button 
-                      onClick={loginDiscord}
-                      className="border border-white/10 text-white py-2 rounded-md hover:bg-white/5 transition-colors font-bold"
-                    >
-                      Discord Login
-                    </button>
-                    <button 
                       onClick={loginGoogle}
-                      className="bg-[#00F0FF] text-black font-bold py-2 rounded-md hover:bg-[#00D8E6] transition-colors"
+                      className="bg-white text-black font-bold py-3 rounded-lg hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
                     >
-                      Google Login
+                      <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 7.368l6.817 5.281C43.518 35.803 48 29.5 48 24c0-1.353-.167-2.673-.448-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.368l6.19 5.238C36.971 39.205 44 34 44 24c0-1.353-.167-2.673-.448-3.917z"/></svg>
+                      Login with Google
                     </button>
                   </div>
                 )}
@@ -215,23 +191,5 @@ export default function Navbar() {
         )}
       </nav>
     </>
-  );
-}
-
-function NavLink({ label, hasDropdown = false }: { label: string; hasDropdown?: boolean }) {
-  return (
-    <div className="flex items-center gap-1 text-[var(--color-text-dim)] hover:text-white cursor-pointer transition-colors">
-      {label}
-      {hasDropdown && <ChevronDown size={14} className="opacity-70" />}
-    </div>
-  );
-}
-
-function MobileNavLink({ label }: { label: string }) {
-  return (
-    <div className="flex items-center justify-between text-[var(--color-text-dim)] hover:text-white transition-colors cursor-pointer">
-      {label}
-      <ChevronDown size={16} />
-    </div>
   );
 }

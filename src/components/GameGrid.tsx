@@ -9,13 +9,13 @@ export default function GameGrid() {
     { 
       name: "Minecraft Java", 
       icon: Gamepad2, 
-      imgUrl: "https://images.unsplash.com/photo-1607853202273-797f1c22a38e?auto=format&fit=crop&w=600&q=80",
+      imgUrl: "https://cdn.discordapp.com/attachments/1414251304741638191/1497103165689167923/qHFzGKFBz7kvxiVyjoe6JJ-1024-80.jpg.webp?ex=69ec4d79&is=69eafbf9&hm=64da41b1e798c241415d4e30b7b51721e814a58528f3ad12d92dd7a93f385bff&",
       key: "MC_THUMB"
     },
     { 
       name: "VPS Hosting", 
       icon: Server, 
-      imgUrl: "https://images.unsplash.com/photo-1558494949253-e5223abfb21a?auto=format&fit=crop&w=600&q=80",
+      imgUrl: "https://cdn.discordapp.com/attachments/1414251304741638191/1497102751035818027/Screenshot_2026_0424_104140.jpg?ex=69ec4d16&is=69eafb96&hm=4b7a1372dae2dc0cd114ae7c6fabbd3bf6d65fdc221aaea5eea9887c094f938f&",
       key: "VPS_THUMB"
     },
   ]);

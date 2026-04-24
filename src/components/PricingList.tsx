@@ -61,7 +61,7 @@ export default function PricingList() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verificationResult, setVerificationResult] = useState<{success?: boolean, error?: string, credentials?: any, serverStatus?: string} | null>(null);
   const [billingStep, setBillingStep] = useState(1); // 1: Config, 2: Payment, 3: Success
-  const { discordUser: user } = useAuth();
+  const { firebaseUser: user } = useAuth();
 
   useEffect(() => {
     async function loadPlans() {
@@ -94,7 +94,7 @@ export default function PricingList() {
     if (user) {
       reset({
         email: user.email || "",
-        username: user.username || "",
+        username: user.displayName || "",
         upiId: "",
         utrId: "",
         date: new Date().toISOString().split('T')[0],
@@ -443,7 +443,9 @@ export default function PricingList() {
                               <AlertCircle size={32} className="text-red-500" />
                             </div>
                             <h3 className="text-xl font-bold text-white mb-2">Verification Failed</h3>
-                            <p className="text-red-400 bg-red-500/5 p-4 rounded-xl border border-red-500/20 text-sm mb-8">{verificationResult.error}</p>
+                            <p className="text-red-400 bg-red-500/10 p-5 rounded-2xl border border-red-500/20 text-sm mb-8 font-mono shadow-[inset_0_0_20px_rgba(239,68,68,0.05)] leading-relaxed">
+                              {verificationResult.error}
+                            </p>
                             <button onClick={() => setVerificationResult(null)} className="w-full py-4 bg-[#00F0FF] text-black font-black rounded-xl uppercase tracking-widest">
                               Try Again
                             </button>

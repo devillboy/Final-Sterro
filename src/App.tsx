@@ -39,26 +39,34 @@ export default function App() {
     <AuthProvider>
       <CursorGlow />
       {showAdmin && <AdminPanel />}
-      <div className="relative selection:bg-[#00F0FF] selection:text-black bg-[var(--color-bg-main)] min-h-screen overflow-x-hidden perspective-1000">
+      <div id="root" className="relative selection:bg-[#00F0FF] selection:text-black bg-[#050914] min-h-screen overflow-x-hidden text-white font-sans">
         {/* Animated Background Glow */}
         <div className="fixed inset-0 pointer-events-none z-0">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#00F0FF]/10 blur-[120px] rounded-full animate-pulse" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-600/10 blur-[120px] rounded-full animate-pulse delay-1000" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full animate-pulse delay-1000" />
         </div>
 
         {/* Progress Bar */}
         <motion.div 
-          className="fixed top-0 left-0 right-0 h-[2px] bg-[#00F0FF] z-[100] origin-left" 
+          className="fixed top-0 left-0 right-0 h-[2px] bg-[#00F0FF] z-[100] origin-left shadow-[0_0_10px_#00F0FF]" 
           style={{ scaleX }} 
         />
 
         <Navbar />
         
         <main>
-          <Hero />
-          <GameGrid />
-          <Services />
-          <PricingList />
+          <div id="hero">
+            <Hero />
+          </div>
+          <div id="games">
+            <GameGrid />
+          </div>
+          <div id="services">
+            <Services />
+          </div>
+          <div id="pricing">
+            <PricingList />
+          </div>
           <Features />
           <Protection />
           <FAQ />
