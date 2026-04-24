@@ -203,7 +203,7 @@ app.post("/api/trial/claim", async (req, res) => {
       let serverRes = null;
       let extError = null;
       try {
-          serverRes = await createPterodactylServer(userRes.id, "1 Hour Free Trial", "Sterro Trial Server", nodeId, { memory: 4096, cpu: 150, disk: 102400, databases: 1, backups: 0, ports: 1 });
+          serverRes = await createPterodactylServer(userRes.id, "1 Hour Free Trial", "Sterro Trial Server", nodeId, { memory: 1024, cpu: 50, disk: 5000, databases: 0, backups: 0, ports: 1 });
           
           if (serverRes && serverRes.id) {
               // Automatically suspend after 1 hour
@@ -233,7 +233,8 @@ app.post("/api/trial/claim", async (req, res) => {
               }, 60 * 60 * 1000);
           }
       } catch(e: any) { 
-          throw new Error("Server Provisioning Failed: " + e.message);
+          console.error("Trial Server Provisioning Failed:", e);
+          extError = "User account created, but the trial server could not be allocated due to insufficient node resources. (" + (e.message.includes('NoViableNodeException') ? 'No Allocations Available' : e.message) + ")";
       }
 
       // Persist trial claim
@@ -242,7 +243,7 @@ app.post("/api/trial/claim", async (req, res) => {
       res.json({
           success: true,
           credentials: { panelUrl: PTERODACTYL_PANEL_URL, username: username || email.split("@")[0], email: email, password: userRes.password },
-          serverStatus: "Trial Server provisioned! It will automatically suspend in 1 Hour."
+          serverStatus: extError || "Trial Server provisioned! It will automatically suspend in 1 Hour."
       });
   } catch (e: any) {
       res.status(500).json({error: e.message});
@@ -311,7 +312,7 @@ app.post("/api/verify-payment", upload.single("screenshot"), async (req, res) =>
     let verificationResult;
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash",
         contents: { parts: [imagePart, textPart] },
         config: { 
           responseMimeType: "application/json"
