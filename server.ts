@@ -95,15 +95,28 @@ async function createPterodactylUser(email: string, username: string, firstName:
   const response = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/users`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({ email, username: safeUsername, first_name: firstName, last_name: lastName, password })
+    body: JSON.stringify({ email, username: safeUsername, first_name: firstName, last_name: lastName, password }),
+    signal: AbortSignal.timeout(3000)
   });
 
   if (!response.ok) {
     const errorText = await response.text();
     if (errorText.includes('has already been taken')) {
-       // Ideally we fetch the user, but for now randomly mutate username/email if collision to succeed creating the server
+       try {
+           const getRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/users?filter[email]=${encodeURIComponent(email)}`, {
+               headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' },
+               signal: AbortSignal.timeout(3000)
+           });
+           if (getRes.ok) {
+               const getData = await getRes.json() as any;
+               if (getData.data && getData.data.length > 0) {
+                   return { id: getData.data[0].attributes.id, password };
+               }
+           }
+       } catch (e) {}
+       
        const rnd = Math.floor(Math.random()*1000);
-       return createPterodactylUser(`${rnd}${email}`, `${safeUsername}${rnd}`, firstName, lastName, passwordInput);
+       return createPterodactylUser(`${rnd}__${email}`, `${safeUsername}${rnd}`, firstName, lastName, passwordInput);
     }
     throw new Error(`Failed to create Panel User (${response.status}): ${errorText}`);
   }
@@ -150,44 +163,6 @@ async function createPterodactylServer(userId: number, planName: string, serverN
   const locationId = parseInt(nodeIdStr || "1", 10);
   const selectedEggConfig = EGG_CONFIGS[eggIdStr || "4"] || EGG_CONFIGS["4"];
   
-  // Find an unassigned allocation to avoid Pterodactyl Auto-Deploy bugs
-  let selectedAllocId = null;
-  
-  try {
-     const nodesRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes?per_page=100`, {
-       headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' }
-     });
-
-     if (nodesRes && nodesRes.ok) {
-        const nodesData = await nodesRes.json() as any;
-        const locationNodes = (nodesData.data || []).filter((node: any) => node.attributes.location_id === locationId);
-        
-        // Fetch allocations in parallel to be as fast as possible
-        const allocPromises = locationNodes.map(async (node: any) => {
-            try {
-              const allocRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes/${node.attributes.id}/allocations?per_page=100`, {
-                  headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' }
-              });
-              if (allocRes.ok) {
-                 const allocData = await allocRes.json() as any;
-                 return allocData.data?.find((d: any) => !d.attributes.assigned);
-              }
-            } catch(e) { }
-            return null;
-        });
-
-        const results = await Promise.all(allocPromises);
-        for (const unassigned of results) {
-            if (unassigned) {
-                selectedAllocId = unassigned.attributes.id;
-                break;
-            }
-        }
-     }
-  } catch (e) {
-     console.error("Failed fetching nodes:", e);
-  }
-
   const serverBody: any = {
     name: serverName,
     user: userId,
@@ -198,23 +173,19 @@ async function createPterodactylServer(userId: number, planName: string, serverN
     environment: selectedEggConfig.environment,
     limits: { memory: limits.memory, swap: 0, disk: limits.disk, io: 500, cpu: limits.cpu },
     feature_limits: { databases: limits.databases, backups: limits.backups, allocations: limits.ports },
-  };
-
-  if (selectedAllocId) {
-     serverBody.allocation = { default: selectedAllocId };
-     serverBody.feature_limits.allocations = 0; // Prevent Panel from trying to allocate more ports if we already set the default
-  } else {
-     serverBody.deploy = {
+    deploy: {
        locations: [locationId],
        dedicated_ip: false,
        port_range: []
-     };
-  }
+    },
+    start_on_completion: false
+  };
 
   const response = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/servers`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify(serverBody)
+    body: JSON.stringify(serverBody),
+    signal: AbortSignal.timeout(15000)
   });
 
   if (!response.ok) {
