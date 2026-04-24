@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext';
 import WorldMap from './WorldMap';
 import { db } from '../lib/firebase';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, getDoc, doc } from 'firebase/firestore';
 
 interface PaymentFormData {
   utrId: string;
@@ -71,7 +71,22 @@ export default function PricingList() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verificationResult, setVerificationResult] = useState<{success?: boolean, error?: string, credentials?: any, serverStatus?: string} | null>(null);
   const [billingStep, setBillingStep] = useState(1); // 1: Config, 2: Payment, 3: Success
+  const [hasClaimedTrial, setHasClaimedTrial] = useState(false);
   const { firebaseUser: user } = useAuth();
+
+  useEffect(() => {
+    async function checkTrialStatus() {
+      if (user?.email) {
+        try {
+          const trialDoc = await getDoc(doc(db, "trials", user.email));
+          if (trialDoc.exists()) {
+            setHasClaimedTrial(true);
+          }
+        } catch(e) { }
+      }
+    }
+    checkTrialStatus();
+  }, [user]);
 
   useEffect(() => {
     async function loadPlans() {
@@ -158,15 +173,21 @@ export default function PricingList() {
         body: formData,
       });
 
-      const result = await response.json();
+      let result;
+      const text = await response.text();
+      try {
+        result = JSON.parse(text);
+      } catch (e) {
+        throw new Error(`Server returned ${response.status}: ${text.substring(0, 100)}`);
+      }
       
       if (response.ok) {
         setVerificationResult({ success: true, credentials: result.credentials, serverStatus: result.serverStatus });
       } else {
         setVerificationResult({ error: result.error || result.reason || 'Verification failed.' });
       }
-    } catch (error) {
-      setVerificationResult({ error: 'Connection error while contacting AI Gateway.' });
+    } catch (error: any) {
+      setVerificationResult({ error: error.message || 'Connection error while contacting AI Gateway.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -189,9 +210,6 @@ export default function PricingList() {
     setVerificationResult(null);
 
     try {
-      // Artificial delay as requested
-      await new Promise(resolve => setTimeout(resolve, 6000));
-
       const response = await fetch('/api/trial/claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -205,14 +223,21 @@ export default function PricingList() {
         }),
       });
 
-      const result = await response.json();
+      let result;
+      const text = await response.text();
+      try {
+        result = JSON.parse(text);
+      } catch (e) {
+        throw new Error(`Server returned ${response.status}: ${text.substring(0, 100)}`);
+      }
+
       if (response.ok) {
         setVerificationResult({ success: true, credentials: result.credentials, serverStatus: result.serverStatus });
       } else {
         setVerificationResult({ error: result.error || 'Verification failed.' });
       }
-    } catch (error) {
-      setVerificationResult({ error: 'Connection error while provisioning Trial.' });
+    } catch (error: any) {
+      setVerificationResult({ error: error.message || 'Connection error while provisioning Trial.' });
     } finally {
       setIsSkeletonLoading(false);
     }
@@ -273,7 +298,7 @@ export default function PricingList() {
             </>
           ) : (
             <>
-              {activeTab === 'minecraft' && minecraftPlans.map((p, i) => (
+              {activeTab === 'minecraft' && minecraftPlans.filter(p => hasClaimedTrial ? !p.isTrial : true).map((p, i) => (
                 <motion.div
                   key={`mc-${i}`}
               initial={{ opacity: 0, y: 20 }}

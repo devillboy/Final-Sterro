@@ -503,7 +503,7 @@ async function startServer() {
 }
 
 // Only start the server natively if we are not running in a Vercel Serverless environment
-if (!process.env.VERCEL) {
+if (!process.env.VERCEL && !process.env.NETLIFY && process.env.NODE_ENV !== 'test') {
   startServer();
 }
 
