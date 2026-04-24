@@ -22,12 +22,6 @@ export default function Footer() {
             <p className="text-white/40 max-w-sm leading-relaxed">
               Sterro Cloud provides high-performance hosting solutions engineered for speed, security, and scalability. Your vision, our hardware.
             </p>
-            <div className="flex gap-4">
-              <SocialIcon icon={<Twitter size={18} />} />
-              <SocialIcon icon={<Instagram size={18} />} />
-              <SocialIcon icon={<Github size={18} />} />
-              <SocialIcon icon={<MessageCircle size={18} />} />
-            </div>
           </div>
 
           <div>
