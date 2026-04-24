@@ -154,18 +154,27 @@ async function createPterodactylServer(userId: number, planName: string, serverN
   });
   if (nodesRes.ok) {
      const nodesData = await nodesRes.json() as any;
-     for (const node of (nodesData.data || [])) {
-        const allocRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes/${node.attributes.id}/allocations?per_page=100`, {
-            headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' }
-        });
-        if (allocRes.ok) {
-           const allocData = await allocRes.json() as any;
-           const unassigned = allocData.data?.find((d: any) => !d.attributes.assigned);
-           if (unassigned) {
-               selectedAllocId = unassigned.attributes.id;
-               break;
-           }
-        }
+     
+     // Fetch allocations in parallel to avoid Vercel 10s Serverless timeout
+     const allocPromises = (nodesData.data || []).map(async (node: any) => {
+        try {
+          const allocRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes/${node.attributes.id}/allocations?per_page=100`, {
+              headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' }
+          });
+          if (allocRes.ok) {
+             const allocData = await allocRes.json() as any;
+             return allocData.data?.find((d: any) => !d.attributes.assigned);
+          }
+        } catch(e) { console.error(e); }
+        return null;
+     });
+     
+     const results = await Promise.all(allocPromises);
+     for (const unassigned of results) {
+         if (unassigned) {
+             selectedAllocId = unassigned.attributes.id;
+             break;
+         }
      }
   }
 
