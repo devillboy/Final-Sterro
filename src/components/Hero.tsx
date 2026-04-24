@@ -4,7 +4,7 @@ import { db } from "../lib/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 
 export default function Hero() {
-  const [bgUrl, setBgUrl] = useState("/hero-bg.jpg");
+  const [bgUrl, setBgUrl] = useState("/hero-bg-v4.jpg");
 
   useEffect(() => {
     async function loadAssets() {

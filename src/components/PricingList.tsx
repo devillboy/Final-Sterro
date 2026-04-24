@@ -260,22 +260,19 @@ export default function PricingList() {
               {activeTab === 'minecraft' && minecraftPlans.map((p, i) => (
                 <motion.div
                   key={`mc-${i}`}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               whileHover={{ 
-                scale: 1.01, 
-                rotateY: 1, 
-                rotateX: 0.5, 
-                z: 15,
-                boxShadow: "0 25px 50px -12px rgba(0, 240, 255, 0.25)"
+                y: -4,
+                boxShadow: "0 20px 40px -12px rgba(0, 240, 255, 0.15)"
               }}
               viewport={{ once: true }}
-              transition={{ duration: 0.15, ease: "easeOut" }}
-              className={`bg-[var(--color-surface)] border shadow-3d-lg preserve-3d ${p.highlight ? 'border-[#00F0FF] glow-primary-strong relative z-10' : 'border-[var(--color-border)]'} rounded-4xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 justify-between hover:border-[#00F0FF]/60 transition-colors cursor-default group overflow-hidden`}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className={`bg-[var(--color-surface)] border ${p.highlight ? 'border-[#00F0FF]/50 shadow-[0_0_30px_rgba(0,240,255,0.1)] relative z-10' : 'border-[var(--color-border)]'} rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 justify-between hover:border-[#00F0FF]/50 transition-all cursor-default group overflow-hidden`}
             >
               {p.imageUrl && (
-                <div className="absolute inset-0 z-0 opacity-[0.08] mix-blend-screen pointer-events-none transition-opacity duration-500 group-hover:opacity-20 flex items-center justify-center overflow-hidden">
-                   <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover scale-110" />
+                <div className="absolute inset-0 z-0 opacity-[0.05] mix-blend-screen pointer-events-none transition-opacity duration-500 group-hover:opacity-10 flex items-center justify-center overflow-hidden">
+                   <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover scale-110" onError={(e) => (e.currentTarget.style.display = 'none')} />
                    <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-surface)] via-[var(--color-surface)]/80 to-transparent" />
                 </div>
               )}
@@ -288,14 +285,14 @@ export default function PricingList() {
                 </div>
                 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-4 text-[13px] font-semibold">
-                  <div className="flex items-center gap-2"><MemoryStick size={16} className="text-[#00F0FF]"/> <span className="text-white">{p.ram}</span></div>
-                  <div className="flex items-center gap-2"><HardDrive size={16} className="text-[#00F0FF]"/> <span className="text-white">{p.storage || p.ssd}</span></div>
-                  <div className="flex items-center gap-2"><Cpu size={16} className="text-[#00F0FF]"/> <span className="text-white">{p.cpu}</span></div>
-                  <div className="flex items-center gap-2"><Network size={16} className="text-[#00F0FF]"/> <span className="text-[var(--color-text-dim)]">{p.ports}</span></div>
-                  <div className="flex items-center gap-2"><Archive size={16} className="text-[#00F0FF]"/> <span className="text-[var(--color-text-dim)]">{p.backups || 'Standard Backups'}</span></div>
-                  <div className="flex items-center gap-2"><Database size={16} className="text-[#00F0FF]"/> <span className="text-[var(--color-text-dim)]">{p.db || 'MySQL DB'}</span></div>
-                  <div className="flex items-center gap-2"><Shield size={16} className="text-[#00F0FF]"/> <span className="text-[var(--color-text-dim)]">{p.ddos || '10Gbps Protection'}</span></div>
-                  <div className="flex items-center gap-2"><Users size={16} className="text-[#00F0FF]"/> <span className="text-[var(--color-text-dim)]">{p.players || 'Unlimited'}</span></div>
+                  <div className="flex items-center gap-2"><MemoryStick size={16} className="text-[#00F0FF]"/> <span className="text-zinc-200">{p.ram}</span></div>
+                  <div className="flex items-center gap-2"><HardDrive size={16} className="text-[#00F0FF]"/> <span className="text-zinc-200">{p.storage || p.ssd}</span></div>
+                  <div className="flex items-center gap-2"><Cpu size={16} className="text-[#00F0FF]"/> <span className="text-zinc-200">{p.cpu}</span></div>
+                  <div className="flex items-center gap-2"><Network size={16} className="text-[#00F0FF]"/> <span className="text-zinc-400">{p.ports}</span></div>
+                  <div className="flex items-center gap-2"><Archive size={16} className="text-[#00F0FF]"/> <span className="text-zinc-400">{p.backups || 'Standard Backups'}</span></div>
+                  <div className="flex items-center gap-2"><Database size={16} className="text-[#00F0FF]"/> <span className="text-zinc-400">{p.db || 'MySQL DB'}</span></div>
+                  <div className="flex items-center gap-2"><Shield size={16} className="text-[#00F0FF]"/> <span className="text-zinc-400">{p.ddos || '10Gbps Protection'}</span></div>
+                  <div className="flex items-center gap-2"><Users size={16} className="text-[#00F0FF]"/> <span className="text-zinc-400">{p.players || 'Unlimited'}</span></div>
                 </div>
               </div>
 
@@ -308,8 +305,8 @@ export default function PricingList() {
                      setSelectedPlan(p);
                    }
                  }}
-                 className={`w-full md:w-auto px-10 py-3.5 rounded-lg font-bold text-white transition-colors text-sm shadow-lg ${(p as any).isTrial ? 'bg-[#5865F2] hover:bg-[#4752C4] shadow-[#5865F2]/20' : (p.highlight ? 'bg-[#00F0FF] text-black hover:bg-[#00D8E6] shadow-[#00F0FF]/20' : 'bg-black hover:bg-[#0e0e0e] border border-[#00F0FF]/30 hover:border-[#00F0FF]')} `}>
-                 {(p as any).isTrial ? 'Claim Free Trial' : p.type === 'vps' ? 'Buy on Discord' : 'Buy Plan'}
+                 className={`w-full md:w-auto px-10 py-3.5 rounded-lg font-bold text-white transition-all duration-300 text-sm shadow-md ${(p as any).isTrial ? 'bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40' : (p.highlight ? 'bg-[#00F0FF] text-black hover:bg-[#00D8E6]' : 'bg-black hover:bg-white/5 border border-white/10 hover:border-white/30')} `}>
+                 {(p as any).isTrial ? 'Claim Free Trial' : p.type === 'vps' ? 'Buy VPS' : 'Deploy Now'}
                </button>
               </div>
             </motion.div>
@@ -318,22 +315,19 @@ export default function PricingList() {
           {activeTab === 'vps' && vpsPlans.map((p, i) => (
              <motion.div
               key={`vps-${i}`}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               whileHover={{ 
-                scale: 1.01, 
-                rotateY: -1, 
-                rotateX: 0.5, 
-                z: 15,
-                boxShadow: "0 25px 50px -12px rgba(0, 240, 255, 0.25)"
+                y: -4,
+                boxShadow: "0 20px 40px -12px rgba(0, 240, 255, 0.15)"
               }}
               viewport={{ once: true }}
-              transition={{ duration: 0.15, ease: "easeOut" }}
-              className={`bg-[var(--color-surface)] border shadow-3d-lg preserve-3d ${p.highlight ? 'border-[#00F0FF] glow-primary-strong relative z-10' : 'border-[var(--color-border)]'} rounded-4xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 justify-between hover:border-[#00F0FF]/60 transition-colors cursor-default group overflow-hidden`}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className={`bg-[var(--color-surface)] border ${p.highlight ? 'border-[#00F0FF]/50 shadow-[0_0_30px_rgba(0,240,255,0.1)] relative z-10' : 'border-[var(--color-border)]'} rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 justify-between hover:border-[#00F0FF]/50 transition-all cursor-default group overflow-hidden`}
            >
               {p.imageUrl && (
-                <div className="absolute inset-0 z-0 opacity-[0.08] mix-blend-screen pointer-events-none transition-opacity duration-500 group-hover:opacity-20 flex items-center justify-center overflow-hidden">
-                   <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover scale-110" />
+                <div className="absolute inset-0 z-0 opacity-[0.05] mix-blend-screen pointer-events-none transition-opacity duration-500 group-hover:opacity-10 flex items-center justify-center overflow-hidden">
+                   <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover scale-110" onError={(e) => (e.currentTarget.style.display = 'none')} />
                    <div className="absolute inset-0 bg-gradient-to-l from-[var(--color-surface)] via-[var(--color-surface)]/80 to-transparent" />
                 </div>
               )}
@@ -346,10 +340,10 @@ export default function PricingList() {
                </div>
                
                <div className="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-4 text-[14px] font-semibold">
-                 <div className="flex items-center gap-2"><MemoryStick size={18} className="text-[#00F0FF]"/> <span className="text-white">{p.ram}</span></div>
-                 <div className="flex items-center gap-2"><Cpu size={18} className="text-[#00F0FF]"/> <span className="text-white">{p.cpu}</span></div>
-                 <div className="flex items-center gap-2"><HardDrive size={18} className="text-[#00F0FF]"/> <span className="text-[var(--color-text-dim)]">NVMe SSD</span></div>
-                 <div className="flex items-center gap-2"><Network size={18} className="text-[#00F0FF]"/> <span className="text-[var(--color-text-dim)]">High Speed Uplink</span></div>
+                 <div className="flex items-center gap-2"><MemoryStick size={18} className="text-[#00F0FF]"/> <span className="text-zinc-200">{p.ram}</span></div>
+                 <div className="flex items-center gap-2"><Cpu size={18} className="text-[#00F0FF]"/> <span className="text-zinc-200">{p.cpu}</span></div>
+                 <div className="flex items-center gap-2"><HardDrive size={18} className="text-[#00F0FF]"/> <span className="text-zinc-400">NVMe SSD</span></div>
+                 <div className="flex items-center gap-2"><Network size={18} className="text-[#00F0FF]"/> <span className="text-zinc-400">High Speed Uplink</span></div>
                </div>
              </div>
 
@@ -366,8 +360,8 @@ export default function PricingList() {
                      setSelectedPlan(p);
                    }
                  }}
-                 className={`w-full md:w-auto px-10 py-3.5 rounded-lg font-bold text-white transition-colors text-sm shadow-lg ${p.highlight ? 'bg-[#00F0FF] text-black hover:bg-[#00D8E6] shadow-[#00F0FF]/20' : 'bg-[var(--color-bg-main)] hover:bg-[#00F0FF]/10 border border-[#00F0FF]/30 hover:border-[#00F0FF]'} `}>
-                 Buy on Discord
+                 className={`w-full md:w-auto px-10 py-3.5 rounded-lg font-bold text-white transition-all duration-300 text-sm shadow-md ${p.highlight ? 'bg-[#00F0FF] text-black hover:bg-[#00D8E6]' : 'bg-black hover:bg-white/5 border border-white/10 hover:border-white/30'} `}>
+                 Deploy VPS
                </button>
              </div>
            </motion.div>
@@ -394,9 +388,9 @@ export default function PricingList() {
               >
               <div className="p-6 border-b border-[var(--color-border)] flex items-center justify-between shrink-0 bg-[#070b19]">
                 <div>
-                  <h3 className="text-xl font-bold text-white">{selectedPlan.isTrial ? 'Discord Trial Verification' : 'AI Purchase Gateway'}</h3>
+                  <h3 className="text-xl font-bold text-white">{selectedPlan.isTrial ? 'Trial Server Setup' : 'AI Purchase Gateway'}</h3>
                   <p className="text-sm text-[var(--color-text-dim)]">
-                    {selectedPlan.isTrial ? 'Verify via Discord bot to claim your 1-hour free trial' : `Purchasing ${selectedPlan.name || `${selectedPlan.ram} Intel VPS`} for ₹${selectedPlan.price}/mo`}
+                    {selectedPlan.isTrial ? 'Complete verification to claim your 1-hour free trial' : `Purchasing ${selectedPlan.name || `${selectedPlan.ram} Intel VPS`} for ₹${selectedPlan.price}/mo`}
                   </p>
                 </div>
                 <button onClick={closeDialog} className="p-2 hover:bg-white/10 rounded-full transition-all text-white/40 hover:text-white"><X size={20}/></button>

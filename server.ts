@@ -57,7 +57,7 @@ const ai = new GoogleGenAI({
 // Pterodactyl Config
 const PTERODACTYL_API_KEY = process.env.PTERODACTYL_API_KEY || 'ptla_yDDZ3d0e8Gn4tpZ4h9pGveVxIFcahxrI97VgVDO29hU';
 const PTERODACTYL_PANEL_URL = process.env.PTERODACTYL_PANEL_URL || "https://panel.sterro.cloud"; 
-const DefaultEggId = parseInt(process.env.PTERODACTYL_EGG_ID || "1", 10);
+const DefaultEggId = parseInt(process.env.PTERODACTYL_EGG_ID || "4", 10);
 const DefaultNestId = parseInt(process.env.PTERODACTYL_NEST_ID || "1", 10);
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || "MTQ5Njc0MjgxODA0MTgyNzM0OQ.GzvkKq.Y4zukBTPocc1tka3pSkVebzoIcmHlzIstRbP-c";
 
@@ -227,7 +227,11 @@ async function createPterodactylServer(userId: number, planName: string, serverN
       nest: DefaultNestId, 
       docker_image: "ghcr.io/pterodactyl/yolks:java_17",
       startup: "java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}",
-      environment: { SERVER_JARFILE: "server.jar", BUILD_NUMBER: "latest" },
+      environment: { 
+        SERVER_JARFILE: "server.jar", 
+        BUILD_NUMBER: "latest",
+        MINECRAFT_VERSION: "latest"
+      },
       limits: { memory: limits.memory, swap: 0, disk: limits.disk, io: 500, cpu: limits.cpu },
       feature_limits: { databases: limits.databases, backups: limits.backups, allocations: limits.ports },
       allocation: {
@@ -338,7 +342,9 @@ app.post("/api/trial/claim", async (req, res) => {
                   }
               }, 60 * 60 * 1000);
           }
-      } catch(e: any) { extError = e.message; }
+      } catch(e: any) { 
+          throw new Error("Server Provisioning Failed: " + e.message);
+      }
 
       // Persist trial claim
       try { await setDoc(doc(db, 'trials', email), { claimedAt: new Date().toISOString(), serverId: serverRes?.id || 'unknown' }); } catch(e) {}
@@ -346,7 +352,7 @@ app.post("/api/trial/claim", async (req, res) => {
       res.json({
           success: true,
           credentials: { panelUrl: PTERODACTYL_PANEL_URL, username: username || email.split("@")[0], email: email, password: userRes.password },
-          serverStatus: extError || "Trial Server provisioned! It will automatically suspend in 1 Hour."
+          serverStatus: "Trial Server provisioned! It will automatically suspend in 1 Hour."
       });
   } catch (e: any) {
       res.status(500).json({error: e.message});
@@ -468,7 +474,7 @@ app.post("/api/verify-payment", upload.single("screenshot"), async (req, res) =>
         serverRes = await createPterodactylServer(userRes.id, planName, `${planName} Server`, nodeId, dynamicLimits);
       } catch (err: any) {
         console.error("Server Creation Failed: ", err);
-        serverCreationError = `User Account created successfully, but Server provisioning was delayed due to Panel Allocation limits (Need to map correct Egg/Node IDs). Error: ${err.message}`;
+        serverCreationError = "User Account created successfully, but Server provisioning was delayed due to Panel Allocation limits (Need to map correct Egg/Node IDs). Error: " + err.message;
       }
 
       res.json({

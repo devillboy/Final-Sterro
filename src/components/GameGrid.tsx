@@ -54,28 +54,26 @@ export default function GameGrid() {
             return (
               <motion.div
                 key={i}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 whileHover={{ 
-                  scale: 1.01, 
-                  rotateY: i % 2 === 0 ? 1 : -1,
-                  z: 20,
-                  boxShadow: "0 25px 50px -12px rgba(0, 240, 255, 0.25)"
+                  y: -5,
+                  boxShadow: "0 20px 40px -12px rgba(0, 240, 255, 0.15)"
                 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
                 viewport={{ once: true }}
-                className="relative bg-[var(--color-surface)] border border-[var(--color-border)] rounded-4xl overflow-hidden group cursor-pointer w-full md:w-[calc(50%-1rem)] h-80 hover:border-[#00F0FF]/50 transition-colors duration-300 preserve-3d shadow-3d"
+                className="relative bg-[#050914] border border-[#121b2b] rounded-3xl overflow-hidden group cursor-pointer w-full md:w-[calc(50%-1rem)] h-80 hover:border-[#00F0FF]/30 transition-all duration-300"
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-main)] via-[var(--color-bg-main)]/60 to-transparent z-10" />
-                <div className="absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity duration-500 group-hover:scale-105">
-                  <img src={game.imgUrl} className="w-full h-full object-cover" alt={game.name} />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#000000] via-black/60 to-transparent z-10" />
+                <div className="absolute inset-0 opacity-40 group-hover:opacity-50 transition-all duration-700 ease-out group-hover:scale-105">
+                  <img src={game.imgUrl} className="w-full h-full object-cover" alt={game.name} onError={(e) => (e.currentTarget.style.display = 'none')} />
                 </div>
                 
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center pt-24">
-                  <div className="w-16 h-16 mb-4 bg-white/5 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10 group-hover:-translate-y-2 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all duration-300">
+                  <div className="w-16 h-16 mb-4 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/10 group-hover:-translate-y-2 group-hover:bg-white/10 transition-all duration-300">
                     <Icon className="text-white w-8 h-8" />
                   </div>
-                  <h3 className="font-bold text-xl text-white tracking-wide">{game.name}</h3>
+                  <h3 className="font-bold text-2xl text-white tracking-tight">{game.name}</h3>
                 </div>
               </motion.div>
             );
