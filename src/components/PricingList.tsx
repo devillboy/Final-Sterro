@@ -413,24 +413,37 @@ export default function PricingList() {
                       <div className="text-center py-8">
                         {verificationResult.success ? (
                           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                            <div className="w-20 h-20 bg-[#00F0FF]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[#00F0FF]/30">
-                              <CheckCircle2 size={40} className="text-[#00F0FF]" />
-                            </div>
-                            <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tighter">Node Provisioned!</h3>
-                            <p className="text-[var(--color-text-dim)] mb-8 font-medium">Your high-performance server is ready for deployment.</p>
+                            {verificationResult.serverStatus?.includes('could not be allocated') || verificationResult.serverStatus?.includes('Error') || verificationResult.serverStatus?.includes('OFFLINE') ? (
+                              <>
+                                <div className="w-20 h-20 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-yellow-500/30">
+                                  <AlertCircle size={40} className="text-yellow-500" />
+                                </div>
+                                <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tighter">User Created, Server Delayed</h3>
+                                <p className="text-[var(--color-text-dim)] mb-8 font-medium">Your account was created, but server creation failed.</p>
+                              </>
+                            ) : (
+                              <>
+                                <div className="w-20 h-20 bg-[#00F0FF]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[#00F0FF]/30">
+                                  <CheckCircle2 size={40} className="text-[#00F0FF]" />
+                                </div>
+                                <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tighter">Node Provisioned!</h3>
+                                <p className="text-[var(--color-text-dim)] mb-8 font-medium">Your high-performance server is ready for deployment.</p>
+                              </>
+                            )}
                             
                             <div className="bg-[#080C14] border border-[#121B2B] rounded-2xl p-6 text-left mb-8 space-y-4">
                               <div className="flex justify-between items-center pb-4 border-b border-white/5">
                                 <span className="text-[10px] font-black uppercase tracking-widest text-[#00F0FF]">Access Credentials</span>
                                 <button className="text-[10px] font-bold text-white/40 hover:text-[#00F0FF] flex items-center gap-1"><Copy size={10}/> Copy All</button>
                               </div>
-                              <CredentialItem label="Panel URL" value={verificationResult.credentials.panelUrl} />
-                              <CredentialItem label="Username" value={verificationResult.credentials.username} />
-                              <CredentialItem label="Password" value={verificationResult.credentials.password} isPassword />
+                              <CredentialItem label="Panel URL" value={verificationResult.credentials?.panelUrl} />
+                              <CredentialItem label="Username" value={verificationResult.credentials?.username} />
+                              <CredentialItem label="Password" value={verificationResult.credentials?.password} isPassword />
                             </div>
 
-                            <p className="text-xs text-[#00F0FF] font-bold mb-8 flex items-center justify-center gap-2">
-                              <Info size={14} /> {verificationResult.serverStatus}
+                            <p className="text-xs text-yellow-400 font-bold mb-8 flex items-center text-left p-4 bg-yellow-400/10 rounded-lg gap-3">
+                              <Info size={24} className="shrink-0" /> 
+                              <span>{verificationResult.serverStatus}</span>
                             </p>
 
                             <button onClick={closeDialog} className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-black text-white uppercase tracking-widest transition-all">

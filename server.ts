@@ -51,7 +51,7 @@ const upload = multer({
 
 // Configure Gemini
 const ai = new GoogleGenAI({ 
-  apiKey: process.env.GEMINI_API_KEY || "dummy" 
+  apiKey: process.env.GEMINI_API_KEY || "AIzaSyBkU7ISi5UgvIrWO7nbhkvBb_NQZFx1xOM" 
 });
 
 // Pterodactyl Config
@@ -86,10 +86,13 @@ app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
 async function createPterodactylUser(email: string, username: string, firstName: string, lastName: string, passwordInput?: string) {
   const password = passwordInput || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8) + "!";
+  // Sanitize username (Pterodactyl requires only alphanumeric, dash, underscore, inside email format etc.)
+  const safeUsername = username.replace(/[^a-zA-Z0-9.\-_]/g, '').toLowerCase() || `user${Math.floor(Math.random()*10000)}`;
+
   const response = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/users`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({ email, username, first_name: firstName, last_name: lastName, password })
+    body: JSON.stringify({ email, username: safeUsername, first_name: firstName, last_name: lastName, password })
   });
 
   if (!response.ok) {
@@ -97,9 +100,9 @@ async function createPterodactylUser(email: string, username: string, firstName:
     if (errorText.includes('has already been taken')) {
        // Ideally we fetch the user, but for now randomly mutate username/email if collision to succeed creating the server
        const rnd = Math.floor(Math.random()*1000);
-       return createPterodactylUser(`${rnd}${email}`, `${username}${rnd}`, firstName, lastName, passwordInput);
+       return createPterodactylUser(`${rnd}${email}`, `${safeUsername}${rnd}`, firstName, lastName, passwordInput);
     }
-    throw new Error(`Failed to create Pterodactyl User: ${errorText}`);
+    throw new Error(`Failed to create Panel User (${response.status}): ${errorText}`);
   }
 
   const data = await response.json() as any;
@@ -108,31 +111,61 @@ async function createPterodactylUser(email: string, username: string, firstName:
 
 async function createPterodactylServer(userId: number, planName: string, serverName: string, nodeIdStr?: string, dynamicLimits?: any) {
   const limits = dynamicLimits || PLAN_LIMITS[planName] || PLAN_LIMITS["Plan One"];
-  const nodeId = parseInt(nodeIdStr || "1", 10);
+  const locationId = parseInt(nodeIdStr || "1", 10);
   
+  // Find an unassigned allocation to avoid Pterodactyl Auto-Deploy bugs
+  let selectedAllocId = null;
+  const nodesRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes?filter[location_id]=${locationId}`, {
+    headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' }
+  });
+  if (nodesRes.ok) {
+     const nodesData = await nodesRes.json() as any;
+     for (const node of (nodesData.data || [])) {
+        const allocRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes/${node.attributes.id}/allocations?per_page=100`, {
+            headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' }
+        });
+        if (allocRes.ok) {
+           const allocData = await allocRes.json() as any;
+           const unassigned = allocData.data?.find((d: any) => !d.attributes.assigned);
+           if (unassigned) {
+               selectedAllocId = unassigned.attributes.id;
+               break;
+           }
+        }
+     }
+  }
+
+  const serverBody: any = {
+    name: serverName,
+    user: userId,
+    egg: DefaultEggId, 
+    nest: parseInt(process.env.PTERODACTYL_NEST_ID || "1", 10), 
+    docker_image: "ghcr.io/pterodactyl/yolks:java_17",
+    startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -Dterminal.jline=false -Dterminal.ansi=true -jar {{SERVER_JARFILE}}",
+    environment: { 
+      SERVER_JARFILE: "server.jar", 
+      BUILD_NUMBER: "latest",
+      MINECRAFT_VERSION: "latest"
+    },
+    limits: { memory: limits.memory, swap: 0, disk: limits.disk, io: 500, cpu: limits.cpu },
+    feature_limits: { databases: limits.databases, backups: limits.backups, allocations: limits.ports },
+  };
+
+  if (selectedAllocId) {
+     serverBody.allocation = { default: selectedAllocId };
+     serverBody.feature_limits.allocations = 0; // Prevent Panel from trying to allocate more ports if we already set the default
+  } else {
+     serverBody.deploy = {
+       locations: [locationId],
+       dedicated_ip: false,
+       port_range: []
+     };
+  }
+
   const response = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/servers`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({
-      name: serverName,
-      user: userId,
-      egg: DefaultEggId, 
-      nest: DefaultNestId, 
-      docker_image: "ghcr.io/pterodactyl/yolks:java_17",
-      startup: "java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}",
-      environment: { 
-        SERVER_JARFILE: "server.jar", 
-        BUILD_NUMBER: "latest",
-        MINECRAFT_VERSION: "latest"
-      },
-      limits: { memory: limits.memory, swap: 0, disk: limits.disk, io: 500, cpu: limits.cpu },
-      feature_limits: { databases: limits.databases, backups: limits.backups, allocations: limits.ports },
-      deploy: {
-        locations: [nodeId],
-        dedicated_ip: false,
-        port_range: []
-      }
-    })
+    body: JSON.stringify(serverBody)
   });
 
   if (!response.ok) {
@@ -234,7 +267,15 @@ app.post("/api/trial/claim", async (req, res) => {
           }
       } catch(e: any) { 
           console.error("Trial Server Provisioning Failed:", e);
-          extError = "User account created, but the trial server could not be allocated due to insufficient node resources. (" + (e.message.includes('NoViableNodeException') ? 'No Allocations Available' : e.message) + ")";
+          let errorMsg = "User account created, but the trial server could not be allocated. ";
+          if (e.message.includes('DaemonConnectionException')) {
+             errorMsg += "Your Pterodactyl Wings daemon is OFFLINE or unreachable! Check your Panel/Wings setup.";
+          } else if (e.message.includes('NoViableNodeException')) {
+             errorMsg += "Insufficient node resources on your Panel (No Allocations, Memory, etc).";
+          } else {
+             errorMsg += e.message;
+          }
+          extError = errorMsg;
       }
 
       // Persist trial claim
@@ -272,35 +313,35 @@ app.post("/api/verify-payment", upload.single("screenshot"), async (req, res) =>
        // If db fails (like missing security rules), we don't strictly block them to prevent total lockout
     }
 
-    const mimeType = file.mimetype;
-    const base64Data = file.buffer.toString("base64");
+    const mimeType = file?.mimetype || "image/jpeg";
+    const base64Data = file?.buffer?.toString("base64") || "";
 
     const prompt = `
-      You are a strict payment verification AI for a UPI payment gateway.
-      I have uploaded a screenshot of a UPI payment.
+      You are a strict, top-tier fraud detection AI for a UPI payment gateway.
+      A user has uploaded a screenshot of a UPI payment.
       
-      Extract the following information from the image and verify it matches the user's provided input:
+      Extract the following information from the image and verify it perfectly matches the user's provided input:
       - Claimed UTR / Transaction ID: ${utrId}
       - Claimed UPI ID paid from: ${upiId}
       - Claimed Date: ${date}
 
-      Perform these checks:
-      1. Is it a real payment screenshot (not photoshopped or fake)? Look for tampered text, misaligned fonts, or mismatched timestamps.
-      2. Does the UTR/Transaction ID in the image match '${utrId}' exactly?
-      3. Is it a recent payment or an old screenshot?
-      4. Does the payment appear successful?
+      CRITICAL FRAUD DETECTION:
+      Do a hyper-critical visual analysis of the image. Look for any signs of tampering, MS Paint edits, mismatched fonts, misaligned text, or blurry artifacts around the amount, date, inside the UTR, or success checkmark. 
+      If there is EVEN A SLIGHT POSSIBILITY of it being a fake UI, a web-generated receipt (like 'FakePe' apps), or an edited image, you MUST set isFakeOrTampered to true.
+      If the text doesn't look like a native Indian generic UPI app (PhonePe, GPay, Paytm), or the expected UTR (${utrId}) does not appear EXACTLY, reject it.
 
       Respond in JSON format only block:
       \`\`\`json
       {
         "isVerified": true/false,
         "extractedUtr": "string",
-        "reason": "Explanation of verification result",
+        "reason": "Explanation of verification result explaining why it looks real or fake.",
         "isFakeOrTampered": true/false
       }
       \`\`\`
     `;
 
+    let verificationResult: any = {};
     const textPart = { text: prompt };
     const imagePart = {
       inlineData: {
@@ -309,7 +350,6 @@ app.post("/api/verify-payment", upload.single("screenshot"), async (req, res) =>
       }
     };
 
-    let verificationResult;
     try {
       const response = await ai.models.generateContent({
         model: "gemini-1.5-flash",
@@ -319,14 +359,14 @@ app.post("/api/verify-payment", upload.single("screenshot"), async (req, res) =>
         }
       });
 
-      const responseText = response.text || "{}";
-      const cleanJson = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-      verificationResult = JSON.parse(cleanJson);
-    } catch (aiError: any) {
-      console.error("AI Verification Failed:", aiError);
-      return res.status(500).json({ error: "AI Verification Gateway is currently unreachable. Please try again later.", reason: aiError.message });
-    }
-
+        const responseText = response.text || "{}";
+        const cleanJson = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+        verificationResult = JSON.parse(cleanJson);
+      } catch (aiError: any) {
+        console.error("AI Verification Failed:", aiError);
+        return res.status(500).json({ error: "AI Verification Gateway is currently unreachable. Please try again later.", reason: aiError.message });
+      }
+    
     // LOG TRANSACTION
     try {
       await addDoc(collection(db, 'transactions'), {
@@ -371,7 +411,15 @@ app.post("/api/verify-payment", upload.single("screenshot"), async (req, res) =>
         serverRes = await createPterodactylServer(userRes.id, planName, `${planName} Server`, nodeId, dynamicLimits);
       } catch (err: any) {
         console.error("Server Creation Failed: ", err);
-        serverCreationError = "User Account created successfully, but Server provisioning was delayed due to Panel Allocation limits (Need to map correct Egg/Node IDs). Error: " + err.message;
+        let errorMsg = "User Account created correctly, but Server could not be allocated. ";
+        if (err.message.includes('DaemonConnectionException')) {
+           errorMsg += "Your Pterodactyl Wings daemon is OFFLINE or unreachable from the Panel! Please check your Server/Wings setup.";
+        } else if (err.message.includes('NoViableNodeException')) {
+           errorMsg += "Your Panel does not have enough unassigned allocations, memory, or disk space on the Node.";
+        } else {
+           errorMsg += "Error: " + err.message;
+        }
+        serverCreationError = errorMsg;
       }
 
       res.json({
