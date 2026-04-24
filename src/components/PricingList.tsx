@@ -509,11 +509,26 @@ export default function PricingList() {
                     ) : selectedPlan.isTrial ? (
                       <div className="max-w-md mx-auto">
                          {isSkeletonLoading ? (
-                           <div className="space-y-6">
-                              <div className="h-8 w-48 bg-white/5 animate-pulse mx-auto rounded-lg" />
-                              <div className="h-4 w-64 bg-white/5 animate-pulse mx-auto rounded-lg" />
-                              <div className="h-32 w-full bg-white/5 animate-pulse rounded-2xl" />
-                              <div className="h-14 w-full bg-white/5 animate-pulse rounded-xl" />
+                           <div className="bg-[#121B2B]/50 border border-[#1a1f2e] p-6 rounded-2xl w-full max-w-md mx-auto">
+                             <div className="animate-pulse flex space-x-4">
+                               <div className="rounded-full bg-[#1a1f2e] h-12 w-12"></div>
+                               <div className="flex-1 space-y-4 py-1">
+                                 <div className="h-3 bg-[#1a1f2e] rounded w-3/4"></div>
+                                 <div className="space-y-2">
+                                   <div className="h-3 bg-[#1a1f2e] rounded"></div>
+                                   <div className="h-3 bg-[#1a1f2e] rounded w-5/6"></div>
+                                 </div>
+                               </div>
+                             </div>
+                             <div className="animate-pulse mt-8 space-y-4">
+                               <div className="h-12 bg-[#1a1f2e] rounded-xl w-full"></div>
+                               <div className="h-12 bg-[#1a1f2e] rounded-xl w-full"></div>
+                               <div className="flex gap-4">
+                                  <div className="h-12 bg-[#1a1f2e] rounded-xl w-1/2"></div>
+                                  <div className="h-12 bg-[#1a1f2e] rounded-xl w-1/2"></div>
+                               </div>
+                               <div className="h-14 bg-[#1a1f2e] rounded-xl w-full mt-6"></div>
+                             </div>
                            </div>
                          ) : (
                             <form onSubmit={handleSubmit(handleClaimTrial)} className="space-y-6">
@@ -624,8 +639,35 @@ export default function PricingList() {
                          )}
 
                          {billingStep === 2 && (
-                           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-                             <div className="bg-[#080C14] border border-[#121B2B] rounded-3xl p-8 relative overflow-hidden">
+                           <>
+                              {isSubmitting ? (
+                                <div className="bg-[#121B2B]/50 border border-[#1a1f2e] p-6 rounded-2xl w-full max-w-2xl mx-auto mt-4">
+                                  <div className="animate-pulse flex space-x-4">
+                                    <div className="rounded-full bg-[#1a1f2e] h-12 w-12"></div>
+                                    <div className="flex-1 space-y-4 py-1">
+                                      <div className="h-3 bg-[#1a1f2e] rounded w-3/4"></div>
+                                      <div className="space-y-2">
+                                        <div className="h-3 bg-[#1a1f2e] rounded"></div>
+                                        <div className="h-3 bg-[#1a1f2e] rounded w-5/6"></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="animate-pulse mt-8 space-y-4">
+                                    <div className="h-32 bg-[#1a1f2e] rounded-xl w-full"></div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                       <div className="h-12 bg-[#1a1f2e] rounded-xl w-full"></div>
+                                       <div className="h-12 bg-[#1a1f2e] rounded-xl w-full"></div>
+                                    </div>
+                                    <div className="h-40 bg-[#1a1f2e] rounded-xl w-full"></div>
+                                    <div className="flex gap-4 pt-4 border-t border-[#1a1f2e]">
+                                       <div className="h-14 bg-[#1a1f2e] rounded-xl w-24"></div>
+                                       <div className="h-14 bg-[#1a1f2e] rounded-xl flex-1"></div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+                              <div className="bg-[#080C14] border border-[#121B2B] rounded-3xl p-8 relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#00F0FF]/10 blur-3xl -z-10" />
                                 <h4 className="text-xs font-black text-[#00F0FF] uppercase tracking-widest mb-4 flex items-center gap-2">
                                    <CreditCard size={14} /> UPI Payment Gateway
@@ -689,6 +731,8 @@ export default function PricingList() {
                                 </button>
                              </div>
                            </form>
+                           )}
+                           </>
                          )}
                       </div>
                     )}

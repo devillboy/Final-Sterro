@@ -47,23 +47,45 @@ export default function App() {
 
   if (isInitialLoading) {
     return (
-      <div className="min-h-screen bg-[#050914] flex flex-col items-center justify-center space-y-8 p-6">
-        <div className="relative w-24 h-24">
-          <div className="absolute inset-0 rounded-full border-t-2 border-[#00F0FF] animate-spin"></div>
-          <div className="absolute inset-2 rounded-full border-r-2 border-blue-500 animate-spin flex items-center justify-center">
-            <span className="w-2 h-2 bg-white rounded-full"></span>
+      <div className="min-h-screen bg-[#050914] overflow-hidden">
+        {/* Navbar Skeleton */}
+        <div className="h-20 border-b border-white/5 flex items-center justify-between px-6 lg:px-24">
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-full bg-[#1a1f2e] animate-pulse"></div>
+             <div className="w-32 h-6 rounded-md bg-[#1a1f2e] animate-pulse hidden sm:block"></div>
+          </div>
+          <div className="flex items-center gap-4">
+             <div className="w-20 h-6 rounded-md bg-[#1a1f2e] animate-pulse hidden sm:block"></div>
+             <div className="w-20 h-6 rounded-md bg-[#1a1f2e] animate-pulse hidden sm:block"></div>
+             <div className="w-10 h-10 rounded-full bg-[#1a1f2e] animate-pulse"></div>
           </div>
         </div>
-        <div className="w-full max-w-4xl space-y-6">
-          <div className="h-16 w-full bg-white/5 animate-pulse rounded-2xl border border-white/10"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="h-64 bg-white/5 animate-pulse rounded-2xl border border-white/10"></div>
-            <div className="h-64 bg-white/5 animate-pulse rounded-2xl border border-white/10"></div>
-            <div className="h-64 bg-white/5 animate-pulse rounded-2xl border border-white/10"></div>
-          </div>
-          <div className="flex justify-center mt-12">
-            <div className="h-8 w-48 bg-white/5 animate-pulse rounded-full border border-white/10"></div>
-          </div>
+
+        {/* Hero Skeleton (like YouTube banner or FB cover) */}
+        <div className="pt-24 pb-16 px-6 flex flex-col items-center text-center">
+           <div className="w-32 h-8 rounded-full bg-[#1a1f2e] animate-pulse mb-8"></div>
+           <div className="w-full max-w-2xl h-16 sm:h-20 rounded-2xl bg-[#1a1f2e] animate-pulse mb-6"></div>
+           <div className="w-full max-w-sm h-6 rounded-md bg-[#1a1f2e] animate-pulse mb-12"></div>
+        </div>
+
+        {/* Grid Content Skeleton (YouTube-like video grid or Pricing Pricing Cards) */}
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-24">
+          {[1, 2, 3, 4].map((i) => (
+             <div key={i} className="flex flex-col gap-4">
+                {/* Big Thumbnail/Card Body */}
+                <div className="w-full h-64 rounded-2xl bg-[#1a1f2e] animate-pulse"></div>
+                {/* Details Row */}
+                <div className="flex items-start gap-4 mt-2">
+                   {/* Avatar/Icon */}
+                   <div className="w-10 h-10 rounded-full bg-[#1a1f2e] animate-pulse shrink-0"></div>
+                   {/* Text lines */}
+                   <div className="flex-1 space-y-3 py-1">
+                      <div className="h-4 bg-[#1a1f2e] rounded-md w-5/6 animate-pulse"></div>
+                      <div className="h-3 bg-[#1a1f2e] rounded-md w-2/3 animate-pulse"></div>
+                   </div>
+                </div>
+             </div>
+          ))}
         </div>
       </div>
     );

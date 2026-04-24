@@ -9,17 +9,12 @@ import { getFirestore, doc, getDoc, setDoc, addDoc, collection, Timestamp } from
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import firebaseConfigRaw from "./firebase-applet-config.json";
 
 dotenv.config();
 
 // Load Firebase Config
-let firebaseConfig: any = {};
-try {
-  const configContent = fsSync.readFileSync(path.join(process.cwd(), "firebase-applet-config.json"), "utf-8");
-  firebaseConfig = JSON.parse(configContent);
-} catch (e) {
-  console.log("Firebase config not found. AI Gateway will not be able to save UTRs to db.");
-}
+let firebaseConfig: any = firebaseConfigRaw;
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
@@ -149,7 +144,7 @@ async function createPterodactylServer(userId: number, planName: string, serverN
   
   // Find an unassigned allocation to avoid Pterodactyl Auto-Deploy bugs
   let selectedAllocId = null;
-  const nodesRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes?filter[location_id]=${locationId}&per_page=5`, {
+  const nodesRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes?per_page=100`, {
     headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' },
     // A smaller timeout is useful so we don't hold the serverless function forever
     signal: AbortSignal.timeout(3000)
@@ -158,7 +153,9 @@ async function createPterodactylServer(userId: number, planName: string, serverN
   if (nodesRes && nodesRes.ok) {
      const nodesData = await nodesRes.json() as any;
      
-     for (const node of (nodesData.data || [])) {
+     const locationNodes = (nodesData.data || []).filter((node: any) => node.attributes.location_id === locationId);
+     
+     for (const node of locationNodes) {
          if (selectedAllocId) break;
          try {
            const allocRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes/${node.attributes.id}/allocations?per_page=200`, {
