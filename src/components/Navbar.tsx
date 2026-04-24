@@ -19,7 +19,7 @@ export default function Navbar() {
     <>
       {/* Top Banner */}
       <div className="bg-[#00F0FF]/10 border-b border-[#00F0FF]/20 text-[#00F0FF] py-2.5 text-xs flex justify-center px-6 items-center">
-        <a href="https://discord.gg/yourdiscord" target="_blank" rel="noreferrer" className="flex items-center gap-2 font-semibold hover:text-white transition-colors">
+        <a href="https://discord.gg/b2PqWqSEU3" target="_blank" rel="noreferrer" className="flex items-center gap-2 font-semibold hover:text-white transition-colors">
           Join our Discord community for more information and instant support &rarr;
         </a>
       </div>

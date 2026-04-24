@@ -300,7 +300,7 @@ export default function PricingList() {
                <button 
                  onClick={() => {
                    if (p.type === 'vps') {
-                     window.open('https://discord.gg/sterrocloud', '_blank');
+                     window.open('https://discord.gg/b2PqWqSEU3', '_blank');
                    } else {
                      setSelectedPlan(p);
                    }
@@ -355,7 +355,7 @@ export default function PricingList() {
                <button 
                  onClick={() => {
                    if (p.type === 'vps') {
-                     window.open('https://discord.gg/sterrocloud', '_blank');
+                     window.open('https://discord.gg/b2PqWqSEU3', '_blank');
                    } else {
                      setSelectedPlan(p);
                    }
