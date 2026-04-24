@@ -149,32 +149,31 @@ async function createPterodactylServer(userId: number, planName: string, serverN
   
   // Find an unassigned allocation to avoid Pterodactyl Auto-Deploy bugs
   let selectedAllocId = null;
-  const nodesRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes?filter[location_id]=${locationId}`, {
-    headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' }
-  });
-  if (nodesRes.ok) {
+  const nodesRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes?filter[location_id]=${locationId}&per_page=5`, {
+    headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' },
+    // A smaller timeout is useful so we don't hold the serverless function forever
+    signal: AbortSignal.timeout(3000)
+  }).catch(() => null);
+
+  if (nodesRes && nodesRes.ok) {
      const nodesData = await nodesRes.json() as any;
      
-     // Fetch allocations in parallel to avoid Vercel 10s Serverless timeout
-     const allocPromises = (nodesData.data || []).map(async (node: any) => {
-        try {
-          const allocRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes/${node.attributes.id}/allocations?per_page=100`, {
-              headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' }
-          });
-          if (allocRes.ok) {
-             const allocData = await allocRes.json() as any;
-             return allocData.data?.find((d: any) => !d.attributes.assigned);
-          }
-        } catch(e) { console.error(e); }
-        return null;
-     });
-     
-     const results = await Promise.all(allocPromises);
-     for (const unassigned of results) {
-         if (unassigned) {
-             selectedAllocId = unassigned.attributes.id;
-             break;
-         }
+     for (const node of (nodesData.data || [])) {
+         if (selectedAllocId) break;
+         try {
+           const allocRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes/${node.attributes.id}/allocations?per_page=200`, {
+               headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' },
+               signal: AbortSignal.timeout(3000)
+           });
+           if (allocRes.ok) {
+              const allocData = await allocRes.json() as any;
+              const unassigned = allocData.data?.find((d: any) => !d.attributes.assigned);
+              if (unassigned) {
+                  selectedAllocId = unassigned.attributes.id;
+                  break;
+              }
+           }
+         } catch(e) {}
      }
   }
 

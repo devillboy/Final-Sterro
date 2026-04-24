@@ -510,10 +510,10 @@ export default function PricingList() {
                       <div className="max-w-md mx-auto">
                          {isSkeletonLoading ? (
                            <div className="space-y-6">
-                              <div className="h-8 w-48 bg-white/5 animate-skeleton mx-auto rounded-lg" />
-                              <div className="h-4 w-64 bg-white/5 animate-skeleton mx-auto rounded-lg" />
-                              <div className="h-32 w-full bg-white/5 animate-skeleton rounded-2xl" />
-                              <div className="h-14 w-full bg-white/5 animate-skeleton rounded-xl" />
+                              <div className="h-8 w-48 bg-white/5 animate-pulse mx-auto rounded-lg" />
+                              <div className="h-4 w-64 bg-white/5 animate-pulse mx-auto rounded-lg" />
+                              <div className="h-32 w-full bg-white/5 animate-pulse rounded-2xl" />
+                              <div className="h-14 w-full bg-white/5 animate-pulse rounded-xl" />
                            </div>
                          ) : (
                             <form onSubmit={handleSubmit(handleClaimTrial)} className="space-y-6">
@@ -759,20 +759,20 @@ function PlanSkeleton({ highlight }: { highlight: boolean }) {
     <div className={`bg-[var(--color-surface)] border ${highlight ? 'border-[#00F0FF]/30 glow-primary' : 'border-[var(--color-border)]'} rounded-4xl p-8 flex flex-col md:flex-row items-center gap-8 justify-between opacity-50`}>
       <div className="flex-1 w-full space-y-6">
         <div className="flex items-center gap-4">
-          <div className="w-48 h-8 rounded-lg animate-skeleton" />
-          <div className="w-24 h-6 rounded animate-skeleton" />
+          <div className="w-48 h-8 rounded-lg animate-pulse" />
+          <div className="w-24 h-6 rounded animate-pulse" />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full animate-skeleton" />
-              <div className="w-20 h-4 rounded animate-skeleton" />
+              <div className="w-4 h-4 rounded-full animate-pulse" />
+              <div className="w-20 h-4 rounded animate-pulse" />
             </div>
           ))}
         </div>
       </div>
       <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto">
-        <div className="flex-1 md:w-44 h-14 rounded-2xl animate-skeleton" />
+        <div className="flex-1 md:w-44 h-14 rounded-2xl animate-pulse" />
       </div>
     </div>
   );
