@@ -13,9 +13,19 @@ interface PaymentFormData {
   date: string;
   email: string;
   username: string;
+  serverName: string;
   password?: string;
   nodeLocation: string;
+  eggId: string;
 }
+
+const EGG_OPTIONS = [
+  { id: "4", name: "Paper (Recommended)" },
+  { id: "5", name: "Vanilla" },
+  { id: "1", name: "Bungeecord" },
+  { id: "2", name: "Forge" },
+  { id: "3", name: "Sponge" }
+];
 
 interface Plan {
   id: string;
@@ -89,19 +99,19 @@ export default function PricingList() {
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<PaymentFormData>();
   const currentNodeLocation = watch("nodeLocation");
+  const currentEggId = watch("eggId") || "4";
 
   useEffect(() => {
-    if (user) {
-      reset({
-        email: user.email || "",
-        username: user.displayName || "",
-        upiId: "",
-        utrId: "",
-        date: new Date().toISOString().split('T')[0],
-        nodeLocation: "1"
-      });
-    }
-  }, [user, reset]);
+    reset({
+      email: user?.email || "",
+      username: user?.displayName || "",
+      upiId: "",
+      utrId: "",
+      date: new Date().toISOString().split('T')[0],
+      nodeLocation: "1",
+      eggId: "4"
+    });
+  }, [user, reset, selectedPlan]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -124,6 +134,7 @@ export default function PricingList() {
     formData.append('date', data.date);
     formData.append('email', data.email);
     formData.append('username', data.username);
+    formData.append('serverName', data.serverName);
     if (data.password) formData.append('password', data.password);
     formData.append('planName', selectedPlan.name);
     // Dynamic specs
@@ -134,8 +145,11 @@ export default function PricingList() {
     formData.append('backups', selectedPlan.backups || '0');
     formData.append('ports', selectedPlan.ports || '0');
     
-    if ((data as any).nodeLocation) {
-      formData.append('nodeId', (data as any).nodeLocation);
+    if (data.nodeLocation) {
+      formData.append('nodeId', data.nodeLocation);
+    }
+    if (data.eggId) {
+      formData.append('eggId', data.eggId);
     }
 
     try {
@@ -184,8 +198,10 @@ export default function PricingList() {
         body: JSON.stringify({ 
           email: data.email, 
           username: data.username,
+          serverName: data.serverName,
           password: data.password,
-          nodeId: (data as any).nodeLocation
+          nodeId: currentNodeLocation,
+          eggId: currentEggId
         }),
       });
 
@@ -482,12 +498,23 @@ export default function PricingList() {
                                </div>
                                <div className="grid grid-cols-2 gap-4">
                                   <div className="col-span-2 space-y-2">
+                                     <label className="text-xs font-black uppercase tracking-widest text-white/60">Server Software</label>
+                                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                                        {EGG_OPTIONS.map((egg) => (
+                                           <div key={egg.id} onClick={() => setValue("eggId", egg.id)} className={`px-3 py-2 border rounded-xl text-xs font-bold cursor-pointer transition-all text-center flex items-center justify-center ${currentEggId === egg.id ? 'bg-[#00F0FF] text-black border-[#00F0FF]' : 'bg-black/50 border-[#121B2B] text-white/70 hover:border-[#00F0FF]/50 hover:text-white'}`}>
+                                              {egg.name}
+                                           </div>
+                                        ))}
+                                     </div>
+                                  </div>
+                                  <div className="col-span-2 space-y-2 mt-2">
                                      <label className="text-xs font-black uppercase tracking-widest text-white/60">Choose Node Location</label>
                                      <WorldMap selectedId={currentNodeLocation} onSelect={(id) => setValue("nodeLocation", id)} />
                                   </div>
                                   <div className="col-span-2">
                                     <Input label="Email Address" {...register("email", {required: true})} type="email" placeholder="you@example.com" />
                                   </div>
+                                  <Input label="Server Name" {...register("serverName", {required: true})} defaultValue="Sterro Trial Server" />
                                   <Input label="Panel Username" {...register("username", {required: true})} />
                                   <Input label="Panel Password" {...register("password", {required: true})} type="password" />
                                </div>
@@ -533,12 +560,27 @@ export default function PricingList() {
                              <div className="space-y-6">
                                 <div className="space-y-3">
                                    <label className="text-xs font-black uppercase tracking-widest text-[#00F0FF] flex items-center gap-2">
+                                      <MapPin size={14} /> Server Software
+                                   </label>
+                                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                       {EGG_OPTIONS.map((egg) => (
+                                          <div key={egg.id} onClick={() => setValue("eggId", egg.id)} className={`p-3 border rounded-xl text-sm font-bold cursor-pointer transition-all text-center flex items-center justify-center ${currentEggId === egg.id ? 'bg-[#00F0FF] text-black border-[#00F0FF]' : 'bg-[#080C14] border-[#121B2B] text-white/70 hover:border-[#00F0FF]/50 hover:text-white shadow-3d'}`}>
+                                             {egg.name}
+                                          </div>
+                                       ))}
+                                   </div>
+                                </div>
+                                <div className="space-y-3 mt-4">
+                                   <label className="text-xs font-black uppercase tracking-widest text-[#00F0FF] flex items-center gap-2">
                                       <MapPin size={14} /> Deployment Node Location
                                    </label>
                                    <WorldMap selectedId={currentNodeLocation} onSelect={(id) => setValue("nodeLocation", id)} />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
+                                   <div className="col-span-2">
+                                     <Input label="Server Name" {...register("serverName", {required: true})} defaultValue={`${selectedPlan.name} Server`} />
+                                   </div>
                                    <Input label="Control Panel Email" {...register("email", {required: true})} type="email" />
                                    <Input label="Panel Username" {...register("username", {required: true})} />
                                    <div className="col-span-2">
