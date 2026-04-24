@@ -270,6 +270,13 @@ app.post("/api/trial/claim", async (req, res) => {
   }
 
   try {
+      // Check if trial has already been claimed
+      const trialCheckDoc = await getDoc(doc(db, "trials", email));
+      if (trialCheckDoc.exists()) {
+        res.status(400).json({ error: "You have already claimed a free trial. You cannot claim another one." });
+        return;
+      }
+
       // Create user and server
       const userRes = await createPterodactylUser(email, username || email.split("@")[0], "Trial", "User", password);
       let serverRes = null;
