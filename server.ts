@@ -22,6 +22,14 @@ const db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
 const app = express();
 const PORT = 3000;
 
+// Fix for Vercel/Netlify where the stream is already parsed, avoiding express.json() hanging
+app.use((req: any, res, next) => {
+  if (req.body && typeof req.body === 'object') {
+    req._body = true; // Tell express.json() not to parse again
+  }
+  next();
+});
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(session({
@@ -144,34 +152,40 @@ async function createPterodactylServer(userId: number, planName: string, serverN
   
   // Find an unassigned allocation to avoid Pterodactyl Auto-Deploy bugs
   let selectedAllocId = null;
-  const nodesRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes?per_page=100`, {
-    headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' },
-    // A smaller timeout is useful so we don't hold the serverless function forever
-    signal: AbortSignal.timeout(3000)
-  }).catch(() => null);
+  
+  try {
+     const nodesRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes?per_page=100`, {
+       headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' }
+     });
 
-  if (nodesRes && nodesRes.ok) {
-     const nodesData = await nodesRes.json() as any;
-     
-     const locationNodes = (nodesData.data || []).filter((node: any) => node.attributes.location_id === locationId);
-     
-     for (const node of locationNodes) {
-         if (selectedAllocId) break;
-         try {
-           const allocRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes/${node.attributes.id}/allocations?per_page=200`, {
-               headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' },
-               signal: AbortSignal.timeout(3000)
-           });
-           if (allocRes.ok) {
-              const allocData = await allocRes.json() as any;
-              const unassigned = allocData.data?.find((d: any) => !d.attributes.assigned);
-              if (unassigned) {
-                  selectedAllocId = unassigned.attributes.id;
-                  break;
+     if (nodesRes && nodesRes.ok) {
+        const nodesData = await nodesRes.json() as any;
+        const locationNodes = (nodesData.data || []).filter((node: any) => node.attributes.location_id === locationId);
+        
+        // Fetch allocations in parallel to be as fast as possible
+        const allocPromises = locationNodes.map(async (node: any) => {
+            try {
+              const allocRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/nodes/${node.attributes.id}/allocations?per_page=100`, {
+                  headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' }
+              });
+              if (allocRes.ok) {
+                 const allocData = await allocRes.json() as any;
+                 return allocData.data?.find((d: any) => !d.attributes.assigned);
               }
-           }
-         } catch(e) {}
+            } catch(e) { }
+            return null;
+        });
+
+        const results = await Promise.all(allocPromises);
+        for (const unassigned of results) {
+            if (unassigned) {
+                selectedAllocId = unassigned.attributes.id;
+                break;
+            }
+        }
      }
+  } catch (e) {
+     console.error("Failed fetching nodes:", e);
   }
 
   const serverBody: any = {
@@ -281,31 +295,7 @@ app.post("/api/trial/claim", async (req, res) => {
           serverRes = await createPterodactylServer(userRes.id, "1 Hour Free Trial", serverName || "Sterro Trial Server", nodeId, { memory: 1024, cpu: 50, disk: 5000, databases: 0, backups: 0, ports: 1 }, eggId);
           
           if (serverRes && serverRes.id) {
-              // Automatically suspend after 1 hour
-              setTimeout(async () => {
-                  try {
-                      const getRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/servers/${serverRes.id}`, {
-                          headers: { "Authorization": `Bearer ${PTERODACTYL_API_KEY}`, "Accept": "application/json" }
-                      });
-                      
-                      if (getRes.ok) {
-                          const serverData = await getRes.json() as any;
-                          if (!serverData.attributes.suspended) {
-                              await fetch(`${PTERODACTYL_PANEL_URL}/api/application/servers/${serverRes.id}/suspend`, {
-                                  method: "POST",
-                                  headers: { 
-                                      "Authorization": `Bearer ${PTERODACTYL_API_KEY}`, 
-                                      "Accept": "application/json", 
-                                      "Content-Type": "application/json" 
-                                  }
-                              });
-                              console.log(`[Trial] Server ${serverRes.id} auto-suspended.`);
-                          }
-                      }
-                  } catch (error) {
-                      console.error(`[Trial] Auto-suspend failed for ${serverRes.id}:`, error);
-                  }
-              }, 60 * 60 * 1000);
+              console.log(`[Trial] Server ${serverRes.id} created.`);
           }
       } catch(e: any) { 
           console.error("Trial Server Provisioning Failed:", e);
