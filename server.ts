@@ -87,7 +87,7 @@ const PLAN_LIMITS: Record<string, any> = {
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
-async function fetchWithTimeout(resource, options = {}) {
+async function fetchWithTimeout(resource: RequestInfo, options: (RequestInit & { timeout?: number }) = {}) {
   const { timeout = 8000 } = options;
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);

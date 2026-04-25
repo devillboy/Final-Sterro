@@ -1,3 +1,11 @@
-import app from '../server';
+import server from '../../../server';
+import serverless from 'serverless-http';
 
-export default app;
+const handler = serverless(server);
+export default handler;
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
