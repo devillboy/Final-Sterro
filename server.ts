@@ -126,32 +126,120 @@ class PterodactylService {
   }
 }
 
+// --- Billing & Invoice Service ---
+class BillingService {
+  static async createInvoice(email: string, planName: string, amount: number, utrId?: string) {
+    if (!db) return null;
+    const invoiceId = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const invoice = {
+      id: invoiceId,
+      email,
+      planName,
+      amount,
+      currency: "INR",
+      status: utrId ? "paid" : "unpaid",
+      utrId: utrId || null,
+      date: Timestamp.now(),
+      dueDate: Timestamp.now(), // Simplified
+    };
+
+    try {
+      await setDoc(doc(db, "invoices", invoiceId), invoice);
+      return invoice;
+    } catch (e) {
+      console.error("Billing Invoice Creation Failed:", e);
+      return null;
+    }
+  }
+
+  static async getUserHistory(email: string) {
+    if (!db) return [];
+    try {
+      // Note: In a real app, use a query. For simplicity here, we assume client might fetch filtered data or we fetch all and filter in memory if needed (though query is better).
+      // Since rules might restrict, we filter by email if possible.
+      // Firestore Rules should allow reading where email == request.auth.token.email.
+      // For this implementation, we'll return an empty list or fetch from transactions if it exists.
+      return []; // Placeholder for actual list fetch if we had query support pre-configured
+    } catch (e) {
+      return [];
+    }
+  }
+}
+
 // --- App Setup ---
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Body Parser Fix for Serverless + Large JSON
-app.use((req: any, _res, next) => {
-  if (req.body && typeof req.body === 'object' && !Array.isArray(req.body) && Object.keys(req.body).length > 0) {
-    req._body = true;
+// Optimized Body Parser for Serverless
+// Some platforms like Vercel/Netlify pre-parse the body.
+app.use((req: any, res, next) => {
+  if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
+    req._body = true; // Tell standard body-parser it's already done
   }
   next();
 });
 
 app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 app.use(cookieParser());
 app.use(session({
-  secret: process.env.SESSION_SECRET || "automated-sterro-secret",
+  secret: process.env.SESSION_SECRET || "automated-sterro-secret-v2",
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: true, sameSite: 'none', httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 }
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production', 
+    sameSite: 'lax', 
+    httpOnly: true, 
+    maxAge: 7 * 24 * 60 * 60 * 1000 
+  }
 }));
 
 app.set("trust proxy", 1);
 
 // --- Routes ---
 
-app.get("/api/health", (_req, res) => res.json({ status: "ok", env: process.env.VERCEL ? 'vercel' : 'local' }));
+app.get("/api/health", (_req, res) => res.json({ 
+  status: "ok", 
+  env: process.env.VERCEL ? 'vercel' : (process.env.NETLIFY ? 'netlify' : 'local'),
+  time: new Date().toISOString()
+}));
+
+// Billing Endpoints
+app.get("/api/debug-env", (req, res) => {
+  res.json({
+    env: process.env.NODE_ENV,
+    isVercel: !!process.env.VERCEL,
+    isNetlify: !!process.env.NETLIFY,
+    hasDb: !!db,
+    hasAi: !!ai,
+    headers: req.headers
+  });
+});
+
+app.get("/api/billing/history", async (req, res) => {
+  const { email } = req.query;
+  if (!email) return res.status(400).json({ error: "Email is required" });
+  
+  try {
+    const history = await BillingService.getUserHistory(email as string);
+    res.json({ success: true, history });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/billing/invoice/:id", async (req, res) => {
+  const { id } = req.params;
+  if (!db) return res.status(500).json({ error: "Cloud DB not ready" });
+
+  try {
+    const invoiceDoc = await getDoc(doc(db, "invoices", id));
+    if (!invoiceDoc.exists()) return res.status(404).json({ error: "Invoice not found" });
+    res.json({ success: true, invoice: invoiceDoc.data() });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.post("/api/trial/claim", async (req, res) => {
   const { email, password, username, serverName, nodeId, eggId } = req.body;
@@ -161,7 +249,6 @@ app.post("/api/trial/claim", async (req, res) => {
   }
 
   try {
-    // 1. Double check trial status
     if (db) {
       const trialRef = doc(db, "trials", email);
       const existing = await getDoc(trialRef);
@@ -170,22 +257,22 @@ app.post("/api/trial/claim", async (req, res) => {
       }
     }
 
-    // 2. Automate User + Server
     const user = await PterodactylService.findOrCreateUser(email, username || email.split("@")[0], password);
     const server = await PterodactylService.createServer(user.id, serverName, parseInt(nodeId || "1"), {
       memory: 1024, cpu: 50, disk: 5000
     }, eggId);
 
-    // 3. Persist and Respond
     if (db) {
       const trialRef = doc(db, "trials", email);
       await setDoc(trialRef, { email, claimedAt: Timestamp.now(), serverId: server.attributes.id });
+      // Create a $0 billing entry for the trial
+      await BillingService.createInvoice(email, "Free Trial", 0, "TRIAL_FREE");
     }
     
     res.json({
       success: true,
       credentials: { username: username || email.split("@")[0], email, password: user.password, panelUrl: "https://panel.sterro.cloud" },
-      message: "Server provisioned successfully!"
+      message: "Free trial server provisioned successfully!"
     });
   } catch (err: any) {
     console.error("Trial Automation Error:", err);
@@ -200,10 +287,15 @@ app.post("/api/verify-payment", async (req, res) => {
     const isBypass = ["00000", "123456789012", "20062012"].includes(utrId);
 
     if ((!screenshot && !isBypass) || !utrId || !date || !planName || !email) {
-      return res.status(400).json({ error: "Required payment details or verification assets are missing." });
+      const missing = [];
+      if (!screenshot && !isBypass) missing.push("Screenshot");
+      if (!utrId) missing.push("UTR ID");
+      if (!date) missing.push("Date");
+      if (!planName) missing.push("Plan Name");
+      if (!email) missing.push("Email");
+      return res.status(400).json({ error: `Missing required data: ${missing.join(", ")}` });
     }
 
-    // 1. Double spend prevention
     if (db) {
       try {
         const paymentCheck = await getDoc(doc(db, 'payments', utrId));
@@ -216,28 +308,38 @@ app.post("/api/verify-payment", async (req, res) => {
     }
 
     let isVerified = true;
-    let reason = "Manual verification bypass for testing.";
+    let reason = "Manual verification bypass or fallback activated.";
 
-    // 2. Gemini-Powered Fraud Detection (if screenshot exists)
-    if (screenshot && !isBypass && ai) {
+    if (screenshot && screenshot !== "null" && screenshot.length > 50 && !isBypass && ai) {
       try {
+        console.log(`Starting AI Verification for UTR: ${utrId}`);
         const prompt = `
-          Analyze this UPI payment proof for Sterro Cloud. 
-          UTR: ${utrId}
-          Compare visual data with claimed UTR. Reject only if completely fraudulent or empty.
-          Respond with JSON: { "isVerified": boolean, "reason": "string" }
+          Payment Verification Task:
+          We are verifying a UPI payment for "Sterro Cloud".
+          Claimed UTR: ${utrId}
+          Compare this UTR with the screenshot.
+          Rules:
+          1. If the screenshot looks like a payment success screen, return { "isVerified": true }.
+          2. Even if UTR is slightly hard to read, if it looks valid, return { "isVerified": true }.
+          3. Only return false if it is clearly NOT a payment screenshot (e.g. a random photo).
+          Response Format: Strictly JSON { "isVerified": boolean, "reason": "string" }
         `;
         const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
         const result = await model.generateContent([
-          { inlineData: { data: screenshot, mimeType: screenshotMimeType || "image/jpeg" } },
+          { inlineData: { data: screenshot.split(',').pop() || screenshot, mimeType: screenshotMimeType || "image/jpeg" } },
           prompt
         ]);
         const responseText = result.response.text();
-        const parsed = JSON.parse(responseText || "{}");
+        const cleanJson = responseText.replace(/```json|```/g, "").trim();
+        const parsed = JSON.parse(cleanJson || '{"isVerified": true}');
+        
         isVerified = parsed.isVerified ?? true;
-        reason = parsed.reason || "Automated check completed.";
+        reason = parsed.reason || "AI check passed.";
+        console.log(`AI Result for ${utrId}:`, isVerified, reason);
       } catch (aiErr) {
-        console.error("AI Fraud Check Failed (Fallback to Allow):", aiErr);
+        console.error("AI Error for", utrId, ":", aiErr);
+        isVerified = true; 
+        reason = "AI Processing fallback (Allowed).";
       }
     }
 
@@ -245,11 +347,12 @@ app.post("/api/verify-payment", async (req, res) => {
       return res.status(400).json({ error: "Payment verification failed.", reason });
     }
 
-    // 3. Log and Persist
     if (db) {
       try {
         await setDoc(doc(db, 'payments', utrId), { utrId, email, planName, verifiedAt: Timestamp.now() });
         await addDoc(collection(db, 'transactions'), { utrId, email, planName, status: 'verified', createdAt: Timestamp.now() });
+        // Create an invoice upon successful verification
+        await BillingService.createInvoice(email, planName, 0, utrId); // Amount 0 for now as pricing logic is on frontend
       } catch (e) {
         console.error("Failed to log transaction safely.");
       }
