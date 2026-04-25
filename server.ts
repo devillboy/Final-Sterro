@@ -87,16 +87,19 @@ const PLAN_LIMITS: Record<string, any> = {
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
-async function fetchWithTimeout(resource: RequestInfo, options: (RequestInit & { timeout?: number }) = {}) {
-  const { timeout = 8000 } = options;
+async function fetchWithTimeout(resource, options = {}) {
+  const { timeout = 30000 } = options;
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
-  const response = await fetchWithTimeout(resource, {
-    ...options,
-    signal: controller.signal  
-  });
-  clearTimeout(id);
-  return response;
+  try {
+    const response = await fetch(resource, {
+      ...options,
+      signal: controller.signal
+    });
+    return response;
+  } finally {
+    clearTimeout(id);
+  }
 }
 
 async function createPterodactylUser(email: string, username: string, firstName: string, lastName: string, passwordInput?: string) {
@@ -222,7 +225,8 @@ async function createPterodactylServer(userId: number, planName: string, serverN
 }
 
 app.post("/api/trial/send-otp", async (req, res) => {
-  const { email } = req.body;
+  const body = req.body || {};
+  const { email } = body;
   if (!email) {
     res.status(400).json({ error: "Email address is required" });
     return;
@@ -260,7 +264,8 @@ app.post("/api/trial/send-otp", async (req, res) => {
 });
 
 app.post("/api/trial/claim", async (req, res) => {
-  const { email, password, username, serverName, nodeId, eggId } = req.body;
+  const body = req.body || {};
+  const { email, password, username, serverName, nodeId, eggId } = body;
 
   if (!email || !password || !serverName) {
     res.status(400).json({ error: "Email, username, password and server name are required" });
@@ -321,7 +326,8 @@ app.post("/api/trial/claim", async (req, res) => {
 
 app.post("/api/verify-payment", async (req, res) => {
   try {
-    const { utrId, upiId, date, planName, email, username, serverName, nodeId, eggId, password, ram, cpu, storage, databases, backups, ports, screenshot, screenshotMimeType } = req.body;
+    const body = req.body || {};
+    const { utrId, upiId, date, planName, email, username, serverName, nodeId, eggId, password, ram, cpu, storage, databases, backups, ports, screenshot, screenshotMimeType } = body;
 
     const isBypassUtr = utrId === "00000" || utrId === "123456789012" || utrId === "20062012";
 
@@ -446,7 +452,8 @@ app.post("/api/verify-payment", async (req, res) => {
 
 app.post("/api/create-server", async (req, res) => {
   try {
-    const { planName, email, username, serverName, nodeId, eggId, password, ram, cpu, storage, databases, backups, ports } = req.body;
+    const body = req.body || {};
+    const { planName, email, username, serverName, nodeId, eggId, password, ram, cpu, storage, databases, backups, ports } = body;
 
     if (!email || !planName || !serverName) {
       res.status(400).json({ error: "Missing required fields for server creation." });

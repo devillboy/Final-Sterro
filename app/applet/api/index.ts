@@ -1,11 +1,5 @@
-import server from '../../../server';
-import serverless from 'serverless-http';
+import app from '../server';
 
-const handler = serverless(server);
-export default handler;
+export default app;
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+export const maxDuration = 60; // Set max duration for Vercel Hobby to 60s
