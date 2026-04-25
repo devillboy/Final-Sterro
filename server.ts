@@ -87,13 +87,13 @@ const PLAN_LIMITS: Record<string, any> = {
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
-async function fetchWithTimeout(resource, options = {}) {
+async function fetchWithTimeout(resource: RequestInfo, options: any = {}) {
   const { timeout = 8000 } = options;
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
-  const response = await fetchWithTimeout(resource, {
+  const response = await fetch(resource, {
     ...options,
-    signal: controller.signal  
+    signal: controller.signal
   });
   clearTimeout(id);
   return response;
@@ -208,14 +208,26 @@ async function createPterodactylServer(userId: number, planName: string, serverN
     return await response.json() as any;
   };
 
+  const fallbackLocations = (process.env.PTERODACTYL_LOCATION_IDS || '1,2,3').split(',').map((x) => parseInt(x.trim(), 10)).filter(Boolean);
+
   try {
     const data = await attemptDeployment(initialLocationId);
     return data.attributes;
   } catch (err: any) {
-    if (err.message.includes('NoViableNodeException')) {
-      console.warn(`Location ${initialLocationId} full. Attempting fallback locations...`);
-      // Fallback locations to try automatically
-      throw err;
+    if (err.message.includes('NoViableNodeException') || err.message.includes('Failed to create Server')) {
+      console.warn(`Deployment failed on location ${initialLocationId}: ${err.message}`);
+      const tried = new Set([initialLocationId]);
+      for (const locId of fallbackLocations) {
+        if (tried.has(locId)) continue;
+        try {
+          console.log(`Trying fallback location ${locId}...`);
+          const data = await attemptDeployment(locId);
+          return data.attributes;
+        } catch (fallbackErr: any) {
+          console.warn(`Fallback location ${locId} also failed: ${fallbackErr.message}`);
+          tried.add(locId);
+        }
+      }
     }
     throw err;
   }
@@ -305,15 +317,28 @@ app.post("/api/trial/claim", async (req, res) => {
           extError = errorMsg;
       }
 
-      // Persist trial claim
-      try { await setDoc(doc(db, 'trials', email), { claimedAt: new Date().toISOString(), serverId: serverRes?.id || 'unknown' }); } catch(e) {}
+      if (serverRes && serverRes.id) {
+        try {
+          await setDoc(doc(db, 'trials', email), { claimedAt: new Date().toISOString(), serverId: serverRes.id });
+        } catch(e) {
+          console.warn('Failed to persist trial claim:', e);
+        }
 
-      res.json({
+        res.json({
           success: true,
           credentials: { panelUrl: PTERODACTYL_PANEL_URL, username: username || email.split("@")[0], email: email, password: userRes.password },
           serverDetails: { serverName: serverName || "Sterro Trial Server", plan: "1 Hour Free Trial", type: "Minecraft Server" },
-          serverStatus: extError || "Trial Server provisioned! It will automatically suspend in 1 Hour."
-      });
+          serverStatus: "Trial Server provisioned! It will automatically suspend in 1 Hour."
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: extError || 'Trial server provisioning failed.',
+          credentials: { panelUrl: PTERODACTYL_PANEL_URL, username: username || email.split("@")[0], email: email, password: userRes.password },
+          serverDetails: { serverName: serverName || "Sterro Trial Server", plan: "1 Hour Free Trial", type: "Minecraft Server" },
+          serverStatus: extError || 'Trial server provisioning failed.'
+        });
+      }
   } catch (e: any) {
       res.status(500).json({error: e.message});
   }
@@ -482,11 +507,20 @@ app.post("/api/create-server", async (req, res) => {
         serverCreationError = errorMsg;
       }
 
+      if (!serverRes || !serverRes.id) {
+        res.status(500).json({
+          success: false,
+          error: serverCreationError || 'Server creation failed without a response from Pterodactyl.',
+          serverStatus: serverCreationError || 'Server creation failed.'
+        });
+        return;
+      }
+
       res.json({
         success: true,
         credentials: { panelUrl: PTERODACTYL_PANEL_URL, username: username || email.split("@")[0], email: email, password: userRes.password },
         serverDetails: { serverName: serverName || `${planName} Server`, plan: planName, ram: dynamicLimits.memory + 'MB' },
-        serverStatus: serverCreationError || "Server deployed! Check panel."
+        serverStatus: "Server deployed! Check panel."
       });
     } catch (panelErr: any) {
       res.status(500).json({ error: "Panel Error: " + panelErr.message });
