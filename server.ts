@@ -5,6 +5,8 @@ import { getFirestore, doc, getDoc, setDoc, addDoc, collection, Timestamp } from
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import path from "path";
+import * as fsSync from "fs";
 
 dotenv.config();
 
@@ -26,7 +28,7 @@ class PterodactylService {
 
   private static EGG_CONFIGS: Record<string, any> = {
     "1": { id: 1, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "BungeeCord.jar" } },
-    "4": { id: 4, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "server.jar", MINECRAFT_VERSION: "latest" } },
+    "4": { id: 4, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "server.jar", MINECR[...]
     // Add more as needed...
   };
 
