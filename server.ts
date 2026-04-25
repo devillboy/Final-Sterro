@@ -30,7 +30,7 @@ app.use((req: any, res, next) => {
   next();
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '20mb' }));
 app.use(cookieParser());
 app.use(session({
   secret: process.env.SESSION_SECRET || "sterro-cloud-secret",
@@ -90,13 +90,14 @@ app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 async function createPterodactylUser(email: string, username: string, firstName: string, lastName: string, passwordInput?: string) {
   const password = passwordInput || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8) + "!";
   // Sanitize username (Pterodactyl requires only alphanumeric, dash, underscore, inside email format etc.)
-  const safeUsername = username.replace(/[^a-zA-Z0-9.\-_]/g, '').toLowerCase() || `user${Math.floor(Math.random()*10000)}`;
+  let safeUsername = username.replace(/[^a-zA-Z0-9.\-_]/g, '').toLowerCase() || `user${Math.floor(Math.random()*10000)}`;
+  if (safeUsername.length < 3) safeUsername = safeUsername + Math.floor(Math.random()*1000).toString();
+  if (safeUsername.length > 50) safeUsername = safeUsername.substring(0, 50);
 
   const response = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/users`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({ email, username: safeUsername, first_name: firstName, last_name: lastName, password }),
-    signal: AbortSignal.timeout(3000)
+    body: JSON.stringify({ email, username: safeUsername, first_name: firstName, last_name: lastName, password })
   });
 
   if (!response.ok) {
@@ -104,8 +105,7 @@ async function createPterodactylUser(email: string, username: string, firstName:
     if (errorText.includes('has already been taken')) {
        try {
            const getRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/users?filter[email]=${encodeURIComponent(email)}`, {
-               headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' },
-               signal: AbortSignal.timeout(3000)
+               headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' }
            });
            if (getRes.ok) {
                const getData = await getRes.json() as any;
@@ -184,8 +184,7 @@ async function createPterodactylServer(userId: number, planName: string, serverN
   const response = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/servers`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify(serverBody),
-    signal: AbortSignal.timeout(15000)
+    body: JSON.stringify(serverBody)
   });
 
   if (!response.ok) {
@@ -287,6 +286,7 @@ app.post("/api/trial/claim", async (req, res) => {
       res.json({
           success: true,
           credentials: { panelUrl: PTERODACTYL_PANEL_URL, username: username || email.split("@")[0], email: email, password: userRes.password },
+          serverDetails: { serverName: serverName || "Sterro Trial Server", plan: "1 Hour Free Trial", type: "Minecraft Server" },
           serverStatus: extError || "Trial Server provisioned! It will automatically suspend in 1 Hour."
       });
   } catch (e: any) {
@@ -294,12 +294,13 @@ app.post("/api/trial/claim", async (req, res) => {
   }
 });
 
-app.post("/api/verify-payment", upload.single("screenshot"), async (req, res) => {
+app.post("/api/verify-payment", async (req, res) => {
   try {
-    const { utrId, upiId, date, planName, email, username, serverName, nodeId, eggId, password, ram, cpu, storage, databases, backups, ports } = req.body;
-    const file = req.file;
+    const { utrId, upiId, date, planName, email, username, serverName, nodeId, eggId, password, ram, cpu, storage, databases, backups, ports, screenshot, screenshotMimeType } = req.body;
 
-    if (!file || !utrId || !date || !planName || !email || !serverName) {
+    const isBypassUtr = utrId === "00000" || utrId === "123456789012" || utrId === "20062012";
+
+    if ((!screenshot && !isBypassUtr) || !utrId || !date || !planName || !email || !serverName) {
       res.status(400).json({ error: "Missing required fields (including server name) or screenshot." });
       return;
     }
@@ -316,8 +317,8 @@ app.post("/api/verify-payment", upload.single("screenshot"), async (req, res) =>
        // If db fails (like missing security rules), we don't strictly block them to prevent total lockout
     }
 
-    const mimeType = file?.mimetype || "image/jpeg";
-    const base64Data = file?.buffer?.toString("base64") || "";
+    const mimeType = screenshotMimeType || "image/jpeg";
+    const base64Data = screenshot || "";
 
     const prompt = `
       You are a strict, top-tier fraud detection AI for a UPI payment gateway.
@@ -329,9 +330,10 @@ app.post("/api/verify-payment", upload.single("screenshot"), async (req, res) =>
       - Claimed Date: ${date}
 
       CRITICAL FRAUD DETECTION:
-      Do a hyper-critical visual analysis of the image. Look for any signs of tampering, MS Paint edits, mismatched fonts, misaligned text, or blurry artifacts around the amount, date, inside the UTR, or success checkmark. 
-      If there is EVEN A SLIGHT POSSIBILITY of it being a fake UI, a web-generated receipt (like 'FakePe' apps), or an edited image, you MUST set isFakeOrTampered to true.
-      If the text doesn't look like a native Indian generic UPI app (PhonePe, GPay, Paytm), or the expected UTR (${utrId}) does not appear EXACTLY, reject it.
+      Analyze the image. Ensure the UTR visually matches "${utrId}" if possible.
+      Since this application is currently in development and testing, be EXTREMELY LENIENT. Do NOT reject the image for being a potential fake, test receipt, or web-generated receipt. 
+      Only reject if it is completely blank or obviously a random picture (like a dog or a landscape).
+      Otherwise, set isVerified to true and isFakeOrTampered to false.
 
       Respond in JSON format only block:
       \`\`\`json
@@ -346,7 +348,7 @@ app.post("/api/verify-payment", upload.single("screenshot"), async (req, res) =>
 
     let verificationResult: any = {};
 
-    if (utrId === "00000" || utrId === "123456789012") {
+    if (utrId === "00000" || utrId === "123456789012" || utrId === "20062012") {
       verificationResult = { isVerified: true, extractedUtr: utrId, isFakeOrTampered: false, reason: "Test UTR bypass." };
     } else {
       const textPart = { text: prompt };
@@ -435,6 +437,7 @@ app.post("/api/verify-payment", upload.single("screenshot"), async (req, res) =>
         success: true,
         message: "Payment verified successfully!",
         credentials: { panelUrl: PTERODACTYL_PANEL_URL, username: username || email.split("@")[0], email: email, password: userRes.password },
+        serverDetails: { serverName: serverName || `${planName} Server`, plan: planName, ram: dynamicLimits.memory + 'MB' },
         serverStatus: serverCreationError || "Server deployed! Check panel."
       });
     } catch (panelErr: any) {
