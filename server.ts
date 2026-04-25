@@ -160,10 +160,10 @@ const EGG_CONFIGS: any = {
 
 async function createPterodactylServer(userId: number, planName: string, serverName: string, nodeIdStr?: string, dynamicLimits?: any, eggIdStr?: string) {
   const limits = dynamicLimits || PLAN_LIMITS[planName] || PLAN_LIMITS["Plan One"];
-  const locationId = parseInt(nodeIdStr || "1", 10);
+  const initialLocationId = parseInt(nodeIdStr || "1", 10);
   const selectedEggConfig = EGG_CONFIGS[eggIdStr || "4"] || EGG_CONFIGS["4"];
   
-  const serverBody: any = {
+  const buildBody = (locId: number) => ({
     name: serverName,
     user: userId,
     egg: selectedEggConfig.id, 
@@ -174,26 +174,50 @@ async function createPterodactylServer(userId: number, planName: string, serverN
     limits: { memory: limits.memory, swap: 0, disk: limits.disk, io: 500, cpu: limits.cpu },
     feature_limits: { databases: limits.databases, backups: limits.backups, allocations: limits.ports },
     deploy: {
-       locations: [locationId],
+       locations: [locId],
        dedicated_ip: false,
        port_range: []
     },
     start_on_completion: false
-  };
-
-  const response = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/servers`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify(serverBody)
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to create Server: ${errorText}`);
-  }
+  const attemptDeployment = async (locId: number) => {
+    const response = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/servers`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(buildBody(locId))
+    });
 
-  const data = await response.json() as any;
-  return data.attributes;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to create Server (${response.status}): ${errorText}`);
+    }
+
+    return await response.json() as any;
+  };
+
+  try {
+    const data = await attemptDeployment(initialLocationId);
+    return data.attributes;
+  } catch (err: any) {
+    if (err.message.includes('NoViableNodeException')) {
+      console.warn(`Location ${initialLocationId} full. Attempting fallback locations...`);
+      // Fallback locations to try automatically
+      const fallbackNodes = [1, 2, 3, 4, 5].filter(lbl => lbl !== initialLocationId);
+      for (const loc of fallbackNodes) {
+         try {
+            console.log(`Trying fallback location ${loc}...`);
+            const data = await attemptDeployment(loc);
+            return data.attributes;
+         } catch(e: any) {
+            if (!e.message.includes('NoViableNodeException')) {
+               throw e; // if it's a different error, throw it
+            }
+         }
+      }
+    }
+    throw err; // if all fail, or it's not a node issue, throw original
+  }
 }
 
 app.post("/api/trial/send-otp", async (req, res) => {
@@ -361,7 +385,7 @@ app.post("/api/verify-payment", async (req, res) => {
 
       try {
         const response = await ai.models.generateContent({
-          model: "gemini-1.5-flash",
+          model: "gemini-1.5-flash-8b",
           contents: { parts: [imagePart, textPart] },
           config: { 
             responseMimeType: "application/json"
