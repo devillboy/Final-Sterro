@@ -28,7 +28,7 @@ class PterodactylService {
 
   private static EGG_CONFIGS: Record<string, any> = {
     "1": { id: 1, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "BungeeCord.jar" } },
-    "4": { id: 4, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "server.jar", MINECR[...]
+    "4": { id: 4, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "server.jar", MINECRAFT_VERSION: "latest" } },
     // Add more as needed...
   };
 
@@ -185,11 +185,19 @@ app.set("trust proxy", 1);
 
 // --- Routes ---
 
-app.get("/api/health", (_req, res) => res.json({ 
-  status: "ok", 
-  env: process.env.VERCEL ? 'vercel' : (process.env.NETLIFY ? 'netlify' : 'local'),
-  time: new Date().toISOString()
-}));
+app.get("/api/health", (req, res) => res.json({ status: "ok" }));
+
+async function fetchWithTimeout(resource: RequestInfo, options: any = {}) {
+  const { timeout = 8000 } = options;
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  const response = await fetch(resource, {
+    ...options,
+    signal: controller.signal
+  });
+  clearTimeout(id);
+  return response;
+}
 
 // Billing Endpoints
 app.get("/api/debug-env", (req, res) => {
@@ -389,7 +397,7 @@ async function mountFrontend() {
     const distPath = path.resolve(process.cwd(), 'dist');
     if (fsSync.existsSync(distPath)) {
       app.use(express.static(distPath));
-      app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
+      app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'Index.html')));
     }
   }
 }
