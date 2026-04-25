@@ -621,6 +621,13 @@ export default function PricingList() {
                     ) : selectedPlan.isTrial ? (
                       <div className="max-w-md mx-auto">
                          {isSkeletonLoading ? (
+ <div className="flex flex-col gap-4">
+ <div className="bg-[#121B2B]/50 border border-[#1a1f2e] p-6 rounded-2xl w-full max-w-md mx-auto mb-4">
+ <div className="text-center mb-6">
+ <h3 className="text-xl font-bold text-[#00F0FF] mb-2 uppercase tracking-widest">Creating Server...</h3>
+ <LoadingMessages isSubmitting={false} isCreatingServer={true} />
+ </div>
+ </div>
                            <div className="bg-[#121B2B]/50 border border-[#1a1f2e] p-6 rounded-2xl w-full max-w-md mx-auto">
                              <div className="animate-pulse flex space-x-4">
                                <div className="rounded-full bg-[#1a1f2e] h-12 w-12"></div>
@@ -641,6 +648,7 @@ export default function PricingList() {
                                </div>
                                <div className="h-14 bg-[#1a1f2e] rounded-xl w-full mt-6"></div>
                              </div>
+                           </div>
                            </div>
                          ) : (
                             <form onSubmit={handleSubmit(handleClaimTrial)} className="space-y-6">

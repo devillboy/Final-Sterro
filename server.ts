@@ -87,6 +87,18 @@ const PLAN_LIMITS: Record<string, any> = {
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
+async function fetchWithTimeout(resource, options = {}) {
+  const { timeout = 8000 } = options;
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  const response = await fetchWithTimeout(resource, {
+    ...options,
+    signal: controller.signal  
+  });
+  clearTimeout(id);
+  return response;
+}
+
 async function createPterodactylUser(email: string, username: string, firstName: string, lastName: string, passwordInput?: string) {
   const password = passwordInput || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8) + "!";
   // Sanitize username (Pterodactyl requires only alphanumeric, dash, underscore, inside email format etc.)
@@ -94,7 +106,7 @@ async function createPterodactylUser(email: string, username: string, firstName:
   if (safeUsername.length < 3) safeUsername = safeUsername + Math.floor(Math.random()*1000).toString();
   if (safeUsername.length > 50) safeUsername = safeUsername.substring(0, 50);
 
-  const response = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/users`, {
+  const response = await fetchWithTimeout(`${PTERODACTYL_PANEL_URL}/api/application/users`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify({ email, username: safeUsername, first_name: firstName, last_name: lastName, password })
@@ -104,7 +116,7 @@ async function createPterodactylUser(email: string, username: string, firstName:
     const errorText = await response.text();
     if (errorText.includes('has already been taken')) {
        try {
-           const getRes = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/users?filter[email]=${encodeURIComponent(email)}`, {
+           const getRes = await fetchWithTimeout(`${PTERODACTYL_PANEL_URL}/api/application/users?filter[email]=${encodeURIComponent(email)}`, {
                headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' }
            });
            if (getRes.ok) {
@@ -182,7 +194,7 @@ async function createPterodactylServer(userId: number, planName: string, serverN
   });
 
   const attemptDeployment = async (locId: number) => {
-    const response = await fetch(`${PTERODACTYL_PANEL_URL}/api/application/servers`, {
+    const response = await fetchWithTimeout(`${PTERODACTYL_PANEL_URL}/api/application/servers`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(buildBody(locId))
@@ -203,20 +215,9 @@ async function createPterodactylServer(userId: number, planName: string, serverN
     if (err.message.includes('NoViableNodeException')) {
       console.warn(`Location ${initialLocationId} full. Attempting fallback locations...`);
       // Fallback locations to try automatically
-      const fallbackNodes = [1, 2, 3, 4, 5].filter(lbl => lbl !== initialLocationId);
-      for (const loc of fallbackNodes) {
-         try {
-            console.log(`Trying fallback location ${loc}...`);
-            const data = await attemptDeployment(loc);
-            return data.attributes;
-         } catch(e: any) {
-            if (!e.message.includes('NoViableNodeException')) {
-               throw e; // if it's a different error, throw it
-            }
-         }
-      }
+      throw err;
     }
-    throw err; // if all fail, or it's not a node issue, throw original
+    throw err;
   }
 }
 
