@@ -69,6 +69,7 @@ export default function PricingList() {
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCreatingServer, setIsCreatingServer] = useState(false);
   const [verificationResult, setVerificationResult] = useState<{success?: boolean, error?: string, credentials?: any, serverDetails?: any, serverStatus?: string} | null>(null);
   const [billingStep, setBillingStep] = useState(1); // 1: Config, 2: Payment, 3: Success
   const [hasClaimedTrial, setHasClaimedTrial] = useState(false);
@@ -96,7 +97,16 @@ export default function PricingList() {
         const snap = await getDocs(q);
         if (!snap.empty) {
           const allPlans = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Plan));
-          setMinecraftPlans(allPlans.filter(p => p.type === 'minecraft'));
+          
+          let fetchedMcPlans = allPlans.filter(p => p.type === 'minecraft');
+          if (!fetchedMcPlans.some(p => p.isTrial)) {
+            const defaultTrial = fallbackMinecraftPlans.find(p => p.isTrial);
+            if (defaultTrial) {
+               fetchedMcPlans = [defaultTrial, ...fetchedMcPlans];
+            }
+          }
+          
+          setMinecraftPlans(fetchedMcPlans);
           setVpsPlans(allPlans.filter(p => p.type === 'vps'));
         }
       } catch (e) {
@@ -192,20 +202,46 @@ export default function PricingList() {
         throw new Error(`Server returned ${response.status}: ${text.substring(0, 100)}`);
       }
       
-      if (response.ok) {
-        setVerificationResult({ success: true, credentials: result.credentials, serverDetails: result.serverDetails, serverStatus: result.serverStatus });
-      } else {
+      if (!response.ok) {
         setVerificationResult({ error: result.error || result.reason || 'Verification failed.' });
+        setIsSubmitting(false);
+        return;
       }
+      
+      // Verification successful, proceed to create server
+      setIsSubmitting(false);
+      setIsCreatingServer(true);
+
+      const serverResponse = await fetch('/api/create-server', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      let serverResult;
+      const serverText = await serverResponse.text();
+      try {
+        serverResult = JSON.parse(serverText);
+      } catch (e) {
+         throw new Error(`Server creation failed: ${serverText.substring(0, 100)}`);
+      }
+
+      if (serverResponse.ok) {
+        setVerificationResult({ success: true, credentials: serverResult.credentials, serverDetails: serverResult.serverDetails, serverStatus: serverResult.serverStatus });
+      } else {
+        setVerificationResult({ error: serverResult.error || 'Server creation failed.' });
+      }
+
     } catch (error: any) {
-      setVerificationResult({ error: error.message || 'Connection error while contacting AI Gateway.' });
+      setVerificationResult({ error: error.message || 'Connection error while contacting AI Gateway or Panel.' });
     } finally {
       setIsSubmitting(false);
+      setIsCreatingServer(false);
     }
   };
 
   const closeDialog = () => {
-    if (!isSubmitting) {
+    if (!isSubmitting && !isCreatingServer) {
       setSelectedPlan(null);
       setScreenshot(null);
       setPreviewUrl(null);
@@ -671,8 +707,12 @@ export default function PricingList() {
 
                          {billingStep === 2 && (
                            <>
-                              {isSubmitting ? (
+                              {(isSubmitting || isCreatingServer) ? (
                                 <div className="bg-[#121B2B]/50 border border-[#1a1f2e] p-6 rounded-2xl w-full max-w-2xl mx-auto mt-4">
+                                  <div className="text-center mb-6">
+                                    <h3 className="text-xl font-bold text-[#00F0FF] mb-2 uppercase tracking-widest">{isSubmitting ? 'Verifying Payment...' : 'Creating Server...'}</h3>
+                                    <p className="text-white/60 text-sm">{isSubmitting ? 'We are verifying your transaction screenshot.' : 'Allocating Pterodactyl node resources...'}</p>
+                                  </div>
                                   <div className="animate-pulse flex space-x-4">
                                     <div className="rounded-full bg-[#1a1f2e] h-12 w-12"></div>
                                     <div className="flex-1 space-y-4 py-1">

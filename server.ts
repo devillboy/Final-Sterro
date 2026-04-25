@@ -404,6 +404,30 @@ app.post("/api/verify-payment", async (req, res) => {
       await setDoc(doc(db, 'payments', utrId), { utrId, upiId, date, planName, email, verifiedAt: new Date().toISOString() });
     } catch(e) { console.warn("Failed recording to DB", e); }
 
+    // Respond successfully so the UI can proceed to Server Creation
+    res.json({
+      success: true,
+      message: "Payment verified successfully! Proceeding to server creation.",
+      verificationDetails: {
+        extractedUtr: verificationResult.extractedUtr
+      }
+    });
+
+  } catch (error: any) {
+    console.error("Payment Verification Error:", error);
+    res.status(500).json({ error: "Internal server error during verification: " + error.message });
+  }
+});
+
+app.post("/api/create-server", async (req, res) => {
+  try {
+    const { planName, email, username, serverName, nodeId, eggId, password, ram, cpu, storage, databases, backups, ports } = req.body;
+
+    if (!email || !planName || !serverName) {
+      res.status(400).json({ error: "Missing required fields for server creation." });
+      return;
+    }
+
     const dynamicLimits = {
       memory: parseInt((ram || '').replace(/[^0-9]/g, '')) * (String(ram).includes('GB') ? 1024 : 1) || PLAN_LIMITS[planName]?.memory || 2048,
       cpu: parseInt((cpu || '').replace(/[^0-9]/g, '')) || PLAN_LIMITS[planName]?.cpu || 100,
@@ -435,7 +459,6 @@ app.post("/api/verify-payment", async (req, res) => {
 
       res.json({
         success: true,
-        message: "Payment verified successfully!",
         credentials: { panelUrl: PTERODACTYL_PANEL_URL, username: username || email.split("@")[0], email: email, password: userRes.password },
         serverDetails: { serverName: serverName || `${planName} Server`, plan: planName, ram: dynamicLimits.memory + 'MB' },
         serverStatus: serverCreationError || "Server deployed! Check panel."
@@ -444,8 +467,8 @@ app.post("/api/verify-payment", async (req, res) => {
       res.status(500).json({ error: "Panel Error: " + panelErr.message });
     }
   } catch (error: any) {
-    console.error("Payment Verification Error:", error);
-    res.status(500).json({ error: "Internal server error during verification: " + error.message });
+    console.error("Server Creation Error:", error);
+    res.status(500).json({ error: "Internal server error during server creation: " + error.message });
   }
 });
 
