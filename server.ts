@@ -1,10 +1,10 @@
 import express from "express";
 import multer from "multer";
 import { GoogleGenAI } from "@google/genai";
-import fetch from "node-fetch";
 import path from "node:path";
 import fs from "node:fs/promises";
 import fsSync from "node:fs";
+import { createRequire } from "node:module";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc, addDoc, collection, Timestamp } from "firebase/firestore";
 import session from "express-session";
@@ -13,19 +13,38 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Create require to load JSON in ESM
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
-const firebaseConfigRaw = require("./firebase-applet-config.json");
-
-// Load Firebase Config
-let firebaseConfig: any = firebaseConfigRaw;
+// Robustly load Firebase Config for both local and serverless environments
+let firebaseConfig: any = {};
+try {
+  // Use createRequire to load JSON so bundlers (esbuild/webpack) can track and include it
+  const require = createRequire(import.meta.url);
+  firebaseConfig = require("./firebase-applet-config.json");
+} catch (err) {
+  // Fallback to manual read if require fails in some ESM contexts
+  try {
+    const configPath = path.resolve(process.cwd(), "firebase-applet-config.json");
+    if (fsSync.existsSync(configPath)) {
+      firebaseConfig = JSON.parse(fsSync.readFileSync(configPath, "utf8"));
+    }
+  } catch (manualErr) {
+    console.error("Critical: Could not load firebase-applet-config.json", manualErr);
+  }
+}
 
 const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
+const firestoreDbId = firebaseConfig.firestoreDatabaseId || "(default)";
+const db = getFirestore(firebaseApp, firestoreDbId);
 
 const app = express();
 const PORT = 3000;
+
+// Body parsing fix for serverless environments where req.body might be pre-parsed
+app.use((req: any, res, next) => {
+  if (req.body && typeof req.body === 'object' && !Array.isArray(req.body) && Object.keys(req.body).length > 0) {
+    req._body = true;
+  }
+  next();
+});
 
 app.use(express.json({ limit: '20mb' }));
 app.use(cookieParser());
@@ -82,19 +101,24 @@ const PLAN_LIMITS: Record<string, any> = {
   "VPS Plan 3": { memory: 16384, disk: 120000, cpu: 800, ports: 1, backups: 0, databases: 0 },
 };
 
-app.get("/api/health", (req, res) => res.json({ status: "ok" }));
+// Helper to get the base URL of the request dynamically
+const getBaseUrl = (req: any) => {
+  const host = req.get('host');
+  const protocol = req.protocol || 'http';
+  return `${protocol}://${host}`;
+};
 
-async function fetchWithTimeout(resource: any, options: any = {}) {
+app.get("/api/health", (req, res) => res.json({ status: "ok", url: getBaseUrl(req) }));
+
+async function fetchWithTimeout(resource: string, options: any = {}) {
   const { timeout = 30000 } = options;
   const controller = new AbortController();
-  const id = setTimeout(() => {
-    try { controller.abort(); } catch {}
-  }, timeout);
+  const timer = setTimeout(() => controller.abort(), timeout);
   
   try {
     const response = await fetch(resource, {
       ...options,
-      signal: controller.signal as any
+      signal: controller.signal
     });
     return response;
   } catch (err: any) {
@@ -103,7 +127,7 @@ async function fetchWithTimeout(resource: any, options: any = {}) {
     }
     throw err;
   } finally {
-    clearTimeout(id);
+    clearTimeout(timer);
   }
 }
 
@@ -515,9 +539,18 @@ async function startServer() {
     const vite = await createViteServer({ server: { middlewareMode: true }, appType: "spa" });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => res.sendFile(path.join(distPath, 'index.html')));
+    const distPath = path.resolve(process.cwd(), 'dist');
+    if (fsSync.existsSync(distPath)) {
+      app.use(express.static(distPath));
+      app.get('*', (req, res) => {
+        const indexPath = path.join(distPath, 'index.html');
+        if (fsSync.existsSync(indexPath)) {
+          res.sendFile(indexPath);
+        } else {
+          res.status(404).send("Frontend build not found. Please run 'npm run build'.");
+        }
+      });
+    }
   }
   app.listen(PORT, "0.0.0.0", () => console.log(`Server running on http://localhost:${PORT}`));
 }
