@@ -1,13 +1,16 @@
+// @ts-ignore
 import app from '../server';
 
 export default app;
 
-// Disable Vercel's default body parser so Express (multer, express.json) can handle the raw request streams
+// Vercel specific configurations
 export const config = {
   api: {
+    // We handle our own body parsing in server.ts to avoid hangs
     bodyParser: false,
+    externalResolver: true,
   },
 };
 
-export const maxDuration = 60; // Set max duration for Vercel Hobby to 60s
-
+// Set maximum duration for automation tasks (especially Pterodactyl calls)
+export const maxDuration = 55; 

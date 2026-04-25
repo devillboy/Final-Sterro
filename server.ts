@@ -1,540 +1,281 @@
-import express from "express";
-import multer from "multer";
+import express, { Request, Response, NextFunction } from "express";
 import { GoogleGenAI } from "@google/genai";
-import path from "node:path";
-import fs from "node:fs/promises";
-import fsSync from "node:fs";
-import { createRequire } from "node:module";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc, addDoc, collection, Timestamp } from "firebase/firestore";
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import path from "node:path";
+import fsSync from "node:fs";
+import { createRequire } from "node:module";
 
 dotenv.config();
 
-// Robustly load Firebase Config for both local and serverless environments
+// --- Configuration Loading ---
+const require = createRequire(import.meta.url);
 let firebaseConfig: any = {};
 try {
-  // Use createRequire to load JSON so bundlers (esbuild/webpack) can track and include it
-  const require = createRequire(import.meta.url);
   firebaseConfig = require("./firebase-applet-config.json");
 } catch (err) {
-  // Fallback to manual read if require fails in some ESM contexts
-  try {
-    const configPath = path.resolve(process.cwd(), "firebase-applet-config.json");
-    if (fsSync.existsSync(configPath)) {
-      firebaseConfig = JSON.parse(fsSync.readFileSync(configPath, "utf8"));
-    }
-  } catch (manualErr) {
-    console.error("Critical: Could not load firebase-applet-config.json", manualErr);
+  const configPath = path.resolve(process.cwd(), "firebase-applet-config.json");
+  if (fsSync.existsSync(configPath)) {
+    firebaseConfig = JSON.parse(fsSync.readFileSync(configPath, "utf8"));
   }
 }
 
+// --- Initialize Services ---
 const firebaseApp = initializeApp(firebaseConfig);
-const firestoreDbId = firebaseConfig.firestoreDatabaseId || "(default)";
-const db = getFirestore(firebaseApp, firestoreDbId);
+const db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId || "(default)");
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "AIza..." });
 
+// --- Pterodactyl Automation Service ---
+class PterodactylService {
+  private static API_KEY = process.env.PTERODACTYL_API_KEY || 'ptla_WKMXC7QZlIfhBJJckJmIfqVDvr9UbUgU9NUJHZ2SQVN';
+  private static PANEL_URL = (process.env.PTERODACTYL_PANEL_URL || "https://panel.sterro.cloud").replace(/\/$/, "");
+
+  private static EGG_CONFIGS: Record<string, any> = {
+    "1": { id: 1, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "BungeeCord.jar" } },
+    "4": { id: 4, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "server.jar", MINECRAFT_VERSION: "latest" } },
+    // Add more as needed...
+  };
+
+  static async request(endpoint: string, method = 'GET', body?: any) {
+    const url = `${this.PANEL_URL}/api/application${endpoint}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${this.API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Pterodactyl API Error [${response.status}]: ${error}`);
+      }
+
+      return response.status === 204 ? null : await response.json();
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  static async findOrCreateUser(email: string, username: string, password?: string) {
+    const safeUsername = username.replace(/[^a-zA-Z0-9.\-_]/g, '').toLowerCase().substring(0, 50);
+    const pass = password || Math.random().toString(36).slice(-10) + "!";
+
+    try {
+      const users = await this.request(`/users?filter[email]=${encodeURIComponent(email)}`);
+      if (users && users.data.length > 0) {
+        return { id: users.data[0].attributes.id, password: pass };
+      }
+    } catch (e) {
+      console.warn("User search failed, attempting fresh create...");
+    }
+
+    const newUser = await this.request('/users', 'POST', {
+      email,
+      username: safeUsername.length < 3 ? `user_${Date.now()}` : safeUsername,
+      first_name: "Sterro",
+      last_name: "Customer",
+      password: pass
+    });
+
+    return { id: newUser.attributes.id, password: pass };
+  }
+
+  static async createServer(userId: number, name: string, nodeId: number, limits: any, eggId = "4") {
+    const egg = this.EGG_CONFIGS[eggId] || this.EGG_CONFIGS["4"];
+    
+    return await this.request('/servers', 'POST', {
+      name,
+      user: userId,
+      egg: egg.id,
+      nest: parseInt(process.env.PTERODACTYL_NEST_ID || "1", 10),
+      docker_image: egg.docker_image,
+      startup: egg.startup,
+      environment: egg.environment,
+      limits: {
+        memory: limits.memory,
+        swap: 0,
+        disk: limits.disk,
+        io: 500,
+        cpu: limits.cpu
+      },
+      feature_limits: {
+        databases: limits.databases || 0,
+        backups: limits.backups || 0,
+        allocations: limits.ports || 1
+      },
+      deploy: { locations: [nodeId], dedicated_ip: false, port_range: [] },
+      start_on_completion: false
+    });
+  }
+}
+
+// --- App Setup ---
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Body parsing fix for serverless environments where req.body might be pre-parsed
-app.use((req: any, res, next) => {
+// Body Parser Fix for Serverless + Large JSON
+app.use((req: any, _res, next) => {
   if (req.body && typeof req.body === 'object' && !Array.isArray(req.body) && Object.keys(req.body).length > 0) {
     req._body = true;
   }
   next();
 });
 
-app.use(express.json({ limit: '20mb' }));
+app.use(express.json({ limit: '25mb' }));
 app.use(cookieParser());
 app.use(session({
-  secret: process.env.SESSION_SECRET || "sterro-cloud-secret",
+  secret: process.env.SESSION_SECRET || "automated-sterro-secret",
   resave: false,
   saveUninitialized: false,
-  cookie: {
-    secure: true,      // Required for SameSite=None
-    sameSite: 'none',  // Required for cross-origin iframe
-    httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-  }
+  cookie: { secure: true, sameSite: 'none', httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 }
 }));
 
-// Proxy trust for secure cookies behind nginx/proxy
 app.set("trust proxy", 1);
 
-const upload = multer({ 
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
-});
+// --- Routes ---
 
-// Configure Gemini
-const ai = new GoogleGenAI({ 
-  apiKey: process.env.GEMINI_API_KEY || "AIzaSyBkU7ISi5UgvIrWO7nbhkvBb_NQZFx1xOM" 
-});
-
-// Pterodactyl Config
-const PTERODACTYL_API_KEY = process.env.PTERODACTYL_API_KEY || 'ptla_WKMXC7QZlIfhBJJckJmIfqVDvr9UbUgU9NUJHZ2SQVN';
-const PTERODACTYL_PANEL_URL = process.env.PTERODACTYL_PANEL_URL || "https://panel.sterro.cloud"; 
-const DefaultEggId = parseInt(process.env.PTERODACTYL_EGG_ID || "4", 10);
-const DefaultNestId = parseInt(process.env.PTERODACTYL_NEST_ID || "1", 10);
-const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || "MTQ5Njc0MjgxODA0MTgyNzM0OQ.GzvkKq.Y4zukBTPocc1tka3pSkVebzoIcmHlzIstRbP-c";
-
-// Discord OAuth Config
-const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
-const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI || `${process.env.APP_URL}/api/auth/callback`;
-
-// Mapping plans to Pterodactyl limits
-const PLAN_LIMITS: Record<string, any> = {
-  "1 Hour Free Trial": { memory: 4096, disk: 10000, cpu: 150, ports: 1, backups: 0, databases: 0 },
-  "Plan One": { memory: 2048, disk: 75000, cpu: 100, ports: 2, backups: 1, databases: 1 },
-  "Plan Two": { memory: 4096, disk: 100000, cpu: 150, ports: 2, backups: 1, databases: 1 },
-  "Plan Three": { memory: 6144, disk: 125000, cpu: 200, ports: 2, backups: 2, databases: 2 },
-  "Plan Four": { memory: 8192, disk: 150000, cpu: 300, ports: 3, backups: 3, databases: 3 },
-  "Plan Five": { memory: 12288, disk: 175000, cpu: 400, ports: 4, backups: 4, databases: 4 },
-  "Plan Six": { memory: 16384, disk: 200000, cpu: 600, ports: 4, backups: 4, databases: 4 },
-  "Plan Seven": { memory: 24576, disk: 250000, cpu: 0, ports: 5, backups: 5, databases: 5 },
-  // Adding base VPS limits mapping for fallback
-  "VPS Plan 1": { memory: 4096, disk: 50000, cpu: 200, ports: 1, backups: 0, databases: 0 },
-  "VPS Plan 2": { memory: 8192, disk: 80000, cpu: 400, ports: 1, backups: 0, databases: 0 },
-  "VPS Plan 3": { memory: 16384, disk: 120000, cpu: 800, ports: 1, backups: 0, databases: 0 },
-};
-
-// Helper to get the base URL of the request dynamically
-const getBaseUrl = (req: any) => {
-  const host = req.get('host');
-  const protocol = req.protocol || 'http';
-  return `${protocol}://${host}`;
-};
-
-app.get("/api/health", (req, res) => res.json({ status: "ok", url: getBaseUrl(req) }));
-
-async function fetchWithTimeout(resource: string, options: any = {}) {
-  const { timeout = 30000 } = options;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeout);
-  
-  try {
-    const response = await fetch(resource, {
-      ...options,
-      signal: controller.signal
-    });
-    return response;
-  } catch (err: any) {
-    if (err.name === 'AbortError') {
-      throw new Error(`Request to ${resource} timed out after ${timeout}ms`);
-    }
-    throw err;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-async function createPterodactylUser(email: string, username: string, firstName: string, lastName: string, passwordInput?: string) {
-  const password = passwordInput || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8) + "!";
-  // Sanitize username (Pterodactyl requires only alphanumeric, dash, underscore, inside email format etc.)
-  let safeUsername = username.replace(/[^a-zA-Z0-9.\-_]/g, '').toLowerCase() || `user${Math.floor(Math.random()*10000)}`;
-  if (safeUsername.length < 3) safeUsername = safeUsername + Math.floor(Math.random()*1000).toString();
-  if (safeUsername.length > 50) safeUsername = safeUsername.substring(0, 50);
-
-  const response = await fetchWithTimeout(`${PTERODACTYL_PANEL_URL}/api/application/users`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({ email, username: safeUsername, first_name: firstName, last_name: lastName, password })
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    if (errorText.includes('has already been taken')) {
-       try {
-           const getRes = await fetchWithTimeout(`${PTERODACTYL_PANEL_URL}/api/application/users?filter[email]=${encodeURIComponent(email)}`, {
-               headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Accept': 'application/json' }
-           });
-           if (getRes.ok) {
-               const getData = await getRes.json() as any;
-               if (getData.data && getData.data.length > 0) {
-                   return { id: getData.data[0].attributes.id, password };
-               }
-           }
-       } catch (e) {}
-       
-       const rnd = Math.floor(Math.random()*1000);
-       return createPterodactylUser(`${rnd}__${email}`, `${safeUsername}${rnd}`, firstName, lastName, passwordInput);
-    }
-    throw new Error(`Failed to create Panel User (${response.status}): ${errorText}`);
-  }
-
-  const data = await response.json() as any;
-  return { id: data.attributes.id, password };
-}
-
-const EGG_CONFIGS: any = {
-  "1": { 
-    id: 1, 
-    docker_image: "ghcr.io/pterodactyl/yolks:java_21", 
-    startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", 
-    environment: { SERVER_JARFILE: "BungeeCord.jar", BUNGEE_VERSION: "latest" }
-  },
-  "2": { 
-    id: 2, 
-    docker_image: "ghcr.io/pterodactyl/yolks:java_21", 
-    startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -Dterminal.jline=false -Dterminal.ansi=true $( [[  ! -f unix_args.txt ]] && printf %s \"-jar {{SERVER_JARFILE}}\" || printf %s \"@unix_args.txt\" )", 
-    environment: { SERVER_JARFILE: "forge.jar", MC_VERSION: "latest", FORGE_VERSION: "", BUILD_TYPE: "recommended" }
-  },
-  "3": { 
-    id: 3, 
-    docker_image: "ghcr.io/pterodactyl/yolks:java_21", 
-    startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", 
-    environment: { SERVER_JARFILE: "server.jar", SPONGE_VERSION: "1.16.5-8.1.0-RC1149" }
-  },
-  "4": { 
-    id: 4, 
-    docker_image: "ghcr.io/pterodactyl/yolks:java_21", 
-    startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -Dterminal.jline=false -Dterminal.ansi=true -jar {{SERVER_JARFILE}}", 
-    environment: { SERVER_JARFILE: "server.jar", BUILD_NUMBER: "latest", MINECRAFT_VERSION: "latest" }
-  },
-  "5": { 
-    id: 5, 
-    docker_image: "ghcr.io/pterodactyl/yolks:java_21", 
-    startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", 
-    environment: { SERVER_JARFILE: "server.jar", VANILLA_VERSION: "latest" }
-  }
-};
-
-async function createPterodactylServer(userId: number, planName: string, serverName: string, nodeIdStr?: string, dynamicLimits?: any, eggIdStr?: string) {
-  const limits = dynamicLimits || PLAN_LIMITS[planName] || PLAN_LIMITS["Plan One"];
-  const initialLocationId = parseInt(nodeIdStr || "1", 10);
-  const selectedEggConfig = EGG_CONFIGS[eggIdStr || "4"] || EGG_CONFIGS["4"];
-  
-  const buildBody = (locId: number) => ({
-    name: serverName,
-    user: userId,
-    egg: selectedEggConfig.id, 
-    nest: parseInt(process.env.PTERODACTYL_NEST_ID || "1", 10), 
-    docker_image: selectedEggConfig.docker_image,
-    startup: selectedEggConfig.startup,
-    environment: selectedEggConfig.environment,
-    limits: { memory: limits.memory, swap: 0, disk: limits.disk, io: 500, cpu: limits.cpu },
-    feature_limits: { databases: limits.databases, backups: limits.backups, allocations: limits.ports },
-    deploy: {
-       locations: [locId],
-       dedicated_ip: false,
-       port_range: []
-    },
-    start_on_completion: false
-  });
-
-  const attemptDeployment = async (locId: number) => {
-    const response = await fetchWithTimeout(`${PTERODACTYL_PANEL_URL}/api/application/servers`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${PTERODACTYL_API_KEY}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify(buildBody(locId))
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to create Server (${response.status}): ${errorText}`);
-    }
-
-    return await response.json() as any;
-  };
-
-  try {
-    const data = await attemptDeployment(initialLocationId);
-    return data.attributes;
-  } catch (err: any) {
-    if (err.message.includes('NoViableNodeException')) {
-      console.warn(`Location ${initialLocationId} full. Attempting fallback locations...`);
-      // Fallback locations to try automatically
-      throw err;
-    }
-    throw err;
-  }
-}
-
-app.post("/api/trial/send-otp", async (req, res) => {
-  const body = req.body || {};
-  const { email } = body;
-  if (!email) {
-    res.status(400).json({ error: "Email address is required" });
-    return;
-  }
-
-  try {
-    // Check if trial already claimed by this email
-    try {
-      const trialDoc = await getDoc(doc(db, 'trials', email));
-      if (trialDoc.exists()) {
-        res.status(400).json({ error: "This email has already claimed a free trial!" });
-        return;
-      }
-    } catch(e) { 
-      console.warn("DB check fail", e);
-    }
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    
-    // In a real app, this would use a service like SendGrid or Nodemailer
-    // For this build, we'll log it to console and simulate success
-    console.log(`[TRIAL OTP] sending to ${email}: ${otp}`);
-
-    try {
-        await setDoc(doc(db, 'otps', email), { otp, expiresAt: Date.now() + 10*60*1000 });
-    } catch(e) {
-        (global as any).memOtps = (global as any).memOtps || {};
-        (global as any).memOtps[email] = otp;
-    }
-
-    res.json({ success: true, message: "Verification code sent! (Demo Mode: Check browser console or look below)", otp: otp });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
+app.get("/api/health", (_req, res) => res.json({ status: "ok", env: process.env.VERCEL ? 'vercel' : 'local' }));
 
 app.post("/api/trial/claim", async (req, res) => {
-  const body = req.body || {};
-  const { email, password, username, serverName, nodeId, eggId } = body;
+  const { email, password, username, serverName, nodeId, eggId } = req.body;
 
-  if (!email || !password || !serverName) {
-    res.status(400).json({ error: "Email, username, password and server name are required" });
-    return;
-  }
-
-  let isValid = true; // Human verification is handled on frontend simply for this flow
-
-  if (!isValid) {
-    res.status(400).json({ error: "Invalid verification code." });
-    return;
+  if (!email || !serverName) {
+    return res.status(400).json({ error: "Missing required details for trial." });
   }
 
   try {
-      // Check if trial has already been claimed
-      const trialCheckDoc = await getDoc(doc(db, "trials", email));
-      if (trialCheckDoc.exists()) {
-        res.status(400).json({ error: "You have already claimed a free trial. You cannot claim another one." });
-        return;
-      }
+    // 1. Double check trial status
+    const trialRef = doc(db, "trials", email);
+    const existing = await getDoc(trialRef);
+    if (existing.exists()) {
+      return res.status(400).json({ error: "You've already claimed your free trial." });
+    }
 
-      // Create user and server
-      const userRes = await createPterodactylUser(email, username || email.split("@")[0], "Trial", "User", password);
-      let serverRes = null;
-      let extError = null;
-      try {
-          serverRes = await createPterodactylServer(userRes.id, "1 Hour Free Trial", serverName || "Sterro Trial Server", nodeId, { memory: 1024, cpu: 50, disk: 5000, databases: 0, backups: 0, ports: 1 }, eggId);
-          
-          if (serverRes && serverRes.id) {
-              console.log(`[Trial] Server ${serverRes.id} created.`);
-          }
-      } catch(e: any) { 
-          console.error("Trial Server Provisioning Failed:", e);
-          let errorMsg = "User account created, but the trial server could not be allocated. ";
-          if (e.message.includes('DaemonConnectionException')) {
-             errorMsg += "Your Pterodactyl Wings daemon is OFFLINE or unreachable! Check your Panel/Wings setup.";
-          } else if (e.message.includes('NoViableNodeException')) {
-             errorMsg += "Insufficient node resources on your Panel (No Allocations, Memory, etc).";
-          } else {
-             errorMsg += e.message;
-          }
-          extError = errorMsg;
-      }
+    // 2. Automate User + Server
+    const user = await PterodactylService.findOrCreateUser(email, username || email.split("@")[0], password);
+    const server = await PterodactylService.createServer(user.id, serverName, parseInt(nodeId || "1"), {
+      memory: 1024, cpu: 50, disk: 5000
+    }, eggId);
 
-      // Persist trial claim
-      try { await setDoc(doc(db, 'trials', email), { claimedAt: new Date().toISOString(), serverId: serverRes?.id || 'unknown' }); } catch(e) {}
-
-      res.json({
-          success: true,
-          credentials: { panelUrl: PTERODACTYL_PANEL_URL, username: username || email.split("@")[0], email: email, password: userRes.password },
-          serverDetails: { serverName: serverName || "Sterro Trial Server", plan: "1 Hour Free Trial", type: "Minecraft Server" },
-          serverStatus: extError || "Trial Server provisioned! It will automatically suspend in 1 Hour."
-      });
-  } catch (e: any) {
-      res.status(500).json({error: e.message});
+    // 3. Persist and Respond
+    await setDoc(trialRef, { email, claimedAt: Timestamp.now(), serverId: server.attributes.id });
+    
+    res.json({
+      success: true,
+      credentials: { username: username || email.split("@")[0], email, password: user.password, panelUrl: "https://panel.sterro.cloud" },
+      message: "Server provisioned successfully!"
+    });
+  } catch (err: any) {
+    console.error("Trial Automation Error:", err);
+    res.status(500).json({ error: err.message || "Failed to automate server deployment." });
   }
 });
 
 app.post("/api/verify-payment", async (req, res) => {
   try {
-    const body = req.body || {};
-    const { utrId, upiId, date, planName, email, username, serverName, nodeId, eggId, password, ram, cpu, storage, databases, backups, ports, screenshot, screenshotMimeType } = body;
+    const { utrId, upiId, date, planName, email, username, serverName, nodeId, eggId, password, ram, cpu, storage, screenshot, screenshotMimeType } = req.body;
 
-    const isBypassUtr = utrId === "00000" || utrId === "123456789012" || utrId === "20062012";
+    const isBypass = ["00000", "123456789012", "20062012"].includes(utrId);
 
-    if ((!screenshot && !isBypassUtr) || !utrId || !date || !planName || !email || !serverName) {
-      res.status(400).json({ error: "Missing required fields (including server name) or screenshot." });
-      return;
+    if ((!screenshot && !isBypass) || !utrId || !date || !planName || !email) {
+      return res.status(400).json({ error: "Required payment details or verification assets are missing." });
     }
 
+    // 1. Double spend prevention
     try {
-      const utrRef = doc(db, 'payments', utrId);
-      const utrDoc = await getDoc(utrRef);
-      if (utrDoc.exists()) {
-        res.status(400).json({ error: "Duplicate payment detected. This UTR/Transaction ID has already been used." });
-        return;
+      const paymentCheck = await getDoc(doc(db, 'payments', utrId));
+      if (paymentCheck.exists()) {
+        return res.status(400).json({ error: "This Transaction ID has already been processed." });
       }
-    } catch (dbErr) {
-       console.warn("DB check skipped/failed. Proceeding...", dbErr);
-       // If db fails (like missing security rules), we don't strictly block them to prevent total lockout
+    } catch (e) {
+      console.warn("DB check bypassed due to connectivity.");
     }
 
-    const mimeType = screenshotMimeType || "image/jpeg";
-    const base64Data = screenshot || "";
+    let isVerified = true;
+    let reason = "Manual verification bypass for testing.";
 
-    const prompt = `
-      You are a strict, top-tier fraud detection AI for a UPI payment gateway.
-      A user has uploaded a screenshot of a UPI payment.
-      
-      Extract the following information from the image and verify it perfectly matches the user's provided input:
-      - Claimed UTR / Transaction ID: ${utrId}
-      - Claimed UPI ID paid from: ${upiId}
-      - Claimed Date: ${date}
-
-      CRITICAL FRAUD DETECTION:
-      Analyze the image. Ensure the UTR visually matches "${utrId}" if possible.
-      Since this application is currently in development and testing, be EXTREMELY LENIENT. Do NOT reject the image for being a potential fake, test receipt, or web-generated receipt. 
-      Only reject if it is completely blank or obviously a random picture (like a dog or a landscape).
-      Otherwise, set isVerified to true and isFakeOrTampered to false.
-
-      Respond in JSON format only block:
-      \`\`\`json
-      {
-        "isVerified": true/false,
-        "extractedUtr": "string",
-        "reason": "Explanation of verification result explaining why it looks real or fake.",
-        "isFakeOrTampered": true/false
-      }
-      \`\`\`
-    `;
-
-    let verificationResult: any = {};
-
-    if (utrId === "00000" || utrId === "123456789012" || utrId === "20062012") {
-      verificationResult = { isVerified: true, extractedUtr: utrId, isFakeOrTampered: false, reason: "Test UTR bypass." };
-    } else {
-      const textPart = { text: prompt };
-      const imagePart = {
-        inlineData: {
-          data: base64Data,
-          mimeType: mimeType
-        }
-      };
-
+    // 2. Gemini-Powered Fraud Detection (if screenshot exists)
+    if (screenshot && !isBypass) {
       try {
-        const response = await ai.models.generateContent({
-          model: "gemini-1.5-flash-8b",
-          contents: { parts: [imagePart, textPart] },
-          config: { 
-            responseMimeType: "application/json"
-          }
+        const prompt = `
+          Analyze this UPI payment proof for Sterro Cloud. 
+          UTR: ${utrId}
+          Compare visual data with claimed UTR. Reject only if completely fraudulent or empty.
+          Respond with JSON: { "isVerified": boolean, "reason": "string" }
+        `;
+        const result = await ai.models.generateContent({
+          model: "gemini-1.5-flash",
+          contents: { parts: [{ inlineData: { data: screenshot, mimeType: screenshotMimeType || "image/jpeg" } }, { text: prompt }] },
+          config: { responseMimeType: "application/json" }
         });
-
-        const responseText = response.text || "{}";
-        const cleanJson = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-        verificationResult = JSON.parse(cleanJson);
-      } catch (aiError: any) {
-        console.error("AI Verification Failed, falling back to approve:", aiError);
-        // Fallback to allow if API key is invalid so user is not blocked
-        verificationResult = { isVerified: true, extractedUtr: utrId, isFakeOrTampered: false, reason: "Bypassed verification due to API Gateway issues." };
+        const parsed = JSON.parse(result.text || "{}");
+        isVerified = parsed.isVerified ?? true;
+        reason = parsed.reason || "Automated check completed.";
+      } catch (aiErr) {
+        console.error("AI Fraud Check Failed (Fallback to Allow):", aiErr);
       }
     }
 
-    // LOG TRANSACTION
-    try {
-      await addDoc(collection(db, 'transactions'), {
-        utrId,
-        upiId,
-        email,
-        username,
-        planName,
-        date: Timestamp.now(),
-        status: verificationResult.isVerified ? 'success' : 'failed',
-        reason: verificationResult.reason,
-        isVerified: verificationResult.isVerified
-      });
-    } catch (logErr) {
-      console.error("Failed to log transaction:", logErr);
+    if (!isVerified) {
+      return res.status(400).json({ error: "Payment verification failed.", reason });
     }
 
-    if (!verificationResult.isVerified || verificationResult.isFakeOrTampered) {
-      res.status(400).json({ error: "Verification failed.", reason: verificationResult.reason });
-      return;
+    // 3. Log and Persist
+    try {
+      await setDoc(doc(db, 'payments', utrId), { utrId, email, planName, verifiedAt: Timestamp.now() });
+      await addDoc(collection(db, 'transactions'), { utrId, email, planName, status: 'verified', createdAt: Timestamp.now() });
+    } catch (e) {
+      console.error("Failed to log transaction safely.");
     }
 
-    try {
-      await setDoc(doc(db, 'payments', utrId), { utrId, upiId, date, planName, email, verifiedAt: new Date().toISOString() });
-    } catch(e) { console.warn("Failed recording to DB", e); }
-
-    // Respond successfully so the UI can proceed to Server Creation
     res.json({
       success: true,
-      message: "Payment verified successfully! Proceeding to server creation.",
-      verificationDetails: {
-        extractedUtr: verificationResult.extractedUtr
-      }
+      message: "Payment verified. You may now proceed with server creation.",
+      details: { utrId, reason }
     });
-
-  } catch (error: any) {
-    console.error("Payment Verification Error:", error);
-    res.status(500).json({ error: "Internal server error during verification: " + error.message });
+  } catch (err: any) {
+    console.error("Verification Critical Error:", err);
+    res.status(500).json({ error: "System failure during payment verification." });
   }
 });
 
 app.post("/api/create-server", async (req, res) => {
-  try {
-    const body = req.body || {};
-    const { planName, email, username, serverName, nodeId, eggId, password, ram, cpu, storage, databases, backups, ports } = body;
-
-    if (!email || !planName || !serverName) {
-      res.status(400).json({ error: "Missing required fields for server creation." });
-      return;
-    }
-
-    const dynamicLimits = {
-      memory: parseInt((ram || '').replace(/[^0-9]/g, '')) * (String(ram).includes('GB') ? 1024 : 1) || PLAN_LIMITS[planName]?.memory || 2048,
-      cpu: parseInt((cpu || '').replace(/[^0-9]/g, '')) || PLAN_LIMITS[planName]?.cpu || 100,
-      disk: parseInt((storage || '').replace(/[^0-9]/g, '')) * (String(storage).includes('GB') ? 1024 : 1) || PLAN_LIMITS[planName]?.disk || 10240,
-      databases: parseInt((databases || '').replace(/[^0-9]/g, '')) || PLAN_LIMITS[planName]?.databases || 1,
-      backups: parseInt((backups || '').replace(/[^0-9]/g, '')) || PLAN_LIMITS[planName]?.backups || 0,
-      ports: parseInt((ports || '').replace(/[^0-9]/g, '')) || PLAN_LIMITS[planName]?.ports || 1
-    };
-
+    const { email, planName, serverName, nodeId, password, ram, cpu, storage } = req.body;
+    
     try {
-      const userRes = await createPterodactylUser(email, username || email.split("@")[0], "New", "User", password);
-      
-      let serverRes = null;
-      let serverCreationError = null;
-      try {
-        serverRes = await createPterodactylServer(userRes.id, planName, serverName || `${planName} Server`, nodeId, dynamicLimits, eggId);
-      } catch (err: any) {
-        console.error("Server Creation Failed: ", err);
-        let errorMsg = "User Account created correctly, but Server could not be allocated. ";
-        if (err.message.includes('DaemonConnectionException')) {
-           errorMsg += "Your Pterodactyl Wings daemon is OFFLINE or unreachable from the Panel! Please check your Server/Wings setup.";
-        } else if (err.message.includes('NoViableNodeException')) {
-           errorMsg += "Your Panel does not have enough unassigned allocations, memory, or disk space on the Node.";
-        } else {
-           errorMsg += "Error: " + err.message;
-        }
-        serverCreationError = errorMsg;
-      }
+        const memory = parseInt(ram) || 2048;
+        const cpuLimit = parseInt(cpu) || 100;
+        const disk = parseInt(storage) || 10000;
 
-      res.json({
-        success: true,
-        credentials: { panelUrl: PTERODACTYL_PANEL_URL, username: username || email.split("@")[0], email: email, password: userRes.password },
-        serverDetails: { serverName: serverName || `${planName} Server`, plan: planName, ram: dynamicLimits.memory + 'MB' },
-        serverStatus: serverCreationError || "Server deployed! Check panel."
-      });
-    } catch (panelErr: any) {
-      res.status(500).json({ error: "Panel Error: " + panelErr.message });
+        const user = await PterodactylService.findOrCreateUser(email, email.split("@")[0], password);
+        const server = await PterodactylService.createServer(user.id, serverName, parseInt(nodeId || "1"), {
+            memory, cpu: cpuLimit, disk
+        });
+
+        res.json({
+            success: true,
+            credentials: { email, password: user.password, panelUrl: "https://panel.sterro.cloud" },
+            server: server.attributes
+        });
+    } catch (err: any) {
+        res.status(500).json({ error: err.message });
     }
-  } catch (error: any) {
-    console.error("Server Creation Error:", error);
-    res.status(500).json({ error: "Internal server error during server creation: " + error.message });
-  }
 });
 
-async function startServer() {
-  if (process.env.NODE_ENV !== "production") {
+// --- Dynamic Frontend Serving ---
+async function mountFrontend() {
+  if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({ server: { middlewareMode: true }, appType: "spa" });
     app.use(vite.middlewares);
@@ -542,36 +283,17 @@ async function startServer() {
     const distPath = path.resolve(process.cwd(), 'dist');
     if (fsSync.existsSync(distPath)) {
       app.use(express.static(distPath));
-      app.get('*', (req, res) => {
-        const indexPath = path.join(distPath, 'index.html');
-        if (fsSync.existsSync(indexPath)) {
-          res.sendFile(indexPath);
-        } else {
-          res.status(404).send("Frontend build not found. Please run 'npm run build'.");
-        }
-      });
+      app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
     }
   }
-  app.listen(PORT, "0.0.0.0", () => console.log(`Server running on http://localhost:${PORT}`));
 }
 
-// Only start the server natively if we are not running in a Vercel Serverless environment
-if (!process.env.VERCEL && !process.env.NETLIFY && process.env.NODE_ENV !== 'test') {
-  startServer();
-}
-
-// Global Error Handler
-app.use((err: any, req: any, res: any, next: any) => {
-  console.error("Global Error Caught:", err);
-  res.status(500).json({ 
-    error: "A critical server error occurred.", 
-    message: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+if (!process.env.VERCEL && !process.env.NETLIFY) {
+  mountFrontend().then(() => {
+    app.listen(Number(PORT), "0.0.0.0", () => console.log(`Server launched on port ${PORT}`));
   });
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
+} else {
+  mountFrontend(); // Just mount, serverless will handle execution
+}
 
 export default app;
