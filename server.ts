@@ -1,6 +1,7 @@
 import express from "express";
 import multer from "multer";
 import { GoogleGenAI } from "@google/genai";
+import fetch from "node-fetch";
 import path from "node:path";
 import fs from "node:fs/promises";
 import fsSync from "node:fs";
@@ -9,9 +10,13 @@ import { getFirestore, doc, getDoc, setDoc, addDoc, collection, Timestamp } from
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-import firebaseConfigRaw from "./firebase-applet-config.json";
 
 dotenv.config();
+
+// Create require to load JSON in ESM
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const firebaseConfigRaw = require("./firebase-applet-config.json");
 
 // Load Firebase Config
 let firebaseConfig: any = firebaseConfigRaw;
@@ -21,14 +26,6 @@ const db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
 
 const app = express();
 const PORT = 3000;
-
-// Fix for Vercel/Netlify where the stream is already parsed, avoiding express.json() hanging
-app.use((req: any, res, next) => {
-  if (req.body && typeof req.body === 'object') {
-    req._body = true; // Tell express.json() not to parse again
-  }
-  next();
-});
 
 app.use(express.json({ limit: '20mb' }));
 app.use(cookieParser());
@@ -87,16 +84,24 @@ const PLAN_LIMITS: Record<string, any> = {
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
-async function fetchWithTimeout(resource, options = {}) {
+async function fetchWithTimeout(resource: any, options: any = {}) {
   const { timeout = 30000 } = options;
   const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
+  const id = setTimeout(() => {
+    try { controller.abort(); } catch {}
+  }, timeout);
+  
   try {
     const response = await fetch(resource, {
       ...options,
-      signal: controller.signal
+      signal: controller.signal as any
     });
     return response;
+  } catch (err: any) {
+    if (err.name === 'AbortError') {
+      throw new Error(`Request to ${resource} timed out after ${timeout}ms`);
+    }
+    throw err;
   } finally {
     clearTimeout(id);
   }
@@ -521,5 +526,19 @@ async function startServer() {
 if (!process.env.VERCEL && !process.env.NETLIFY && process.env.NODE_ENV !== 'test') {
   startServer();
 }
+
+// Global Error Handler
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error("Global Error Caught:", err);
+  res.status(500).json({ 
+    error: "A critical server error occurred.", 
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 export default app;
