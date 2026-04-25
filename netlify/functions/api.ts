@@ -3,13 +3,20 @@ import app from "../../server";
 
 const handler = serverless(app, {
   request: (req: any, event: any) => {
-    // Inject Netlify event context into the request if needed
     req.netlifyEvent = event;
     
-    // Path rewriting for clean routing
-    const path = event.path || req.url;
-    req.url = path.replace(/^\/\.netlify\/functions\/api/, '');
-    if (!req.url.startsWith('/')) req.url = '/' + req.url;
+    // Path rewriting: ensure it starts with /api if it's being proxied to this function
+    let path = event.path || req.url;
+    
+    // If it comes through the function path directly, strip the function prefix but keep /api
+    if (path.startsWith('/.netlify/functions/api')) {
+      path = path.replace('/.netlify/functions/api', '/api');
+    }
+    
+    // Ensure it's never empty
+    if (!path || path === '') path = '/';
+    
+    req.url = path;
   }
 });
 

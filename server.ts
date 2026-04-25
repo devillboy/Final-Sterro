@@ -17,16 +17,22 @@ let firebaseConfig: any = {};
 try {
   firebaseConfig = require("./firebase-applet-config.json");
 } catch (err) {
-  const configPath = path.resolve(process.cwd(), "firebase-applet-config.json");
-  if (fsSync.existsSync(configPath)) {
-    firebaseConfig = JSON.parse(fsSync.readFileSync(configPath, "utf8"));
+  try {
+    const configPath = path.resolve(process.cwd(), "firebase-applet-config.json");
+    if (fsSync.existsSync(configPath)) {
+      firebaseConfig = JSON.parse(fsSync.readFileSync(configPath, "utf8"));
+    }
+  } catch (innerErr) {
+    console.error("Critical: Could not load firebase-applet-config.json", innerErr);
   }
 }
 
 // --- Initialize Services ---
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId || "(default)");
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "AIza..." });
+// Only initialize if we have at least some config
+const firebaseApp = (firebaseConfig && firebaseConfig.apiKey) ? initializeApp(firebaseConfig) : null;
+const db = firebaseApp ? getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId || "(default)") : null;
+const aiKey = process.env.GEMINI_API_KEY;
+const ai = aiKey ? new GoogleGenAI(aiKey) : null;
 
 // --- Pterodactyl Automation Service ---
 class PterodactylService {
@@ -156,10 +162,12 @@ app.post("/api/trial/claim", async (req, res) => {
 
   try {
     // 1. Double check trial status
-    const trialRef = doc(db, "trials", email);
-    const existing = await getDoc(trialRef);
-    if (existing.exists()) {
-      return res.status(400).json({ error: "You've already claimed your free trial." });
+    if (db) {
+      const trialRef = doc(db, "trials", email);
+      const existing = await getDoc(trialRef);
+      if (existing.exists()) {
+        return res.status(400).json({ error: "You've already claimed your free trial." });
+      }
     }
 
     // 2. Automate User + Server
@@ -169,7 +177,10 @@ app.post("/api/trial/claim", async (req, res) => {
     }, eggId);
 
     // 3. Persist and Respond
-    await setDoc(trialRef, { email, claimedAt: Timestamp.now(), serverId: server.attributes.id });
+    if (db) {
+      const trialRef = doc(db, "trials", email);
+      await setDoc(trialRef, { email, claimedAt: Timestamp.now(), serverId: server.attributes.id });
+    }
     
     res.json({
       success: true,
@@ -193,20 +204,22 @@ app.post("/api/verify-payment", async (req, res) => {
     }
 
     // 1. Double spend prevention
-    try {
-      const paymentCheck = await getDoc(doc(db, 'payments', utrId));
-      if (paymentCheck.exists()) {
-        return res.status(400).json({ error: "This Transaction ID has already been processed." });
+    if (db) {
+      try {
+        const paymentCheck = await getDoc(doc(db, 'payments', utrId));
+        if (paymentCheck.exists()) {
+          return res.status(400).json({ error: "This Transaction ID has already been processed." });
+        }
+      } catch (e) {
+        console.warn("DB check bypassed due to connectivity.");
       }
-    } catch (e) {
-      console.warn("DB check bypassed due to connectivity.");
     }
 
     let isVerified = true;
     let reason = "Manual verification bypass for testing.";
 
     // 2. Gemini-Powered Fraud Detection (if screenshot exists)
-    if (screenshot && !isBypass) {
+    if (screenshot && !isBypass && ai) {
       try {
         const prompt = `
           Analyze this UPI payment proof for Sterro Cloud. 
@@ -214,12 +227,13 @@ app.post("/api/verify-payment", async (req, res) => {
           Compare visual data with claimed UTR. Reject only if completely fraudulent or empty.
           Respond with JSON: { "isVerified": boolean, "reason": "string" }
         `;
-        const result = await ai.models.generateContent({
-          model: "gemini-1.5-flash",
-          contents: { parts: [{ inlineData: { data: screenshot, mimeType: screenshotMimeType || "image/jpeg" } }, { text: prompt }] },
-          config: { responseMimeType: "application/json" }
-        });
-        const parsed = JSON.parse(result.text || "{}");
+        const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const result = await model.generateContent([
+          { inlineData: { data: screenshot, mimeType: screenshotMimeType || "image/jpeg" } },
+          prompt
+        ]);
+        const responseText = result.response.text();
+        const parsed = JSON.parse(responseText || "{}");
         isVerified = parsed.isVerified ?? true;
         reason = parsed.reason || "Automated check completed.";
       } catch (aiErr) {
@@ -232,11 +246,13 @@ app.post("/api/verify-payment", async (req, res) => {
     }
 
     // 3. Log and Persist
-    try {
-      await setDoc(doc(db, 'payments', utrId), { utrId, email, planName, verifiedAt: Timestamp.now() });
-      await addDoc(collection(db, 'transactions'), { utrId, email, planName, status: 'verified', createdAt: Timestamp.now() });
-    } catch (e) {
-      console.error("Failed to log transaction safely.");
+    if (db) {
+      try {
+        await setDoc(doc(db, 'payments', utrId), { utrId, email, planName, verifiedAt: Timestamp.now() });
+        await addDoc(collection(db, 'transactions'), { utrId, email, planName, status: 'verified', createdAt: Timestamp.now() });
+      } catch (e) {
+        console.error("Failed to log transaction safely.");
+      }
     }
 
     res.json({
