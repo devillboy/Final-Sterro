@@ -1,7 +1,8 @@
 // @ts-ignore
+import serverless from 'serverless-http';
 import app from '../server';
 
-export default app;
+export default serverless(app);
 
 // Vercel specific configurations
 export const config = {
