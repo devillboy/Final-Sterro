@@ -5,27 +5,12 @@ import { getFirestore, doc, getDoc, setDoc, addDoc, collection, Timestamp } from
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-import path from "node:path";
-import fsSync from "node:fs";
-import { createRequire } from "node:module";
 
 dotenv.config();
 
 // --- Configuration Loading ---
-const require = createRequire(import.meta.url);
-let firebaseConfig: any = {};
-try {
-  firebaseConfig = require("./firebase-applet-config.json");
-} catch (err) {
-  try {
-    const configPath = path.resolve(process.cwd(), "firebase-applet-config.json");
-    if (fsSync.existsSync(configPath)) {
-      firebaseConfig = JSON.parse(fsSync.readFileSync(configPath, "utf8"));
-    }
-  } catch (innerErr) {
-    console.error("Critical: Could not load firebase-applet-config.json", innerErr);
-  }
-}
+import firebaseConfigRaw from "./firebase-applet-config.json";
+let firebaseConfig: any = firebaseConfigRaw;
 
 // --- Initialize Services ---
 // Only initialize if we have at least some config
