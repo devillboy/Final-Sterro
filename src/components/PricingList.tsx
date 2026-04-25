@@ -7,6 +7,23 @@ import WorldMap from './WorldMap';
 import { db } from '../lib/firebase';
 import { collection, query, orderBy, getDocs, getDoc, doc } from 'firebase/firestore';
 
+const LoadingMessages = ({ isSubmitting, isCreatingServer }: { isSubmitting: boolean, isCreatingServer: boolean }) => {
+  const [msgIdx, setMsgIdx] = useState(0);
+  const msgs = isSubmitting 
+    ? ["Analyzing payment screenshot...", "Scanning UTR number...", "Verifying payment with AI..."]
+    : ["Connecting to Pterodactyl Panel...", "Creating User Account...", "Assigning Allocations & Ports...", "Allocating Server RAM & CPU...", "Waiting for Panel Response..."];
+
+  useEffect(() => {
+    setMsgIdx(0);
+    const interval = setInterval(() => {
+      setMsgIdx(prev => Math.min(prev + 1, msgs.length - 1));
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [isSubmitting, isCreatingServer]);
+
+  return <p className="text-white/60 text-sm animate-pulse">{msgs[msgIdx]}</p>;
+}
+
 interface PaymentFormData {
   utrId: string;
   upiId: string;
@@ -506,8 +523,8 @@ export default function PricingList() {
                                 <div className="w-20 h-20 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-yellow-500/30">
                                   <AlertCircle size={40} className="text-yellow-500" />
                                 </div>
-                                <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tighter">User Created, Server Delayed</h3>
-                                <p className="text-[var(--color-text-dim)] mb-8 font-medium">Your account was created, but server creation failed.</p>
+                                <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tighter">Server Delayed (Panel Error)</h3>
+                                <p className="text-[var(--color-text-dim)] mb-8 font-medium">Pterodactyl Node lacks Resources/Ports. Check Node Allocations.</p>
                               </>
                             ) : (
                               <>
@@ -711,7 +728,7 @@ export default function PricingList() {
                                 <div className="bg-[#121B2B]/50 border border-[#1a1f2e] p-6 rounded-2xl w-full max-w-2xl mx-auto mt-4">
                                   <div className="text-center mb-6">
                                     <h3 className="text-xl font-bold text-[#00F0FF] mb-2 uppercase tracking-widest">{isSubmitting ? 'Verifying Payment...' : 'Creating Server...'}</h3>
-                                    <p className="text-white/60 text-sm">{isSubmitting ? 'We are verifying your transaction screenshot.' : 'Allocating Pterodactyl node resources...'}</p>
+                                    <LoadingMessages isSubmitting={isSubmitting} isCreatingServer={isCreatingServer} />
                                   </div>
                                   <div className="animate-pulse flex space-x-4">
                                     <div className="rounded-full bg-[#1a1f2e] h-12 w-12"></div>
