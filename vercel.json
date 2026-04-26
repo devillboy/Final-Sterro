@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "framework": "vite",
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -10,5 +9,12 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "functions": {
+    "api/*.ts": {
+      "runtime": "vercel-node@latest",
+      "memory": 1024
+    }
+  },
+  "cleanUrls": true
 }

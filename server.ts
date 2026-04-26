@@ -5,21 +5,40 @@ import { getFirestore, doc, getDoc, setDoc, addDoc, collection, Timestamp } from
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-import path from "path";
-import * as fsSync from "fs";
+import path from "node:path";
+import fsSync from "node:fs";
+import { createRequire } from "node:module";
 
 dotenv.config();
 
 // --- Configuration Loading ---
-import firebaseConfigRaw from "./firebase-applet-config.json";
-let firebaseConfig: any = firebaseConfigRaw;
+const require = createRequire(import.meta.url);
+let firebaseConfig: any = {};
+const configFiles = ["./firebase-applet-config.json", "../firebase-applet-config.json", "./api/firebase-applet-config.json"];
+
+for (const f of configFiles) {
+  try {
+    const fullPath = path.resolve(process.cwd(), f);
+    if (fsSync.existsSync(fullPath)) {
+      firebaseConfig = JSON.parse(fsSync.readFileSync(fullPath, "utf8"));
+      console.log(`[CONFIG] Loaded firebase config from ${fullPath}`);
+      break;
+    }
+  } catch (e) {}
+}
+
+if (!firebaseConfig.apiKey) {
+  try {
+    firebaseConfig = require("./firebase-applet-config.json");
+  } catch (e) {}
+}
 
 // --- Initialize Services ---
 // Only initialize if we have at least some config
 const firebaseApp = (firebaseConfig && firebaseConfig.apiKey) ? initializeApp(firebaseConfig) : null;
 const db = firebaseApp ? getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId || "(default)") : null;
 const aiKey = process.env.GEMINI_API_KEY;
-const ai = aiKey ? new GoogleGenAI(aiKey) : null;
+const ai = aiKey ? new GoogleGenAI({ apiKey: aiKey }) : null;
 
 // --- Pterodactyl Automation Service ---
 class PterodactylService {
@@ -185,19 +204,11 @@ app.set("trust proxy", 1);
 
 // --- Routes ---
 
-app.get("/api/health", (req, res) => res.json({ status: "ok" }));
-
-async function fetchWithTimeout(resource: RequestInfo, options: any = {}) {
-  const { timeout = 8000 } = options;
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  const response = await fetch(resource, {
-    ...options,
-    signal: controller.signal
-  });
-  clearTimeout(id);
-  return response;
-}
+app.get("/api/health", (_req, res) => res.json({ 
+  status: "ok", 
+  env: process.env.VERCEL ? 'vercel' : (process.env.NETLIFY ? 'netlify' : 'local'),
+  time: new Date().toISOString()
+}));
 
 // Billing Endpoints
 app.get("/api/debug-env", (req, res) => {
@@ -307,34 +318,33 @@ app.post("/api/verify-payment", async (req, res) => {
 
     if (screenshot && screenshot !== "null" && screenshot.length > 50 && !isBypass && ai) {
       try {
-        console.log(`Starting AI Verification for UTR: ${utrId}`);
+        console.log(`[VERIFY] Starting AI check for UTR: ${utrId} (Screenshot length: ${screenshot.length})`);
         const prompt = `
-          Payment Verification Task:
-          We are verifying a UPI payment for "Sterro Cloud".
-          Claimed UTR: ${utrId}
-          Compare this UTR with the screenshot.
-          Rules:
-          1. If the screenshot looks like a payment success screen, return { "isVerified": true }.
-          2. Even if UTR is slightly hard to read, if it looks valid, return { "isVerified": true }.
-          3. Only return false if it is clearly NOT a payment screenshot (e.g. a random photo).
-          Response Format: Strictly JSON { "isVerified": boolean, "reason": "string" }
+          Payment Verification for Sterro Cloud.
+          UTR: ${utrId}
+          Instruction: Check if the image confirms a successful payment.
+          If valid, return {"isVerified": true}. If clearly fake or wrong, return {"isVerified": false}.
+          Format: JSON only.
         `;
-        const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const result = await model.generateContent([
-          { inlineData: { data: screenshot.split(',').pop() || screenshot, mimeType: screenshotMimeType || "image/jpeg" } },
-          prompt
-        ]);
-        const responseText = result.response.text();
+        const result = await ai.models.generateContent({
+          model: "gemini-1.5-flash",
+          contents: [
+            { inlineData: { data: screenshot.split(',').pop() || screenshot, mimeType: screenshotMimeType || "image/jpeg" } },
+            prompt
+          ]
+        });
+        const responseText = result.text;
+        console.log(`[VERIFY] AI Raw Response: ${responseText}`);
         const cleanJson = responseText.replace(/```json|```/g, "").trim();
         const parsed = JSON.parse(cleanJson || '{"isVerified": true}');
         
         isVerified = parsed.isVerified ?? true;
-        reason = parsed.reason || "AI check passed.";
-        console.log(`AI Result for ${utrId}:`, isVerified, reason);
-      } catch (aiErr) {
-        console.error("AI Error for", utrId, ":", aiErr);
+        reason = parsed.reason || "AI check completed.";
+        console.log(`[VERIFY] AI Final Verdict: ${isVerified}, Reason: ${reason}`);
+      } catch (aiErr: any) {
+        console.error("[VERIFY] AI Check Error:", aiErr.message || aiErr);
         isVerified = true; 
-        reason = "AI Processing fallback (Allowed).";
+        reason = "Verification fallback activated.";
       }
     }
 
@@ -397,7 +407,7 @@ async function mountFrontend() {
     const distPath = path.resolve(process.cwd(), 'dist');
     if (fsSync.existsSync(distPath)) {
       app.use(express.static(distPath));
-      app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'Index.html')));
+      app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
     }
   }
 }

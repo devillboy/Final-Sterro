@@ -5,7 +5,7 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Hero() {
-  const [bgUrl, setBgUrl] = useState("https://cdn.discordapp.com/attachments/1414251304741638191/1496919234364706988/Download_Free_Minecraft_Wallpapers_and_Backgrounds.jpg?ex=69eba22c&is=69ea50ac&hm=c6d476ec6a7ff99fc9e25e3c6a89265701f71cbb92e998989f3321cd60eb25ab&");
+  const [bgUrl, setBgUrl] = useState("https://cdn.discordapp.com/attachments/1414251304741638191/1496919234364706988/Download_Free_Minecraft_Wallpapers_and_Backgrounds.jpg?ex=69ee452c&is=69ecf3ac&hm=32ce4762007a2fdffd2a2981c0ea767cb890e73631ec5bceebc1e862202495dc&");
   const { firebaseUser, loginGoogle } = useAuth();
 
   useEffect(() => {
