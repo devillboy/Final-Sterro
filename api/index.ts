@@ -16,7 +16,7 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 let firebaseConfig: any = {};
 
 const possiblePaths = [
-  path.resolve(process.cwd(), "firebase-applet-config.json"),
+  path.join(process.cwd(), "firebase-applet-config.json"),
   path.resolve(__dirname, "firebase-applet-config.json"),
   path.resolve(__dirname, "..", "firebase-applet-config.json")
 ];
@@ -32,7 +32,10 @@ for (const p of possiblePaths) {
 
 if (!firebaseConfig.apiKey) {
   try {
-    firebaseConfig = require("../firebase-applet-config.json");
+    const fallbackPath = path.join(process.cwd(), "firebase-applet-config.json");
+    if (fsSync.existsSync(fallbackPath)) {
+      firebaseConfig = JSON.parse(fsSync.readFileSync(fallbackPath, "utf8"));
+    }
   } catch (e) {}
 }
 
@@ -40,6 +43,19 @@ const firebaseApp = (firebaseConfig && firebaseConfig.apiKey) ? initializeApp(fi
 const db = firebaseApp ? getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId || "(default)") : null;
 const aiKey = process.env.GEMINI_API_KEY;
 const ai = aiKey ? new GoogleGenAI({ apiKey: aiKey }) : null;
+
+// --- Debug Route ---
+const router = express.Router();
+
+router.get("/test", (req, res) => {
+  res.json({
+    message: "API is working perfectly on Vercel!",
+    cwd: process.cwd(),
+    dirname: __dirname,
+    hasConfig: !!firebaseConfig.apiKey,
+    platform: process.env.VERCEL ? "vercel" : "other"
+  });
+});
 
 // --- Pterodactyl Automation Service ---
 class PterodactylService {
@@ -177,6 +193,9 @@ app.use((req: any, res, next) => {
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 app.use(cookieParser());
+
+app.use("/api", router);
+
 app.use(session({
   secret: process.env.SESSION_SECRET || "automated-sterro-secret-v2",
   resave: false,
