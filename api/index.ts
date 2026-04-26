@@ -7,36 +7,32 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import path from "node:path";
 import fsSync from "node:fs";
-import { createRequire } from "node:module";
 
 dotenv.config();
 
-const require = createRequire(import.meta.url);
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
 let firebaseConfig: any = {};
 
 const possiblePaths = [
   path.join(process.cwd(), "firebase-applet-config.json"),
-  path.resolve(__dirname, "firebase-applet-config.json"),
-  path.resolve(__dirname, "..", "firebase-applet-config.json")
+  path.join(process.cwd(), "api", "firebase-applet-config.json"),
+  path.join(process.cwd(), "..", "firebase-applet-config.json"),
+  "/var/task/firebase-applet-config.json"
 ];
 
 for (const p of possiblePaths) {
   if (fsSync.existsSync(p)) {
     try {
       firebaseConfig = JSON.parse(fsSync.readFileSync(p, "utf8"));
+      console.log(`[INIT] Loaded firebase config from: ${p}`);
       break;
-    } catch (e) {}
+    } catch (e: any) {
+      console.error(`[INIT] Failed to parse config at ${p}:`, e.message);
+    }
   }
 }
 
 if (!firebaseConfig.apiKey) {
-  try {
-    const fallbackPath = path.join(process.cwd(), "firebase-applet-config.json");
-    if (fsSync.existsSync(fallbackPath)) {
-      firebaseConfig = JSON.parse(fsSync.readFileSync(fallbackPath, "utf8"));
-    }
-  } catch (e) {}
+  console.warn("[INIT] No Firebase API Key found in env or files. DB features will be disabled.");
 }
 
 const firebaseApp = (firebaseConfig && firebaseConfig.apiKey) ? initializeApp(firebaseConfig) : null;
@@ -49,11 +45,16 @@ const router = express.Router();
 
 router.get("/test", (req, res) => {
   res.json({
+    status: "ok",
     message: "API is working perfectly on Vercel!",
     cwd: process.cwd(),
-    dirname: __dirname,
     hasConfig: !!firebaseConfig.apiKey,
-    platform: process.env.VERCEL ? "vercel" : "other"
+    hasDb: !!db,
+    hasAi: !!ai,
+    env: {
+      isVercel: !!process.env.VERCEL,
+      nodeVersion: process.version
+    }
   });
 });
 
@@ -195,6 +196,16 @@ app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 app.use(cookieParser());
 
 app.use("/api", router);
+
+// Error handling middleware
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error("[FATAL] Unhandled API Error:", err);
+  res.status(500).json({
+    error: "Internal Server Error",
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+});
 
 app.use(session({
   secret: process.env.SESSION_SECRET || "automated-sterro-secret-v2",
