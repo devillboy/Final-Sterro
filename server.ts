@@ -11,20 +11,23 @@ import { createRequire } from "node:module";
 
 dotenv.config();
 
-// --- Configuration Loading ---
 const require = createRequire(import.meta.url);
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 let firebaseConfig: any = {};
-const configFiles = ["./firebase-applet-config.json", "../firebase-applet-config.json", "./api/firebase-applet-config.json"];
 
-for (const f of configFiles) {
-  try {
-    const fullPath = path.resolve(process.cwd(), f);
-    if (fsSync.existsSync(fullPath)) {
-      firebaseConfig = JSON.parse(fsSync.readFileSync(fullPath, "utf8"));
-      console.log(`[CONFIG] Loaded firebase config from ${fullPath}`);
+const possiblePaths = [
+  path.resolve(process.cwd(), "firebase-applet-config.json"),
+  path.resolve(__dirname, "firebase-applet-config.json"),
+  path.resolve(__dirname, "..", "firebase-applet-config.json")
+];
+
+for (const p of possiblePaths) {
+  if (fsSync.existsSync(p)) {
+    try {
+      firebaseConfig = JSON.parse(fsSync.readFileSync(p, "utf8"));
       break;
-    }
-  } catch (e) {}
+    } catch (e) {}
+  }
 }
 
 if (!firebaseConfig.apiKey) {
