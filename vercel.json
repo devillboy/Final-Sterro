@@ -10,12 +10,5 @@
       "destination": "/index.html"
     }
   ],
-  "functions": {
-    "api/*.ts": {
-      "runtime": "vercel-node@latest",
-      "memory": 1024,
-      "includeFiles": "firebase-applet-config.json"
-    }
-  },
   "cleanUrls": true
 }
