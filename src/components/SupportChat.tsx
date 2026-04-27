@@ -25,7 +25,7 @@ export default function SupportChat() {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputValue.trim()) return;
 
     const newUserMsg: Message = {
@@ -38,16 +38,41 @@ export default function SupportChat() {
     setInputValue('');
     setIsTyping(true);
 
-    // TODO: Replace with actual Qurob AI API call here
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: 'You are Qurob AI, a helpful support assistant for SterroCloud, a high-performance game hosting and VPS provider. Help users with technical questions about their servers, pricing, and deployment.' },
+            ...messages.map(m => ({ role: m.role, content: m.content })),
+            { role: 'user', content: inputValue.trim() }
+          ]
+        })
+      });
+
+      if (!response.ok) throw new Error('API Error');
+
+      const data = await response.json();
+      const aiContent = data.choices?.[0]?.message?.content || "I'm sorry, I'm having trouble connecting to my brain right now.";
+
       const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
+        id: Date.now().toString(),
         role: 'assistant',
-        content: "I am a placeholder for Qurob AI. Once the API is integrated, I will be able to assist you with actual queries!"
+        content: aiContent
       };
       setMessages(prev => [...prev, aiResponse]);
+    } catch (err) {
+      console.error('Chat Error:', err);
+      const errorMsg: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: "I'm sorry, I encountered an error. Please try again later or contact support directly."
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return (

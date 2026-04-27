@@ -520,4 +520,40 @@ app.post("/api/create-server", async (req, res) => {
     }
 });
 
+app.post("/api/chat", async (req, res) => {
+    const { messages } = req.body;
+    const apiKey = process.env.QUROB_AI_API_KEY;
+
+    if (!apiKey) {
+        return res.status(500).json({ error: "Qurob AI API key is not configured." });
+    }
+
+    try {
+        const response = await fetch("https://api.qurob.ai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: "qurob-1",
+                messages: messages,
+                max_tokens: 1000
+            })
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            console.error("[QUROB] API Error:", errText);
+            return res.status(response.status).json({ error: "API Error from Qurob AI" });
+        }
+
+        const data = await response.json();
+        res.json(data);
+    } catch (error: any) {
+        console.error("[QUROB] Error:", error.message);
+        res.status(500).json({ error: "Failed to connect to Qurob AI" });
+    }
+});
+
 export default app;
