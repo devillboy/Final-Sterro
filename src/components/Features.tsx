@@ -23,15 +23,28 @@ export default function Features() {
           <p className="text-[var(--color-text-dim)] font-medium text-lg">Features, tools, settings, and support bundled in one place.</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <motion.div 
+          className="grid md:grid-cols-2 gap-6"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.1 }
+            }
+          }}
+        >
           {feats.map((f, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.05 }}
-              className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-10 flex flex-col group hover:border-[#00F0FF]/40 transition-colors"
+              variants={{
+                hidden: { opacity: 0, y: 30 },
+                visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 50 } }
+              }}
+              whileHover={{ scale: 1.02 }}
+              className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-10 flex flex-col group hover:border-[#00F0FF]/40 transition-colors cursor-default"
             >
               <div className="w-full h-40 mb-8 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border)] flex flex-col items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity bg-gradient-to-b from-[#0a1021] to-[#050814] relative overflow-hidden">
                  {/* Abstract visual representation */}
@@ -44,7 +57,7 @@ export default function Features() {
               <p className="text-[var(--color-text-dim)] font-medium leading-relaxed">{f.desc}</p>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

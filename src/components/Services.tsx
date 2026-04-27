@@ -34,12 +34,26 @@ export default function Services() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-6 perspective-2000">
+        <motion.div 
+          className="flex flex-col gap-6 perspective-2000"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.1 }
+            }
+          }}
+        >
           {servicesList.map((s, i) => (
             <motion.div 
               key={i}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
+              variants={{
+                hidden: { opacity: 0, x: -30 },
+                visible: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 60 } }
+              }}
               whileHover={{ 
                 scale: 1.01, 
                 rotateX: -0.5, 
@@ -47,8 +61,6 @@ export default function Services() {
                 z: 10,
                 boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.4)"
               }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.2 }}
               className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-8 flex flex-col md:flex-row gap-8 items-start relative hover:border-[#00F0FF]/30 transition-colors group cursor-pointer preserve-3d shadow-3d"
             >
               <div className="shrink-0 group-hover:scale-110 transition-transform duration-300">
@@ -65,7 +77,7 @@ export default function Services() {
               </div>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

@@ -15,6 +15,7 @@ import FAQ from "./components/FAQ";
 import Footer from "./components/Footer";
 import CursorGlow from "./components/CursorGlow";
 import AdminPanel from "./components/AdminPanel";
+import SupportChat from "./components/SupportChat";
 import { motion, useScroll, useSpring } from "motion/react";
 import { AuthProvider } from "./contexts/AuthContext";
 import { useState, useEffect } from "react";
@@ -132,6 +133,7 @@ export default function App() {
         </main>
 
         <Footer />
+        <SupportChat />
       </div>
     </AuthProvider>
   );

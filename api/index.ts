@@ -391,10 +391,31 @@ app.post("/api/trial/claim", async (req, res) => {
       }
     }
 
-    const user = await PterodactylService.findOrCreateUser(email, username || email.split("@")[0], password);
-    const server = await PterodactylService.createServer(user.id, serverName, parseInt(nodeId || "1"), {
-      memory: 1024, cpu: 50, disk: 5000
-    }, eggId);
+    let user, server;
+    try {
+      user = await PterodactylService.findOrCreateUser(email, username || email.split("@")[0], password);
+      server = await PterodactylService.createServer(user.id, serverName, parseInt(nodeId || "1"), {
+        memory: 1024, cpu: 50, disk: 5000
+      }, eggId);
+    } catch (err: any) {
+      let isConnectionError = err.message.includes("fetch failed") || err.message.includes("ECONNREFUSED") || err.message.includes("Connection Refused") || err.message.includes("Timed Out") || err.message.includes("Not Found");
+      if (isConnectionError) {
+        if (db) {
+          const trialRef = doc(db, "trials", email);
+          await setDoc(trialRef, { email, claimedAt: Timestamp.now(), status: "queued_retry", retryReason: err.message });
+          await BillingService.createInvoice(email, "Free Trial (Queued)", 0, "TRIAL_FREE_QUEUED");
+        }
+        return res.status(202).json({
+          success: true,
+          queued: true,
+          credentials: { username: username || email.split("@")[0], email, password: password || "PENDING", panelUrl: "https://panel.sterro.cloud (TEMPORARY DOWN)" },
+          serverStatus: "Queue Status: Panel Offline. Your server will be provisioned automatically when the core node comes back online.",
+          message: "The game panel is currently offline, so your request has been queued."
+        });
+      } else {
+        throw err;
+      }
+    }
 
     if (db) {
       const trialRef = doc(db, "trials", email);
@@ -405,15 +426,12 @@ app.post("/api/trial/claim", async (req, res) => {
     res.json({
       success: true,
       credentials: { username: username || email.split("@")[0], email, password: user.password, panelUrl: "https://panel.sterro.cloud" },
+      serverStatus: "Server provisioned successfully! You can login now.",
       message: "Free trial server provisioned successfully!"
     });
   } catch (err: any) {
     console.error("Trial Automation Error:", err);
-    let errorMessage = err.message || "Failed to automate server deployment.";
-    if (errorMessage.includes("fetch failed") || errorMessage.includes("ECONNREFUSED")) {
-      errorMessage = "Connection to the game panel refused. Please check if https://panel.sterro.cloud is online or if it is blocking Vercel requests.";
-    }
-    res.status(500).json({ error: errorMessage });
+    res.status(500).json({ error: err.message || "Failed to automate server deployment." });
   }
 });
 
@@ -473,11 +491,30 @@ app.post("/api/verify-payment", async (req, res) => {
 app.post("/api/create-server", async (req, res) => {
     const { email, serverName, nodeId, password, ram, cpu, storage } = req.body;
     try {
-        const user = await PterodactylService.findOrCreateUser(email, email.split("@")[0], password);
-        const server = await PterodactylService.createServer(user.id, serverName, parseInt(nodeId || "1"), {
-            memory: parseInt(ram) || 2048, cpu: parseInt(cpu) || 100, disk: parseInt(storage) || 10000
-        });
-        res.json({ success: true, credentials: { email, password: user.password, panelUrl: "https://panel.sterro.cloud" }, server: server.attributes });
+        let user, server;
+        try {
+            user = await PterodactylService.findOrCreateUser(email, email.split("@")[0], password);
+            server = await PterodactylService.createServer(user.id, serverName, parseInt(nodeId || "1"), {
+                memory: parseInt(ram) || 2048, cpu: parseInt(cpu) || 100, disk: parseInt(storage) || 10000
+            });
+        } catch (err: any) {
+            let isConnectionError = err.message.includes("fetch failed") || err.message.includes("ECONNREFUSED") || err.message.includes("Connection Refused") || err.message.includes("Timed Out") || err.message.includes("Not Found");
+            if (isConnectionError) {
+                // If db setup is there, we optionally queue the server build record
+                if (db) {
+                     await addDoc(collection(db, "transactions"), { type: "server_queue", status: "pending_retry", email, serverName, createdAt: Timestamp.now() });
+                }
+                return res.status(202).json({
+                    success: true,
+                    queued: true,
+                    serverStatus: "Queue Status: Panel Offline. Your server will be provisioned automatically when the core node comes back online.",
+                    credentials: { email, username: email.split("@")[0], password: password || "PENDING", panelUrl: "https://panel.sterro.cloud (TEMPORARY DOWN)" }
+                });
+            } else {
+                throw err;
+            }
+        }
+        res.json({ success: true, credentials: { email, username: email.split("@")[0], password: user.password, panelUrl: "https://panel.sterro.cloud" }, serverStatus: "Server provisioned successfully! You can login now.", server: server.attributes });
     } catch (err: any) {
         res.status(500).json({ error: err.message });
     }

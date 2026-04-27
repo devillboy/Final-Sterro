@@ -357,18 +357,18 @@ export default function PricingList() {
             Deploy in minutes, scale anytime. Choose between our Premium Minecraft Hosting or high-performance Intel VPS solutions.
           </p>
           
-          <div className="inline-flex flex-col md:flex-row p-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl relative z-20 shadow-xl mx-auto mb-12">
+          <div className="inline-flex flex-col md:flex-row p-2 bg-[#050914]/80 backdrop-blur-lg border border-white/5 rounded-2xl relative z-20 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] mx-auto mb-12">
             <button
               onClick={() => setActiveTab('minecraft')}
-              className={`flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-bold text-sm transition-all duration-300 ${activeTab === 'minecraft' ? 'bg-[#00F0FF] text-black shadow-md' : 'text-[var(--color-text-dim)] hover:text-white hover:bg-white/5'}`}
+              className={`flex items-center justify-center gap-3 px-10 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 ${activeTab === 'minecraft' ? 'bg-gradient-to-r from-[#00F0FF] to-[#00b8cc] text-black shadow-[0_0_20px_rgba(0,240,255,0.2)]' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
             >
-              <Gamepad2 size={18} /> Premium Minecraft
+              <Gamepad2 size={20} /> <span className="tracking-wide">PREMIUM MINECRAFT</span>
             </button>
             <button
               onClick={() => setActiveTab('vps')}
-              className={`flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-bold text-sm transition-all duration-300 ${activeTab === 'vps' ? 'bg-[#00F0FF] text-black shadow-md' : 'text-[var(--color-text-dim)] hover:text-white hover:bg-white/5'}`}
+              className={`flex items-center justify-center gap-3 px-10 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 ${activeTab === 'vps' ? 'bg-gradient-to-r from-[#00F0FF] to-[#00b8cc] text-black shadow-[0_0_20px_rgba(0,240,255,0.2)]' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
             >
-              <Server size={18} /> Intel VPS Plans
+              <Server size={20} /> <span className="tracking-wide">INTEL VPS PLANS</span>
             </button>
           </div>
 
@@ -391,7 +391,19 @@ export default function PricingList() {
           )}
         </div>
 
-        <div className="flex flex-col gap-8 perspective-2000">
+        <motion.div 
+          className="flex flex-col gap-8 perspective-2000"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.15 }
+            }
+          }}
+        >
           {loading ? (
             <>
               <PlanSkeleton highlight={false} />
@@ -403,14 +415,14 @@ export default function PricingList() {
               {activeTab === 'minecraft' && minecraftPlans.filter(p => hasClaimedTrial ? !p.isTrial : true).map((p, i) => (
                 <motion.div
                   key={`mc-${i}`}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              variants={{
+                hidden: { opacity: 0, y: 30, scale: 0.95 },
+                visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50 } }
+              }}
               whileHover={{ 
                 y: -4,
                 boxShadow: "0 20px 40px -12px rgba(0, 240, 255, 0.15)"
               }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
               className={`bg-[var(--color-surface)] border ${p.highlight ? 'border-[#00F0FF]/50 shadow-[0_0_30px_rgba(0,240,255,0.1)] relative z-10' : 'border-[var(--color-border)]'} rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 justify-between hover:border-[#00F0FF]/50 transition-all cursor-default group overflow-hidden`}
             >
               {p.imageUrl && (
@@ -458,14 +470,14 @@ export default function PricingList() {
           {activeTab === 'vps' && vpsPlans.map((p, i) => (
              <motion.div
               key={`vps-${i}`}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              variants={{
+                hidden: { opacity: 0, y: 30, scale: 0.95 },
+                visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50 } }
+              }}
               whileHover={{ 
                 y: -4,
                 boxShadow: "0 20px 40px -12px rgba(0, 240, 255, 0.15)"
               }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
               className={`bg-[var(--color-surface)] border ${p.highlight ? 'border-[#00F0FF]/50 shadow-[0_0_30px_rgba(0,240,255,0.1)] relative z-10' : 'border-[var(--color-border)]'} rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 justify-between hover:border-[#00F0FF]/50 transition-all cursor-default group overflow-hidden`}
            >
               {p.imageUrl && (
@@ -511,7 +523,7 @@ export default function PricingList() {
           ))}
             </>
           )}
-        </div>
+        </motion.div>
       </div>
 
       {/* AI Verification Payment Gateway Modal */}

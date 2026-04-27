@@ -48,20 +48,32 @@ export default function GameGrid() {
           Choose your service and get started instantly. We take care of setup, performance, and stability.
         </p>
 
-        <div className="flex flex-wrap justify-center gap-6 perspective-2000">
+        <motion.div 
+          className="flex flex-wrap justify-center gap-6 perspective-2000"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.15 }
+            }
+          }}
+        >
           {games.map((game, i) => {
             const Icon = game.icon;
             return (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                variants={{
+                  hidden: { opacity: 0, scale: 0.9, y: 20 },
+                  visible: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 60 } }
+                }}
                 whileHover={{ 
                   y: -5,
                   boxShadow: "0 20px 40px -12px rgba(0, 240, 255, 0.15)"
                 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-                viewport={{ once: true }}
                 className="relative bg-[#050914] border border-[#121b2b] rounded-3xl overflow-hidden group cursor-pointer w-full md:w-[calc(50%-1rem)] h-80 hover:border-[#00F0FF]/30 transition-all duration-300"
               >
                 <div className="absolute inset-0 bg-gradient-to-t from-[#000000] via-black/60 to-transparent z-10" />
@@ -78,7 +90,7 @@ export default function GameGrid() {
               </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
