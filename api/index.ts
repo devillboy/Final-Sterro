@@ -1,12 +1,14 @@
 import express from "express";
 import { GoogleGenAI } from "@google/genai";
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc, addDoc, collection, Timestamp } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, addDoc, collection, Timestamp, query, where, getDocs, orderBy } from "firebase/firestore";
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import path from "node:path";
 import fsSync from "node:fs";
+import fetch from "node-fetch";
+import https from "node:https";
 
 dotenv.config();
 
@@ -16,7 +18,7 @@ const possiblePaths = [
   path.join(process.cwd(), "firebase-applet-config.json"),
   path.join(process.cwd(), "api", "firebase-applet-config.json"),
   path.join(process.cwd(), "..", "firebase-applet-config.json"),
-  "/var/task/firebase-applet-config.json"
+  path.join(process.env.LAMBDA_TASK_ROOT || "/var/task", "firebase-applet-config.json")
 ];
 
 for (const p of possiblePaths) {
@@ -43,6 +45,51 @@ const ai = aiKey ? new GoogleGenAI({ apiKey: aiKey }) : null;
 // --- Debug Route ---
 const router = express.Router();
 
+router.get("/debug-ptero", async (req, res) => {
+  const panelUrl = (process.env.PTERODACTYL_PANEL_URL || "https://panel.sterro.cloud").trim().replace(/\/$/, "");
+  try {
+    const start = Date.now();
+    const testUrl = `${panelUrl}/api/application/users?per_page=1`;
+    
+    console.log(`[DEBUG] Testing connection to ${testUrl}`);
+    
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 10000);
+    
+    const agent = new https.Agent({ rejectUnauthorized: false });
+    const response = await fetch(testUrl, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${process.env.PTERODACTYL_API_KEY || "HIDDEN"}`,
+        "Accept": "application/json",
+        "User-Agent": "SterroCloud-Debug/1.0"
+      },
+      signal: controller.signal as any,
+      agent: testUrl.startsWith('https') ? agent : undefined
+    });
+    clearTimeout(id);
+    
+    res.json({
+      connected: response.ok,
+      status: response.status,
+      statusText: response.statusText,
+      timeMs: Date.now() - start,
+      url: testUrl,
+      help: response.ok ? "Connection successful" : `Panel is reachable but returned ${response.status}. Check API Key permissions.`
+    });
+  } catch (err: any) {
+    console.error("[DEBUG] Connection Test Failed:", err);
+    res.status(500).json({
+      connected: false,
+      error: err.message,
+      code: err.code,
+      stack: err.stack,
+      panelUrl,
+      suggestion: "If ECONNREFUSED, the IP 103.190.93.178 is explicitly rejecting the connection. Check panel firewall/whitelist."
+    });
+  }
+});
+
 router.get("/test", (req, res) => {
   res.json({
     status: "ok",
@@ -61,39 +108,85 @@ router.get("/test", (req, res) => {
 // --- Pterodactyl Automation Service ---
 class PterodactylService {
   private static API_KEY = process.env.PTERODACTYL_API_KEY || 'ptla_WKMXC7QZlIfhBJJckJmIfqVDvr9UbUgU9NUJHZ2SQVN';
-  private static PANEL_URL = (process.env.PTERODACTYL_PANEL_URL || "https://panel.sterro.cloud").replace(/\/$/, "");
+  private static PANEL_URL = (process.env.PTERODACTYL_PANEL_URL || "https://panel.sterro.cloud").trim().replace(/\/$/, "");
 
   private static EGG_CONFIGS: Record<string, any> = {
     "1": { id: 1, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "BungeeCord.jar" } },
+    "2": { id: 2, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "forge.jar" } },
+    "3": { id: 3, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "sponge.jar" } },
     "4": { id: 4, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "server.jar", MINECRAFT_VERSION: "latest" } },
+    "5": { id: 5, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "vanilla.jar", MINECRAFT_VERSION: "latest" } },
   };
 
   static async request(endpoint: string, method = 'GET', body?: any) {
-    const url = `${this.PANEL_URL}/api/application${endpoint}`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 25000);
-
-    try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${this.API_KEY}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: body ? JSON.stringify(body) : undefined,
-        signal: controller.signal
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${this.PANEL_URL}/api/application${cleanEndpoint}`;
+    
+    const maskedKey = this.API_KEY ? this.API_KEY.substring(0, 8) + '...' : 'MISSING';
+    
+    const execute = async (attempt: number): Promise<any> => {
+      console.log(`[PTERO] Request (Attempt ${attempt}): ${method} ${url} | Key: ${maskedKey}`);
+      
+      const agent = new https.Agent({
+        rejectUnauthorized: false, // For debugging, if there's an SSL mismatch on the panel
+        keepAlive: true
       });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Pterodactyl API Error [${response.status}]: ${error}`);
-      }
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-      return response.status === 204 ? null : await response.json();
-    } finally {
-      clearTimeout(timeout);
-    }
+      try {
+        const response: any = await fetch(url, {
+          method,
+          headers: {
+            'Authorization': `Bearer ${this.API_KEY}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'SterroCloud-Automation/1.0 (Vercel; Node.js)'
+          },
+          body: body ? JSON.stringify(body) : undefined,
+          signal: controller.signal as any,
+          agent: url.startsWith('https') ? agent : undefined
+        });
+
+        if (!response.ok) {
+          clearTimeout(timeoutId);
+          const errorText = await response.text();
+          console.error(`[PTERO] API Error [${response.status}]: ${errorText}`);
+          if (response.status >= 500 && attempt < 3) {
+             console.log(`[PTERO] Server Error (5xx), retrying...`);
+             await new Promise(r => setTimeout(r, 1000 * attempt));
+             return execute(attempt + 1);
+          }
+          throw new Error(`Panel API returned ${response.status}: ${errorText.substring(0, 100)}`);
+        }
+
+        clearTimeout(timeoutId);
+        return response.status === 204 ? null : await response.json();
+      } catch (err: any) {
+        clearTimeout(timeoutId);
+        // More descriptive connection errors
+        let errorHint = "";
+        if (err.code === 'ECONNREFUSED') errorHint = " Connection Refused: The panel is not accepting connections from this server.";
+        if (err.code === 'ETIMEDOUT' || err.name === 'AbortError') errorHint = " Connection Timed Out: The panel did not respond in time.";
+        if (err.code === 'ENOTFOUND') errorHint = " Host Not Found: Check the PANEL_URL.";
+        
+        if ((err.name === 'AbortError' || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT') && attempt < 3) {
+          console.warn(`[PTERO] Connection issue (${err.code || err.name}), retrying...${errorHint}`);
+          await new Promise(r => setTimeout(r, 1000 * attempt));
+          return execute(attempt + 1);
+        }
+        
+        console.error(`[PTERO] Connection Failed to ${url}:`, err.message || err, errorHint);
+        throw new Error(`${err.message}${errorHint}`);
+      }
+    };
+
+    return execute(1);
+  }
+
+  static async getNodes() {
+    return await this.request('/nodes');
   }
 
   static async findOrCreateUser(email: string, username: string, password?: string) {
@@ -177,7 +270,14 @@ class BillingService {
 
   static async getUserHistory(email: string) {
     if (!db) return [];
-    return []; 
+    try {
+      const q = query(collection(db, "invoices"), where("email", "==", email), orderBy("date", "desc"));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.error("Failed to fetch user history:", e);
+      return []; 
+    }
   }
 }
 
@@ -265,6 +365,15 @@ app.get("/api/billing/invoice/:id", async (req, res) => {
   }
 });
 
+app.get("/api/nodes", async (req, res) => {
+  try {
+    const nodes = await PterodactylService.getNodes();
+    res.json(nodes);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post("/api/trial/claim", async (req, res) => {
   const { email, password, username, serverName, nodeId, eggId } = req.body;
 
@@ -299,7 +408,11 @@ app.post("/api/trial/claim", async (req, res) => {
     });
   } catch (err: any) {
     console.error("Trial Automation Error:", err);
-    res.status(500).json({ error: err.message || "Failed to automate server deployment." });
+    let errorMessage = err.message || "Failed to automate server deployment.";
+    if (errorMessage.includes("fetch failed") || errorMessage.includes("ECONNREFUSED")) {
+      errorMessage = "Connection to the game panel refused. Please check if https://panel.sterro.cloud is online or if it is blocking Vercel requests.";
+    }
+    res.status(500).json({ error: errorMessage });
   }
 });
 

@@ -278,7 +278,12 @@ export default function PricingList() {
       }
 
     } catch (error: any) {
-      setVerificationResult({ error: error.message || 'Connection error while contacting AI Gateway or Panel.' });
+      console.error("Deploy Error:", error);
+      let msg = error.message || 'Connection error while contacting AI Gateway or Panel.';
+      if (msg.includes("fetch failed") || msg.includes("ECONNREFUSED")) {
+        msg = "The deployment engine cannot reach panel.sterro.cloud (ECONNREFUSED). The panel might be firewalling Vercel or is currently down.";
+      }
+      setVerificationResult({ error: msg });
     } finally {
       setIsSubmitting(false);
       setIsCreatingServer(false);
@@ -329,7 +334,12 @@ export default function PricingList() {
         setVerificationResult({ error: result.error || 'Verification failed.' });
       }
     } catch (error: any) {
-      setVerificationResult({ error: error.message || 'Connection error while provisioning Trial.' });
+      console.error("Trial Error:", error);
+      let msg = error.message || 'Connection error while provisioning Trial.';
+      if (msg.includes("fetch failed") || msg.includes("ECONNREFUSED")) {
+        msg = "The provisioner cannot reach the panel (ECONNREFUSED). This usually means the panel.sterro.cloud is offline or blocking our server's IP. Please contact support or try again later.";
+      }
+      setVerificationResult({ error: msg });
     } finally {
       setIsSkeletonLoading(false);
     }
