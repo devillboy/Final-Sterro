@@ -5,7 +5,7 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Hero() {
-  const [bgUrl, setBgUrl] = useState("https://cdn.discordapp.com/attachments/1414251304741638191/1496919234364706988/Download_Free_Minecraft_Wallpapers_and_Backgrounds.jpg?ex=69ee452c&is=69ecf3ac&hm=32ce4762007a2fdffd2a2981c0ea767cb890e73631ec5bceebc1e862202495dc&");
+  const [bgUrl, setBgUrl] = useState("https://cdn.discordapp.com/attachments/1414251304741638191/1497103165689167923/qHFzGKFBz7kvxiVyjoe6JJ-1024-80.jpg.webp?ex=69ef9939&is=69ee47b9&hm=9a8a35041d2aa644a390c81f07f60b874b2c14e45981ffec7827092e0a1bca4e&");
   const { firebaseUser, loginGoogle } = useAuth();
 
   useEffect(() => {
@@ -36,24 +36,24 @@ export default function Hero() {
     <section className="relative pt-24 pb-32 px-6 overflow-hidden flex items-center border-b border-[var(--color-border)] min-h-[90vh]">
       {/* Background Layer */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#050914]/80 via-[#050914]/60 to-[#050914] z-20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#050914]/60 via-[#050914]/40 to-[#050914] z-20" />
         
         {/* Animated Grid Pattern */}
-        <div className="absolute inset-0 z-10 opacity-20" 
+        <div className="absolute inset-0 z-10 opacity-30" 
              style={{ 
                backgroundImage: 'linear-gradient(#00F0FF 1px, transparent 1px), linear-gradient(90deg, #00F0FF 1px, transparent 1px)',
-               backgroundSize: '40px 40px',
-               maskImage: 'radial-gradient(ellipse at center, black, transparent 80%)'
+               backgroundSize: '50px 50px',
+               maskImage: 'radial-gradient(ellipse at center, black, transparent 90%)'
              }} 
         />
 
         <img 
           src={bgUrl} 
-          alt="Minecraft Landscape" 
-          className="w-full h-full object-cover opacity-60"
+          alt="Gaming Setup Background" 
+          className="w-full h-full object-cover opacity-70"
           referrerPolicy="no-referrer"
           onError={() => {
-             setBgUrl("https://images.unsplash.com/photo-1607513746994-51f730a44832?q=80&w=2000&auto=format&fit=crop");
+             setBgUrl("https://images.unsplash.com/photo-1624396115105-0219bd52427a?q=80&w=2000&auto=format&fit=crop");
           }}
         />
       </div>

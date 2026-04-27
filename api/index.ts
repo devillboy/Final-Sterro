@@ -261,9 +261,10 @@ class BillingService {
 
     try {
       await setDoc(doc(db, "invoices", invoiceId), invoice);
+      console.log(`[BILLING] Invoice created: ${invoiceId}`);
       return invoice;
-    } catch (e) {
-      console.error("Billing Invoice Creation Failed:", e);
+    } catch (e: any) {
+      console.error(`[BILLING] Invoice Creation Failed for ${email}:`, e.message);
       return null;
     }
   }

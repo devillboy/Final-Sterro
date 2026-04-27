@@ -95,6 +95,11 @@ service cloud.firestore {
       allow write: if true; // Server-side write
     }
 
+    match /invoices/{invoiceId} {
+      allow read: if isSignedIn() || true; // Allow users to view their invoices and server to fetch
+      allow write: if true; // Server-side write
+    }
+
     // Tracking orders for analytics
     match /orders/{orderId} {
       allow read: if isAdmin();

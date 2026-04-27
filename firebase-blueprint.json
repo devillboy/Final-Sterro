@@ -67,6 +67,10 @@
     "/payments/{utrId}": {
       "schema": "object",
       "description": "UTR verification tracking"
+    },
+    "/invoices/{invoiceId}": {
+      "schema": "object",
+      "description": "Billing records for users"
     }
   }
 }
