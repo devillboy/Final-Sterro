@@ -45,6 +45,12 @@ export default function Navbar() {
             <a href="#" onClick={(e) => scrollTo("root", e)} className="text-zinc-300 hover:text-white transition-colors">Home</a>
             <a href="#games" onClick={(e) => scrollTo("games", e)} className="text-zinc-300 hover:text-white transition-colors">Game Servers</a>
             <a href="#pricing" onClick={(e) => scrollTo("pricing", e)} className="text-zinc-300 hover:text-white transition-colors">Root Servers</a>
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('TOGGLE_SUPPORT_CHAT'))}
+              className="text-zinc-300 hover:text-[#00F0FF] transition-all hover:scale-105 font-semibold"
+            >
+              Support
+            </button>
             {isAdmin && (
               <button 
                 onClick={() => window.dispatchEvent(new CustomEvent('OPEN_ADMIN_PANEL'))}
@@ -135,6 +141,13 @@ export default function Navbar() {
               <a href="#" onClick={(e) => scrollTo("root", e)} className="text-white">Home</a>
               <a href="#games" onClick={(e) => scrollTo("games", e)} className="text-zinc-300">Game Servers</a>
               <a href="#pricing" onClick={(e) => scrollTo("pricing", e)} className="text-zinc-300">Root Servers</a>
+              <button 
+                onClick={() => { setIsOpen(false); window.dispatchEvent(new CustomEvent('TOGGLE_SUPPORT_CHAT')); }} 
+                className="text-[#00F0FF] font-bold text-left flex items-center gap-2"
+              >
+                <span className="w-2 h-2 rounded-full bg-[#00F0FF] animate-pulse"></span>
+                Support Chat
+              </button>
               {isAdmin && (
                 <button 
                   onClick={() => { setIsOpen(false); window.dispatchEvent(new CustomEvent('OPEN_ADMIN_PANEL')); }} 

@@ -25,6 +25,15 @@ export default function SupportChat() {
     scrollToBottom();
   }, [messages, isTyping]);
 
+  useEffect(() => {
+    const handleToggle = () => {
+      console.log("[CHAT] Toggle received");
+      setIsOpen(prev => !prev);
+    };
+    window.addEventListener('TOGGLE_SUPPORT_CHAT', handleToggle);
+    return () => window.removeEventListener('TOGGLE_SUPPORT_CHAT', handleToggle);
+  }, []);
+
   const handleSend = async () => {
     if (!inputValue.trim()) return;
 
@@ -34,7 +43,8 @@ export default function SupportChat() {
       content: inputValue.trim()
     };
 
-    setMessages(prev => [...prev, newUserMsg]);
+    const updatedMessages = [...messages, newUserMsg];
+    setMessages(updatedMessages);
     setInputValue('');
     setIsTyping(true);
 
@@ -44,30 +54,32 @@ export default function SupportChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [
-            { role: 'system', content: 'You are Qurob AI, a helpful support assistant for SterroCloud, a high-performance game hosting and VPS provider. Help users with technical questions about their servers, pricing, and deployment.' },
-            ...messages.map(m => ({ role: m.role, content: m.content })),
-            { role: 'user', content: inputValue.trim() }
+            { role: 'system', content: 'You are Qurob AI, a helpful support assistant for SterroCloud, a high-performance game hosting and VPS provider. Help users with technical questions about their servers, pricing, and deployment. Be professional and concise.' },
+            ...updatedMessages.map(m => ({ role: m.role, content: m.content }))
           ]
         })
       });
 
-      if (!response.ok) throw new Error('API Error');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'API Error');
+      }
 
       const data = await response.json();
-      const aiContent = data.choices?.[0]?.message?.content || "I'm sorry, I'm having trouble connecting to my brain right now.";
+      const aiContent = data.choices?.[0]?.message?.content || "I'm sorry, I'm having trouble retrieving a response.";
 
       const aiResponse: Message = {
-        id: Date.now().toString(),
+        id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: aiContent
       };
       setMessages(prev => [...prev, aiResponse]);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Chat Error:', err);
       const errorMsg: Message = {
-        id: Date.now().toString(),
+        id: (Date.now() + 2).toString(),
         role: 'assistant',
-        content: "I'm sorry, I encountered an error. Please try again later or contact support directly."
+        content: `Error: ${err.message}. Please make sure the Qurob AI API key is correctly configured in the settings.`
       };
       setMessages(prev => [...prev, errorMsg]);
     } finally {
@@ -76,7 +88,7 @@ export default function SupportChat() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-0 right-0 z-[9999] p-6 pointer-events-none">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -84,7 +96,7 @@ export default function SupportChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute bottom-20 right-0 w-[350px] sm:w-[400px] h-[500px] bg-[#050914] border border-white/10 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden"
+            className="pointer-events-auto w-[320px] sm:w-[400px] h-[550px] bg-[#050914] border border-[#00F0FF]/20 rounded-2xl shadow-[0_10px_60px_-10px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden backdrop-blur-xl mb-4"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-[#00F0FF]/10 to-[#00b8cc]/10 border-b border-white/5 p-4 flex items-center justify-between">
@@ -149,16 +161,6 @@ export default function SupportChat() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Chat Bubble Toggle Button */}
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-gradient-to-tr from-[#00F0FF] to-[#00b8cc] rounded-full shadow-[0_0_20px_rgba(0,240,255,0.4)] flex items-center justify-center text-[#050914] relative z-50 transition-all font-bold"
-      >
-        {isOpen ? <X size={24} /> : <MessageCircle size={24} className="text-[#050914] fill-current" />}
-      </motion.button>
     </div>
   );
 }

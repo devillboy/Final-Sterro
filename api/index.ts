@@ -529,30 +529,51 @@ app.post("/api/chat", async (req, res) => {
     }
 
     try {
-        const response = await fetch("https://api.qurob.ai/v1/chat/completions", {
+        const response = await fetch("https://fstxrxojxnziuqqceobd.supabase.co/functions/v1/api-chat", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: "qurob-1",
-                messages: messages,
-                max_tokens: 1000
+                model: "qurob-3.2",
+                messages: messages
             })
         });
 
         if (!response.ok) {
             const errText = await response.text();
-            console.error("[QUROB] API Error:", errText);
-            return res.status(response.status).json({ error: "API Error from Qurob AI" });
+            console.error("[QUROB] API Error:", response.status, errText);
+            return res.status(response.status).json({ 
+                error: "API Error from Qurob AI", 
+                details: errText,
+                status: response.status,
+                hint: "Check your API key and quota."
+            });
         }
 
-        const data = await response.json();
-        res.json(data);
+        const data: any = await response.json();
+        // The official API returns { success: true, message: "...", model: "...", usage: {...} }
+        if (data && data.success) {
+            res.json({
+                choices: [
+                    {
+                        message: {
+                            content: data.message
+                        }
+                    }
+                ]
+            });
+        } else {
+            res.status(500).json({ error: "Invalid response from Qurob AI", details: data });
+        }
     } catch (error: any) {
-        console.error("[QUROB] Error:", error.message);
-        res.status(500).json({ error: "Failed to connect to Qurob AI" });
+        console.error("[QUROB] Connection Error:", error.message);
+        res.status(500).json({ 
+            error: "Failed to connect to Qurob AI Service", 
+            message: error.message,
+            hint: "Check if the Supabase endpoint is reachable."
+        });
     }
 });
 

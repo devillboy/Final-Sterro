@@ -97,7 +97,7 @@ export default function App() {
       <CursorGlow />
       {showAdmin && <AdminPanel />}
       <div
-        id="root"
+        id="app-main"
         className="relative selection:bg-[#00F0FF] selection:text-black bg-[#050914] min-h-screen overflow-x-hidden text-white font-sans"
       >
         {/* Animated Background Glow */}
@@ -133,8 +133,8 @@ export default function App() {
         </main>
 
         <Footer />
-        <SupportChat />
       </div>
+      <SupportChat />
     </AuthProvider>
   );
 }
