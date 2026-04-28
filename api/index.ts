@@ -522,50 +522,74 @@ app.post("/api/create-server", async (req, res) => {
 
 app.post("/api/chat", async (req, res) => {
     const { messages } = req.body;
-    const apiKey = process.env.QUROB_AI_API_KEY;
+    const apiKeyFromEnv = process.env.QUROB_AI_API_KEY;
+    // Use the key provided by the user as a fallback if the environment variable is not set
+    const apiKey = apiKeyFromEnv || "qai_f8578f10f86cd0b28a6085f43692798c6c7073ec78516d17";
 
-    if (!apiKey) {
-        return res.status(500).json({ error: "Qurob AI API key is not configured." });
+    if (!apiKey || apiKey.includes("your_key_here")) {
+        return res.status(500).json({ error: "Qurob AI API key is not configured. Please set QUROB_AI_API_KEY in environment or settings." });
     }
 
     try {
+        console.log(`[QUROB] Sending request to Supabase. Key prefix: ${apiKey?.substring(0, 8)}`);
+        
         const response = await fetch("https://fstxrxojxnziuqqceobd.supabase.co/functions/v1/api-chat", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}`
+                "Authorization": `Bearer ${apiKey.trim()}`
             },
             body: JSON.stringify({
                 model: "qurob-3.2",
                 messages: messages
-            })
+            }),
+            signal: AbortSignal.timeout(30000) // 30 second timeout
         });
 
+        const responseText = await response.text();
+        console.log(`[QUROB] Raw Response [${response.status}]`);
+
         if (!response.ok) {
-            const errText = await response.text();
-            console.error("[QUROB] API Error:", response.status, errText);
+            console.error("[QUROB] Error Response Body:", responseText);
+            let details = responseText;
+            try {
+                const parsedErr = JSON.parse(responseText);
+                details = parsedErr.message || parsedErr.error || responseText;
+            } catch (e) {}
+
             return res.status(response.status).json({ 
                 error: "API Error from Qurob AI", 
-                details: errText,
+                details: details,
                 status: response.status,
-                hint: "Check your API key and quota."
+                hint: "Check your API key, subscription standing, or try again later."
             });
         }
 
-        const data: any = await response.json();
+        let data: any;
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            console.error("[QUROB] JSON Parse Error. Body:", responseText);
+            return res.status(500).json({ 
+                error: "Invalid JSON from Qurob AI", 
+                details: responseText.length > 200 ? responseText.substring(0, 200) + "..." : responseText 
+            });
+        }
+
         // The official API returns { success: true, message: "...", model: "...", usage: {...} }
-        if (data && data.success) {
+        if (data && (data.success === true || data.message)) {
             res.json({
                 choices: [
                     {
                         message: {
-                            content: data.message
+                            content: data.message || data.content
                         }
                     }
                 ]
             });
         } else {
-            res.status(500).json({ error: "Invalid response from Qurob AI", details: data });
+            console.error("[QUROB] Invalid Structure:", data);
+            res.status(500).json({ error: "Unexpected response format", details: data });
         }
     } catch (error: any) {
         console.error("[QUROB] Connection Error:", error.message);

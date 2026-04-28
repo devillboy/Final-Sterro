@@ -54,15 +54,21 @@ export default function SupportChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [
-            { role: 'system', content: 'You are Qurob AI, a helpful support assistant for SterroCloud, a high-performance game hosting and VPS provider. Help users with technical questions about their servers, pricing, and deployment. Be professional and concise.' },
+            { role: 'system', content: 'You are Qurob AI, the official support assistant for SterroCloud. SterroCloud provides high-performance game hosting (Minecraft, GTA, etc.) and VPS/Root servers. Help users with technical issues, pricing, and server setup. Always respond in English unless the user speaks another language. Be professional, technical, and helpful.' },
             ...updatedMessages.map(m => ({ role: m.role, content: m.content }))
           ]
         })
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.details || 'API Error');
+        let errorMsg = 'API Error';
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.details || errorData.error || `Error ${response.status}: ${response.statusText}`;
+        } catch (e) {
+          errorMsg = `HTTP Error ${response.status}`;
+        }
+        throw new Error(errorMsg);
       }
 
       const data = await response.json();
@@ -88,15 +94,15 @@ export default function SupportChat() {
   };
 
   return (
-    <div className="fixed bottom-0 right-0 z-[9999] p-6 pointer-events-none">
+    <div className="fixed bottom-6 right-6 z-[9999] p-0 flex flex-col items-end gap-4">
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95, transformOrigin: 'bottom right' }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="pointer-events-auto w-[320px] sm:w-[400px] h-[550px] bg-[#050914] border border-[#00F0FF]/20 rounded-2xl shadow-[0_10px_60px_-10px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden backdrop-blur-xl mb-4"
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="w-[320px] sm:w-[400px] h-[550px] bg-[#050914] border border-[#00F0FF]/20 rounded-2xl shadow-[0_20px_80px_-20px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden backdrop-blur-xl"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-[#00F0FF]/10 to-[#00b8cc]/10 border-b border-white/5 p-4 flex items-center justify-between">
@@ -161,6 +167,17 @@ export default function SupportChat() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Floating Toggle Button */}
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-16 h-16 bg-gradient-to-tr from-[#00F0FF] to-[#00b8cc] rounded-full shadow-[0_8px_30px_rgba(0,240,255,0.4)] flex items-center justify-center text-[#050914] transition-all relative group"
+      >
+        <div className="absolute inset-0 rounded-full bg-[#00F0FF] animate-ping opacity-20 group-hover:hidden"></div>
+        {isOpen ? <X size={28} /> : <MessageCircle size={28} className="fill-current" />}
+      </motion.button>
     </div>
   );
 }

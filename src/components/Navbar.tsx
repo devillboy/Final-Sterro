@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import { Menu, X, Shield, LogOut, User as UserIcon } from "lucide-react";
+import { Menu, X, Shield, LogOut, User as UserIcon, MessageCircle } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Navbar() {
@@ -47,8 +47,9 @@ export default function Navbar() {
             <a href="#pricing" onClick={(e) => scrollTo("pricing", e)} className="text-zinc-300 hover:text-white transition-colors">Root Servers</a>
             <button 
               onClick={() => window.dispatchEvent(new CustomEvent('TOGGLE_SUPPORT_CHAT'))}
-              className="text-zinc-300 hover:text-[#00F0FF] transition-all hover:scale-105 font-semibold"
+              className="px-4 py-2 rounded-full bg-[#00F0FF]/10 text-[#00F0FF] border border-[#00F0FF]/20 hover:bg-[#00F0FF] hover:text-[#050914] transition-all flex items-center gap-2 text-sm font-bold shadow-[0_0_15px_rgba(0,240,255,0.1)]"
             >
+              <MessageCircle size={16} />
               Support
             </button>
             {isAdmin && (
