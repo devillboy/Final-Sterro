@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Menu, X, Shield, LogOut, User as UserIcon, MessageCircle, ChevronRight } from "lucide-react";
+import { Menu, X, Shield, LogOut, User as UserIcon, MessageCircle, ChevronRight, LayoutTemplate, Database } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Navbar() {
@@ -24,71 +24,100 @@ export default function Navbar() {
         </a>
       </div>
 
-      <nav className="sticky top-0 z-50 bg-bg-dark/70 backdrop-blur-3xl border-b border-white/5 transition-all duration-500">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 h-20 flex items-center justify-between">
+      <nav className="sticky top-0 z-50 bg-bg-dark/80 backdrop-blur-2xl border-b border-white/5 transition-all duration-500">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 h-24 flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-4 group cursor-pointer" onClick={(e) => scrollTo("root", e)}>
+          <div className="flex items-center gap-5 group cursor-pointer" onClick={(e) => scrollTo("root", e)}>
             <div className="relative">
               <motion.img 
-                whileHover={{ scale: 1.1, rotate: 5 }}
+                whileHover={{ scale: 1.05, rotate: 2 }}
                 src="https://cdn.discordapp.com/icons/1391758924687999006/9d09b6eae193f8156683b959fd116e68.webp?size=2048" 
                 alt="Sterro Cloud Logo" 
-                className="w-10 h-10 rounded-xl shadow-2xl relative z-10"
+                className="w-12 h-12 rounded-2xl shadow-3xl relative z-10 border border-white/10"
               />
-              <div className="absolute inset-0 bg-brand-cyan/20 blur-xl rounded-xl scale-0 group-hover:scale-110 transition-transform duration-500" />
+              <div className="absolute inset-0 bg-brand-cyan/10 blur-2xl rounded-full scale-0 group-hover:scale-150 transition-transform duration-700" />
             </div>
-            <span className="text-2xl font-extrabold tracking-tighter text-white">
-              STERRO<span className="text-brand-cyan">CLOUD</span>
-            </span>
+            <div className="flex flex-col">
+              <span className="text-2xl font-black tracking-[-0.05em] text-white leading-none">
+                STERRO<span className="text-brand-cyan">CLOUD</span>
+              </span>
+              <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em] mt-1">High-Frequency Computing</span>
+            </div>
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden lg:flex items-center gap-10">
-            <div className="flex items-center gap-8 text-[11px] font-black uppercase tracking-[0.15em] text-zinc-400">
-              <a href="#" onClick={(e) => scrollTo("root", e)} className="hover:text-white transition-colors">Nodes</a>
-              <a href="#pricing" onClick={(e) => scrollTo("pricing", e)} className="hover:text-white transition-colors">Solutions</a>
-              <a href="#games" onClick={(e) => scrollTo("games", e)} className="hover:text-white transition-colors">Locations</a>
+          <div className="hidden lg:flex items-center gap-12">
+            <div className="flex items-center gap-10 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+              <a href="#" onClick={(e) => scrollTo("root", e)} className="hover:text-white transition-colors relative group/link">
+                Infrastructure
+                <span className="absolute -bottom-2 left-0 w-0 h-px bg-brand-cyan transition-all duration-300 group-hover/link:w-full" />
+              </a>
+              <a href="#pricing" onClick={(e) => scrollTo("pricing", e)} className="hover:text-white transition-colors relative group/link">
+                Solutions
+                <span className="absolute -bottom-2 left-0 w-0 h-px bg-brand-cyan transition-all duration-300 group-hover/link:w-full" />
+              </a>
+              <a href="#games" onClick={(e) => scrollTo("games", e)} className="hover:text-white transition-colors relative group/link">
+                Uplink Map
+                <span className="absolute -bottom-2 left-0 w-0 h-px bg-brand-cyan transition-all duration-300 group-hover/link:w-full" />
+              </a>
             </div>
             
-            <div className="h-6 w-px bg-white/10" />
+            <div className="h-4 w-px bg-white/10" />
             
             <button 
               onClick={() => window.dispatchEvent(new CustomEvent('TOGGLE_SUPPORT_CHAT'))}
-              className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-brand-cyan hover:text-white transition-colors"
+              className="flex items-center gap-2 group text-[10px] font-black uppercase tracking-[0.2em] text-white/40 hover:text-brand-cyan transition-colors"
             >
-              <MessageCircle size={14} />
-              Assistant
+              <MessageCircle size={14} className="transition-transform group-hover:scale-110" />
+              Concierge
             </button>
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-6">
             {loading ? (
-              <div className="w-24 h-5 bg-white/5 animate-pulse rounded-full" />
+              <div className="w-32 h-12 bg-white/5 animate-skeleton rounded-2xl" />
             ) : user ? (
               <div className="group relative">
-                <div className="flex items-center gap-3 cursor-pointer py-1 pr-1 pl-4 rounded-full bg-white/5 border border-white/10 hover:border-brand-cyan/30 hover:bg-brand-cyan/5 transition-all duration-300">
+                <div className="flex items-center gap-4 cursor-pointer py-1.5 pr-1.5 pl-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-brand-cyan/20 hover:bg-brand-cyan/5 transition-all duration-500">
                   <div className="flex flex-col items-end">
-                    <span className="text-[11px] font-black uppercase tracking-widest text-white leading-none mb-1">{user.displayName?.split(' ')[0]}</span>
-                    <span className="text-[9px] font-bold text-brand-cyan/70 tracking-widest leading-none">{isAdmin ? 'OPERATOR' : 'CLIENT'}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white leading-none mb-1.5">{user.displayName?.split(' ')[0]}</span>
+                    <span className={isAdmin ? 'admin-badge' : 'text-[8px] font-black text-white/30 tracking-[0.2em] uppercase'}>{isAdmin ? 'OPERATOR' : 'CLIENT'}</span>
                   </div>
-                  <div className="w-10 h-10 rounded-full border border-white/20 overflow-hidden shadow-lg group-hover:border-brand-cyan/50 transition-colors duration-500">
+                  <div className="w-11 h-11 rounded-xl border border-white/10 overflow-hidden shadow-2xl group-hover:border-brand-cyan/30 transition-all duration-500">
                     {user.photoURL ? (
                       <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-brand-cyan/10 flex items-center justify-center text-brand-cyan">
-                        <UserIcon size={16} />
+                      <div className="w-full h-full bg-brand-cyan/5 flex items-center justify-center text-brand-cyan/40">
+                        <UserIcon size={18} />
                       </div>
                     )}
                   </div>
                 </div>
                 
                 {/* Refined Dropdown */}
-                <div className="absolute top-[120%] right-0 w-56 bg-bg-card/95 backdrop-blur-2xl border border-white/10 rounded-2xl py-4 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 shadow-3xl z-[60]">
+                <div className="absolute top-[120%] right-0 w-64 bg-bg-card/95 backdrop-blur-2xl border border-white/10 rounded-2xl py-4 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 shadow-3xl z-[60]">
                   <div className="px-5 py-2 mb-2 border-b border-white/5 overflow-hidden">
                     <div className="text-[9px] font-black text-zinc-500 tracking-widest mb-1">ACCOUNT IDENTIFIER</div>
                     <div className="text-[11px] font-mono text-zinc-400 truncate">{user.email}</div>
                   </div>
+                  
+                  <button 
+                    onClick={() => window.dispatchEvent(new CustomEvent('OPEN_USER_DASHBOARD', { detail: 'subscriptions' }))}
+                    className="w-full text-left px-5 py-3 text-[11px] font-black text-white/70 hover:text-brand-cyan hover:bg-brand-cyan/5 flex items-center gap-3 transition-colors uppercase tracking-widest"
+                  >
+                    <LayoutTemplate size={14} /> My Subscriptions
+                  </button>
+                  
+                  <button 
+                    onClick={() => window.dispatchEvent(new CustomEvent('OPEN_USER_DASHBOARD', { detail: 'credentials' }))}
+                    className="w-full text-left px-5 py-3 text-[11px] font-black text-white/70 hover:text-brand-cyan hover:bg-brand-cyan/5 flex items-center gap-3 transition-colors uppercase tracking-widest"
+                  >
+                    <Database size={14} /> Panel Credentials
+                  </button>
+
+                  <div className="mx-5 my-2 border-t border-white/5" />
+
                   {isAdmin && (
                     <button 
                       onClick={() => window.dispatchEvent(new CustomEvent('OPEN_ADMIN_PANEL'))}

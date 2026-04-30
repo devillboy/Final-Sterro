@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot, Paperclip, FileIcon, Image as ImageIcon, CheckCircle2, AlertCircle } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, Paperclip, FileIcon, Image as ImageIcon, CheckCircle2, AlertCircle, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -18,7 +18,7 @@ export default function SupportChat() {
   const { firebaseUser, loginGoogle } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', role: 'assistant', content: 'Hi! I am Qurob AI, your SterroCloud assistant. How can I help you today?' }
+    { id: '1', role: 'assistant', content: 'Connection established. Establishing secure link with Sterro Concierge. How may I assist your operations today?' }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -86,17 +86,17 @@ export default function SupportChat() {
     setIsTyping(true);
 
     const systemPrompt = `
-      You are Sterro Agent, a senior concierge for SterroCloud High-Performance Infrastructure.
+      You are Sterro Agent, a senior operations specialist for SterroCloud High-Performance Infrastructure.
       
-      Your personality: Professional, technically precise, and highly reliable. You speak like a senior systems engineer who genuinely cares about client success.
+      Your personality: Professional, technically precise, and authoritative yet helpful. You speak like a senior systems engineer.
       
       SterroCloud Operational Parameters:
-      - Core Fleet: High-frequency Minecraft Nodes (Ryzen/EPYC) and enterprise Intel Xeon VPS.
+      - Core Fleet: High-frequency Minecraft Nodes (Ryzen 7950X based) and Enterprise KVM Virtualization nodes.
       - Service Catalog:
-        * Minecraft Nodes: Plan 1 (2GB, ₹130), Plan 2 (4GB, ₹260), Plan 3 (6GB, ₹390).
-        * Scalable VPS: Entry (4GB, ₹240), Pro (8GB, ₹480), Elite (16GB, ₹960).
-        * Sandbox: 1 Hour Complimentary Trial (4GB) for proof-of-concept testing.
-      - Global Infrastructure: India, Singapore, Germany, USA. All nodes protected by 10Gbps EdgeGuard.
+        * Core Series (MC): Core-01 (2GB, ₹130), Core-02 (4GB, ₹260), Sigma Pro (6GB, ₹390).
+        * D-Node Series (VPS): D-Node Alpha (4GB, ₹240), D-Node Beta (8GB, ₹480), D-Node Xeon Pro (16GB, ₹960).
+        * Sandbox: Dev Sandbox trial (4GB) for proof-of-concept.
+      - Global Infrastructure: IN, SG, DE, US regions. 10Gbps EdgeGuard active.
       
       Security & Compliance:
       - Trial Policy: Strictly one sandbox per user. If they've already tested, politely inform them: "Our records indicate you've already utilized the test environment. All systems are stable and bugs are squashed—we recommend moving to a dedicated production plan for full access."
@@ -173,13 +173,13 @@ export default function SupportChat() {
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <div className="w-10 h-10 rounded-xl bg-brand-cyan/10 flex items-center justify-center text-brand-cyan border border-brand-cyan/20">
-                    <Bot size={20} />
+                    <Activity size={20} />
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-bg-dark" />
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-[#050914]" />
                 </div>
                 <div>
-                  <h3 className="font-black text-white text-xs uppercase tracking-widest">Sterro Agent</h3>
-                  <p className="text-[10px] text-brand-cyan font-bold uppercase tracking-tight">Systems Online</p>
+                  <h3 className="font-black text-white text-xs uppercase tracking-widest">Operations Liaison</h3>
+                  <p className="text-[10px] text-brand-cyan font-bold uppercase tracking-tight">Terminal Active</p>
                 </div>
               </div>
               <button 

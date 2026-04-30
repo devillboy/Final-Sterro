@@ -3,24 +3,24 @@ import { motion } from 'motion/react';
 
 export default function Features() {
   const feats = [
-    { title: "Epic Hardware", desc: "Pick your power: AMD EPYC 9654 for budget-friendly might or Ryzen 7950X3D for top-tier single-core performance. Let's play!" },
-    { title: "DDoS Protection", desc: "Our network protects your servers with up to 7 Tbps DDoS mitigation at no extra cost." },
-    { title: "Always Online", desc: "Your server, your schedule. We're always online, so you decide when to log off. 24/7 gaming, no questions asked." },
-    { title: "User-Friendly Panel", desc: "Control your server like a boss with our user-friendly panel. No tech wizardry required just pure gaming management." },
-    { title: "Instant Play", desc: "Ready, set, game! Most servers are up in minutes. Skip the wait and dive straight into the action." },
-    { title: "Fast & Friendly Support", desc: "Stuck? Our gamer support squad's got your back. Fast, friendly help from fellow players, no extra coin needed." },
-    { title: "Superb Documentation", desc: "Setup's a breeze with our easy guides and videos. We've got the essentials covered, so you can focus on gaming." },
-    { title: "Mods & Plugin Manager", desc: "Unleash your creativity! Easily upload and manage your custom mods or plugins to make your server truly unique." },
+    { title: "Ryzen™ Bare-Metal", desc: "Native performance on 5.7GHz frequency nodes. Each core is dedicated to your runtime, ensuring zero steal and peak tick rates for demanding workloads." },
+    { title: "EdgeGuard L3/L4 Mitigation", desc: "Proprietary network stack capable of 10Tbps+ volumetric scrubbing. Real-time packet inspection ensures zero downtime during targeted saturation events." },
+    { title: "Uptime SLA Guarantee", desc: "Enterprise-grade reliability with 99.9% network availability. Our redundancy protocols ensure your mission-critical infrastructure remains accessible 24/7." },
+    { title: "Advanced Control Interface", desc: "Granular administrative control via a customized Pterodactyl-based terminal. Manage file systems, databases, and cron tasks with zero friction." },
+    { title: "Sub-Second Deployment", desc: "Automated provisioning pipeline that initializes your environment within 12 seconds. Rapid iteration cycles from purchase to production." },
+    { title: "Technical Support Liaison", desc: "Direct access to our Level 3 engineering team. We speak your language and troubleshoot your specific implementation challenges." },
+    { title: "Global CDN Edge", desc: "Strategically located clusters in Mumbai, Frankfurt, Singapore, and New York for sub-30ms latency benchmarks worldwide." },
+    { title: "Scale-Out Ready", desc: "Dynamic resource allocation. Upgrade your compute pool or storage volume horizontally without requiring a system-wide reboot." },
   ];
 
   return (
-    <section className="py-24 px-6 bg-[var(--color-bg-main)]">
+    <section id="features" className="py-24 px-6 bg-[var(--color-bg-main)] visible-grid">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight text-white">
-            Everything <span className="text-[#00F0FF]">your server needs</span>
+          <h2 className="text-4xl md:text-6xl font-black mb-4 tracking-tighter text-white uppercase italic">
+            Engineered for <span className="text-[#00F0FF] italic">Resilience</span>
           </h2>
-          <p className="text-[var(--color-text-dim)] font-medium text-lg">Features, tools, settings, and support bundled in one place.</p>
+          <p className="text-zinc-500 font-bold text-sm uppercase tracking-widest">Advanced Infrastructure Architecture & Protocols</p>
         </div>
 
         <motion.div 
@@ -46,10 +46,14 @@ export default function Features() {
               whileHover={{ scale: 1.02 }}
               className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-10 flex flex-col group hover:border-[#00F0FF]/40 transition-colors cursor-default"
             >
-              <div className="w-full h-40 mb-8 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border)] flex flex-col items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity bg-gradient-to-b from-[#0a1021] to-[#050814] relative overflow-hidden">
-                 {/* Abstract visual representation */}
-                 <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)]" style={{backgroundSize: '20px 20px'}}></div>
-                 <div className="w-16 h-16 bg-[#00F0FF]/10 rounded-lg border border-[#00F0FF]/30 flex items-center justify-center">
+              <div className="w-full h-48 mb-8 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border)] flex flex-col items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity bg-gradient-to-b from-[#0a1021] to-[#050814] relative overflow-hidden shrink-0">
+                 <img 
+                   src={i === 0 ? "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?q=80&w=800" : (i === 1 ? "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?q=80&w=800" : (i === 2 ? "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800" : "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=800"))} 
+                   alt="" 
+                   className="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" 
+                 />
+                 <div className="absolute inset-0 bg-gradient-to-t from-bg-dark to-transparent" />
+                 <div className="relative z-10 w-16 h-16 bg-[#00F0FF]/10 rounded-lg border border-[#00F0FF]/30 flex items-center justify-center backdrop-blur-sm">
                     <div className="w-8 h-8 rounded bg-[#00F0FF]/40 animate-pulse" />
                  </div>
               </div>

@@ -15,6 +15,7 @@ import FAQ from "./components/FAQ";
 import Footer from "./components/Footer";
 import CursorGlow from "./components/CursorGlow";
 import AdminPanel from "./components/AdminPanel";
+import UserDashboard from "./components/UserDashboard";
 import SupportChat from "./components/SupportChat";
 import { motion, useScroll, useSpring } from "motion/react";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -102,6 +103,7 @@ export default function App() {
     <AuthProvider>
       <CursorGlow />
       {showAdmin && <AdminPanel />}
+      <UserDashboard />
       <div
         id="app-main"
         className="relative bg-bg-dark min-h-screen overflow-x-hidden text-white font-sans selection:bg-brand-cyan selection:text-bg-dark"

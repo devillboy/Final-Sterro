@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext';
 import WorldMap from './WorldMap';
 import { db } from '../lib/firebase';
-import { collection, query, orderBy, getDocs, getDoc, doc } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, getDoc, doc, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const LoadingMessages = ({ isSubmitting, isCreatingServer }: { isSubmitting: boolean, isCreatingServer: boolean }) => {
   const [msgIdx, setMsgIdx] = useState(0);
@@ -65,17 +65,18 @@ interface Plan {
 }
 
 const fallbackMinecraftPlans: Plan[] = [
-  { id: 'trial', name: "1 Hour Free Trial", price: "0", ram: "4GB RAM", storage: "100GB SSD", cpu: "150% CPU", ports: "1 Additional Port", backups: "0 Backup Limit", db: "1 Database", ddos: "Trial Protection", players: "Testing Only", isTrial: true, type: 'minecraft', order: 0 },
-  { id: 'p1', name: "Plan One", price: "130", ram: "2GB RAM", storage: "75GB SSD", cpu: "100% CPU (4.0GHz)", ports: "2 Additional Ports", backups: "1 Backup Limit", db: "1 Database", ddos: "10 Gbps EdgeGuard", players: "10-20 Players", type: 'minecraft', order: 1 },
-  { id: 'p2', name: "Plan Two", price: "260", ram: "4GB RAM", storage: "100GB SSD", cpu: "150% CPU", ports: "2 Additional Ports", backups: "1 Backup Limit", db: "1 Database", ddos: "10 Gbps Protection", players: "20-35 Players", type: 'minecraft', order: 2 },
-  { id: 'p3', name: "Plan Three", price: "390", ram: "6GB RAM", storage: "125GB SSD", cpu: "200% CPU", ports: "2 Additional Ports", backups: "2 Backup Limits", db: "2 Databases", ddos: "10 Gbps Protection", players: "30-50 Players", highlight: true, type: 'minecraft', order: 3 }
+  { id: 'trial', name: "Dev Sandbox", price: "0", ram: "4GB RAM", storage: "100GB SSD", cpu: "150% CPU", ports: "1 Additional Port", backups: "0 Backup Limit", db: "1 Database", ddos: "Standard", players: "Testing Only", isTrial: true, type: 'minecraft', order: 0 },
+  { id: 'p1', name: "Core-01", price: "130", ram: "2GB RAM", storage: "75GB SSD", cpu: "100% CPU (4.0GHz)", ports: "2 Additional Ports", backups: "1 Backup Limit", db: "1 Database", ddos: "10 Gbps EdgeGuard", players: "10-20 Players", type: 'minecraft', order: 1 },
+  { id: 'p2', name: "Core-02", price: "260", ram: "4GB RAM", storage: "100GB SSD", cpu: "150% CPU", ports: "2 Additional Ports", backups: "1 Backup Limit", db: "1 Database", ddos: "10 Gbps Protection", players: "20-35 Players", type: 'minecraft', order: 2 },
+  { id: 'p3', name: "Sigma Pro", price: "390", ram: "6GB RAM", storage: "125GB SSD", cpu: "200% CPU", ports: "2 Additional Ports", backups: "2 Backup Limits", db: "2 Databases", ddos: "10 Gbps Protection", players: "30-50 Players", highlight: true, type: 'minecraft', order: 3 }
 ];
 
 const fallbackVpsPlans: Plan[] = [
-  { id: 'v1', name: "VPS Plan 1", price: "240", ram: "4GB RAM", cpu: "200% CPU", type: 'vps', storage: '50GB', ports: '1', order: 0 },
-  { id: 'v2', name: "VPS Plan 2", price: "480", ram: "8GB RAM", cpu: "400% CPU", type: 'vps', storage: '100GB', ports: '1', order: 1 },
-  { id: 'v3', name: "VPS Plan 3", price: "960", ram: "16GB RAM", cpu: "800% CPU", highlight: true, type: 'vps', storage: '200GB', ports: '1', order: 2 }
+  { id: 'v1', name: "D-Node Alpha", price: "240", ram: "4GB RAM", cpu: "200% CPU", type: 'vps', storage: '50GB', ports: '1', order: 0 },
+  { id: 'v2', name: "D-Node Beta", price: "480", ram: "8GB RAM", cpu: "400% CPU", type: 'vps', storage: '100GB', ports: '1', order: 1 },
+  { id: 'v3', name: "D-Node Xeon Pro", price: "960", ram: "16GB RAM", cpu: "800% CPU", highlight: true, type: 'vps', storage: '200GB', ports: '1', order: 2 }
 ];
+
 
 export default function PricingList() {
   const [activeTab, setActiveTab] = useState<'minecraft' | 'vps'>('minecraft');
@@ -90,7 +91,30 @@ export default function PricingList() {
   const [verificationResult, setVerificationResult] = useState<{success?: boolean, error?: string, credentials?: any, serverDetails?: any, serverStatus?: string} | null>(null);
   const [billingStep, setBillingStep] = useState(1); // 1: Config, 2: Payment, 3: Success
   const [hasClaimedTrial, setHasClaimedTrial] = useState(false);
+  const [savedCreds, setSavedCreds] = useState<any>(null);
+  const [useExistingAccount, setUseExistingAccount] = useState(true);
   const { firebaseUser: user } = useAuth();
+
+  useEffect(() => {
+    async function fetchSavedCreds() {
+      if (user?.uid) {
+        try {
+          const credDoc = await getDoc(doc(db, "users", user.uid, "settings", "panel"));
+          if (credDoc.exists()) {
+            const data = credDoc.data();
+            setSavedCreds(data);
+            setUseExistingAccount(true);
+          } else {
+            setUseExistingAccount(false);
+          }
+        } catch (e) {
+          console.warn("Failed to fetch saved creds");
+          setUseExistingAccount(false);
+        }
+      }
+    }
+    fetchSavedCreds();
+  }, [user, selectedPlan]);
 
   useEffect(() => {
     async function checkTrialStatus() {
@@ -116,6 +140,8 @@ export default function PricingList() {
           const allPlans = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Plan));
           
           let fetchedMcPlans = allPlans.filter(p => p.type === 'minecraft');
+          if (fetchedMcPlans.length === 0) fetchedMcPlans = fallbackMinecraftPlans;
+
           if (!fetchedMcPlans.some(p => p.isTrial)) {
             const defaultTrial = fallbackMinecraftPlans.find(p => p.isTrial);
             if (defaultTrial) {
@@ -124,7 +150,12 @@ export default function PricingList() {
           }
           
           setMinecraftPlans(fetchedMcPlans);
-          setVpsPlans(allPlans.filter(p => p.type === 'vps'));
+          const fetchedVpsPlans = allPlans.filter(p => p.type === 'vps');
+          setVpsPlans(fetchedVpsPlans.length > 0 ? fetchedVpsPlans : fallbackVpsPlans);
+        } else {
+          // If snap is empty, we already have fallbacks in state, but let's be explicit
+          setMinecraftPlans(fallbackMinecraftPlans);
+          setVpsPlans(fallbackVpsPlans);
         }
       } catch (e) {
         console.warn("Live plans load failed, using fallbacks.");
@@ -215,10 +246,10 @@ export default function PricingList() {
       utrId: data.utrId,
       upiId: data.upiId,
       date: data.date,
-      email: data.email,
-      username: data.username,
+      email: useExistingAccount ? savedCreds.email : data.email,
+      username: useExistingAccount ? savedCreds.username : data.username,
       serverName: data.serverName,
-      password: data.password,
+      password: useExistingAccount ? savedCreds.password : data.password,
       planName: selectedPlan.name,
       ram: selectedPlan.ram || '',
       cpu: selectedPlan.cpu || '',
@@ -273,6 +304,29 @@ export default function PricingList() {
 
       if (serverResponse.ok) {
         setVerificationResult({ success: true, credentials: serverResult.credentials, serverDetails: serverResult.serverDetails, serverStatus: serverResult.serverStatus });
+        
+        // Save Credentials if new
+        if (!useExistingAccount && user?.uid) {
+           await setDoc(doc(db, "users", user.uid, "settings", "panel"), {
+             email: data.email,
+             username: data.username,
+             password: data.password,
+             updatedAt: serverTimestamp()
+           });
+        }
+
+        // Save Subscription Record
+        if (user?.uid) {
+           await addDoc(collection(db, "users", user.uid, "subscriptions"), {
+             planId: selectedPlan.id,
+             planName: selectedPlan.name,
+             price: selectedPlan.price,
+             serverName: data.serverName,
+             status: 'active',
+             createdAt: serverTimestamp(),
+             panelUrl: serverResult.credentials?.panelUrl
+           });
+        }
       } else {
         setVerificationResult({ error: serverResult.error || 'Server creation failed.' });
       }
@@ -302,22 +356,23 @@ export default function PricingList() {
   }
 
   const handleClaimTrial = async (data: PaymentFormData) => {
-    if (!data.email || !isHumanVerified) return;
+    if ((!data.email && !useExistingAccount) || !isHumanVerified) return;
     setIsSkeletonLoading(true);
     setVerificationResult(null);
 
     try {
+      const payload = { 
+        email: useExistingAccount ? savedCreds.email : data.email, 
+        username: useExistingAccount ? savedCreds.username : data.username,
+        serverName: data.serverName,
+        password: useExistingAccount ? savedCreds.password : data.password,
+        nodeId: currentNodeLocation,
+        eggId: currentEggId
+      };
       const response = await fetch('/api/trial/claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email: data.email, 
-          username: data.username,
-          serverName: data.serverName,
-          password: data.password,
-          nodeId: currentNodeLocation,
-          eggId: currentEggId
-        }),
+        body: JSON.stringify(payload),
       });
 
       let result;
@@ -330,6 +385,29 @@ export default function PricingList() {
 
       if (response.ok) {
         setVerificationResult({ success: true, credentials: result.credentials, serverDetails: result.serverDetails, serverStatus: result.serverStatus });
+        
+        // Save Credentials if new
+        if (!useExistingAccount && user?.uid) {
+           await setDoc(doc(db, "users", user.uid, "settings", "panel"), {
+             email: payload.email,
+             username: payload.username,
+             password: payload.password,
+             updatedAt: serverTimestamp()
+           });
+        }
+
+        // Save Subscription Record
+        if (user?.uid) {
+           await addDoc(collection(db, "users", user.uid, "subscriptions"), {
+             planId: 'trial',
+             planName: 'Cloud Trial Server',
+             price: 0,
+             serverName: payload.serverName,
+             status: 'active',
+             createdAt: serverTimestamp(),
+             panelUrl: result.credentials?.panelUrl
+           });
+        }
       } else {
         setVerificationResult({ error: result.error || 'Verification failed.' });
       }
@@ -346,7 +424,7 @@ export default function PricingList() {
   };
 
   return (
-    <section className="py-24 px-6 bg-gradient-to-b from-[var(--color-bg-main)] to-[var(--color-surface)]/30 border-t border-[var(--color-border)] min-h-screen">
+    <section id="pricing" className="py-24 px-6 bg-gradient-to-b from-[var(--color-bg-main)] to-[var(--color-surface)]/30 border-t border-[var(--color-border)] min-h-screen">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-20 animate-in fade-in slide-in-from-bottom-5 duration-1000">
           <h2 className="text-5xl md:text-6xl font-extrabold mb-6 tracking-tight">
@@ -410,139 +488,162 @@ export default function PricingList() {
               {activeTab === 'minecraft' && minecraftPlans.map((p, i) => (
                 <motion.div
                   key={`mc-${i}`}
-              variants={{
-                hidden: { opacity: 0, y: 30, scale: 0.95 },
-                visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50, damping: 20 } }
-              }}
-              whileHover={{ 
-                y: -6,
-                borderColor: "rgba(0, 240, 255, 0.4)",
-              }}
-              className={`group relative bg-white/[0.02] border ${p.highlight ? 'border-brand-cyan/40 shadow-[0_0_50px_rgba(0,240,255,0.05)]' : 'border-white/5'} rounded-[2rem] p-8 md:p-10 flex flex-col md:flex-row items-center gap-8 justify-between transition-all duration-500 overflow-hidden backdrop-blur-3xl`}
-            >
-              {/* Background Glow */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-brand-cyan/5 blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none group-hover:bg-brand-cyan/10 transition-all duration-700" />
-              
-              <div className="flex-1 w-full relative z-10">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
-                  <h4 className="text-3xl font-extrabold tracking-tight text-white group-hover:text-brand-cyan transition-colors duration-500">{p.name}</h4>
-                  <div className="flex items-center gap-2">
-                    <span className="bg-brand-cyan/10 text-brand-cyan text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border border-brand-cyan/20">₹{p.price} / MO</span>
-                    {p.highlight && <span className="bg-brand-blue/10 text-brand-blue text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border border-brand-blue/20">Most Popular</span>}
+                  variants={{
+                    hidden: { opacity: 0, y: 30, scale: 0.95 },
+                    visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50, damping: 20 } }
+                  }}
+                  whileHover={{ y: -4 }}
+                  className={`group relative bg-bg-card/40 border ${p.highlight ? 'border-brand-cyan/30 shadow-[0_30px_100px_-20px_rgba(0,240,255,0.1)]' : 'border-white/5'} rounded-[2.5rem] p-1 md:p-1 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-700 overflow-hidden backdrop-blur-3xl hover:bg-bg-card/60`}
+                >
+                  {/* Visual Side */}
+                  <div className="relative w-full md:w-72 h-48 md:h-auto overflow-hidden shrink-0">
+                    <img 
+                      src={p.isTrial ? "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800" : (i % 2 === 0 ? "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?q=80&w=800" : "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800")} 
+                      alt="" 
+                      className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:scale-110 group-hover:opacity-100 transition-all duration-1000" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-bg-card/40 md:to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-bg-card/90 to-transparent md:hidden" />
+                    
+                    <div className="absolute inset-0 flex flex-col justify-end p-6 md:hidden">
+                       <h4 className="text-2xl font-black text-white uppercase tracking-tighter">{p.name}</h4>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                  {[
-                    { icon: MemoryStick, label: "RAM", value: p.ram },
-                    { icon: HardDrive, label: "NVMe SSD", value: p.storage || p.ssd },
-                    { icon: Cpu, label: "CPU CORE", value: p.cpu },
-                    { icon: Shield, label: "DDoS", value: "Enterprise" },
-                  ].map((spec, idx) => (
-                    <div key={idx} className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-2 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-                        <spec.icon size={12} className="text-brand-cyan/60" />
-                        {spec.label}
+
+                  {/* Content Side */}
+                  <div className="flex-1 p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div className="flex-1 w-full space-y-8">
+                      <div className="hidden md:block">
+                        <div className="flex items-center gap-4 mb-2">
+                           <h4 className="text-3xl font-black text-white uppercase tracking-tighter group-hover:text-brand-cyan transition-colors duration-500">{p.name}</h4>
+                           {p.highlight && <span className="admin-badge">Priority Node</span>}
+                        </div>
+                        <p className="text-xs text-zinc-500 font-medium tracking-wide">Enterprise High-Frequency Instance</p>
                       </div>
-                      <div className="text-sm font-bold text-zinc-200 group-hover:text-white transition-colors">{spec.value}</div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 opacity-50 group-hover:opacity-100 transition-opacity duration-500">
-                  {['Instant Setup', 'Root Access', '24/7 Support', 'Dedicated IP'].map(feature => (
-                    <div key={feature} className="flex items-center gap-2 text-[10px] font-bold text-zinc-400">
-                      <CheckCircle2 size={12} className="text-brand-cyan" />
-                      {feature}
-                    </div>
-                  ))}
-                </div>
-              </div>
 
-              <div className="relative z-10 w-full md:w-auto shrink-0 flex flex-col items-center sm:items-end gap-3">
-               <button 
-                 onClick={() => {
-                   if (p.type === 'vps') {
-                     window.open('https://discord.gg/b2PqWqSEU3', '_blank');
-                   } else {
-                     setSelectedPlan(p);
-                   }
-                 }}
-                 className={`w-full md:w-[200px] h-16 rounded-2xl font-black transition-all duration-500 text-xs uppercase tracking-[0.1em] flex items-center justify-center gap-2 shadow-xl ${(p as any).isTrial ? 'bg-white/5 hover:bg-white/10 text-white border border-white/10' : (p.highlight ? 'bg-brand-cyan text-bg-dark hover:shadow-[0_0_40px_rgba(0,240,255,0.3)]' : 'bg-white/5 hover:bg-white text-white hover:text-bg-dark border border-white/10')} `}>
-                 <span>{(p as any).isTrial ? 'Claim Free Trial' : 'Get Started'}</span>
-                 <ChevronRight size={16} />
-               </button>
-               {(p as any).isTrial && <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">No Credit Card Required</span>}
-              </div>
-            </motion.div>
-          ))}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6">
+                        {[
+                          { icon: MemoryStick, label: "Allocation", value: p.ram },
+                          { icon: HardDrive, label: "NVMe Pool", value: p.storage || p.ssd },
+                          { icon: Cpu, label: "Compute", value: p.cpu },
+                          { icon: Network, label: "Protocol", value: "TCP/UDP Ready" },
+                        ].map((spec, idx) => (
+                          <div key={idx} className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1.5 text-[10px] font-black text-zinc-600 uppercase tracking-widest">
+                              <spec.icon size={12} className="text-brand-cyan/40" />
+                              {spec.label}
+                            </div>
+                            <div className="text-base font-bold text-zinc-300 font-mono tracking-tight">{spec.value}</div>
+                          </div>
+                        ))}
+                      </div>
 
-          {activeTab === 'vps' && vpsPlans.map((p, i) => (
+                      <div className="flex flex-wrap gap-x-6 gap-y-2">
+                        {['99.9% Uptime SLA', 'Ryzen 9 7950X', 'DDR5 ECC RAM'].map(f => (
+                          <div key={f} className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                            <span className="w-1 h-1 bg-brand-cyan rounded-full" />
+                            {f}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="w-full md:w-auto flex flex-col items-center md:items-end gap-6 shrink-0">
+                      <div className="text-center md:text-right">
+                         <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Cost Identifier</div>
+                         <div className="text-4xl font-black text-white tracking-tighter">₹{p.price}<span className="text-sm font-medium text-zinc-600 tracking-normal">/mo</span></div>
+                      </div>
+                      
+                      <button 
+                        onClick={() => p.type === 'vps' ? window.open('https://discord.gg/b2PqWqSEU3', '_blank') : setSelectedPlan(p)}
+                        className={`w-full md:w-52 h-16 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-3 ${p.highlight ? 'bg-brand-cyan text-bg-dark shadow-[0_20px_40px_rgba(0,240,255,0.2)] hover:scale-105' : 'bg-white/5 text-white hover:bg-white hover:text-bg-dark border border-white/10'}`}
+                      >
+                        {p.isTrial ? 'Claim Sandbox' : 'Provision Node'}
+                        <ChevronRight size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+
+              {activeTab === 'vps' && vpsPlans.map((p, i) => (
              <motion.div
-              key={`vps-${i}`}
-              variants={{
-                hidden: { opacity: 0, y: 30, scale: 0.95 },
-                visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50, damping: 20 } }
-              }}
-              whileHover={{ 
-                y: -6,
-                borderColor: "rgba(0, 240, 255, 0.4)",
-              }}
-              className={`group relative bg-white/[0.02] border ${p.highlight ? 'border-brand-cyan/40 shadow-[0_0_50px_rgba(0,240,255,0.05)]' : 'border-white/5'} rounded-[2rem] p-8 md:p-10 flex flex-col md:flex-row items-center gap-8 justify-between transition-all duration-500 overflow-hidden backdrop-blur-3xl`}
-           >
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-blue/5 blur-[80px] translate-y-1/2 -translate-x-1/2 pointer-events-none group-hover:bg-brand-blue/10 transition-all duration-700" />
-              
-             <div className="flex-1 w-full relative z-10">
-               <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
-                 <h4 className="text-3xl font-extrabold tracking-tight text-white group-hover:text-brand-cyan transition-colors duration-500">{p.name}</h4>
-                 <div className="flex items-center gap-2">
-                    <span className="bg-brand-cyan/10 text-brand-cyan text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border border-brand-cyan/20">₹{p.price} / MO</span>
-                    <span className="bg-white/5 text-white/50 text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border border-white/10">INTEL XEON</span>
+               key={`vps-${i}`}
+               variants={{
+                 hidden: { opacity: 0, y: 30, scale: 0.95 },
+                 visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50, damping: 20 } }
+               }}
+               whileHover={{ y: -4 }}
+               className={`group relative bg-bg-card/40 border ${p.highlight ? 'border-brand-cyan/30 shadow-[0_30px_100px_-20px_rgba(0,240,255,0.1)]' : 'border-white/5'} rounded-[2.5rem] p-1 md:p-1 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-700 overflow-hidden backdrop-blur-3xl hover:bg-bg-card/60`}
+            >
+               {/* Visual Side */}
+               <div className="relative w-full md:w-72 h-48 md:h-auto overflow-hidden shrink-0">
+                 <img 
+                   src={i === 2 ? "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?q=80&w=800" : "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=800"} 
+                   alt="" 
+                   className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:scale-110 group-hover:opacity-100 transition-all duration-1000" 
+                 />
+                 <div className="absolute inset-0 bg-gradient-to-r from-transparent to-bg-card/40 md:to-transparent" />
+                 
+                 <div className="absolute inset-0 flex flex-col justify-end p-6 md:hidden">
+                    <h4 className="text-2xl font-black text-white uppercase tracking-tighter">{p.name}</h4>
                  </div>
                </div>
-               
-               <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                  {[
-                    { icon: MemoryStick, label: "RAM", value: p.ram },
-                    { icon: Cpu, label: "VCORE CPU", value: p.cpu },
-                    { icon: HardDrive, label: "NVMe STORAGE", value: p.storage },
-                    { icon: Network, label: "UPLINK", value: "1 Gbps" },
-                  ].map((spec, idx) => (
-                    <div key={idx} className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-2 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-                        <spec.icon size={12} className="text-brand-cyan/60" />
-                        {spec.label}
-                      </div>
-                      <div className="text-sm font-bold text-zinc-200 group-hover:text-white transition-colors">{spec.value}</div>
+
+               {/* Content Side */}
+               <div className="flex-1 p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
+                 <div className="flex-1 w-full space-y-8">
+                   <div className="hidden md:block">
+                     <div className="flex items-center gap-4 mb-2">
+                        <h4 className="text-3xl font-black text-white uppercase tracking-tighter group-hover:text-brand-cyan transition-colors duration-500">{p.name}</h4>
+                        {p.highlight && <span className="admin-badge">Premium Compute</span>}
+                     </div>
+                     <p className="text-xs text-zinc-500 font-medium tracking-wide">Enterprise KVM Virtualization</p>
+                   </div>
+
+                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6">
+                      {[
+                        { icon: MemoryStick, label: "RAM Pool", value: p.ram },
+                        { icon: Cpu, label: "KVM vCore", value: p.cpu },
+                        { icon: HardDrive, label: "NVMe Raid", value: p.storage },
+                        { icon: Network, label: "BGP Port", value: "1 Gbps" },
+                      ].map((spec, idx) => (
+                        <div key={idx} className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1.5 text-[10px] font-black text-zinc-600 uppercase tracking-widest">
+                            <spec.icon size={12} className="text-brand-cyan/40" />
+                            {spec.label}
+                          </div>
+                          <div className="text-base font-bold text-zinc-300 font-mono tracking-tight">{spec.value}</div>
+                        </div>
+                      ))}
+                   </div>
+
+                   <div className="flex flex-wrap gap-x-6 gap-y-2">
+                      {['Tier-3 Datacenter', 'Full Root Access', 'IPv6 Ready'].map(f => (
+                        <div key={f} className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                          <span className="w-1 h-1 bg-brand-cyan rounded-full" />
+                          {f}
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                 </div>
+
+                 <div className="w-full md:w-auto flex flex-col items-center md:items-end gap-6 shrink-0">
+                   <div className="text-center md:text-right">
+                      <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Pricing Model</div>
+                      <div className="text-4xl font-black text-white tracking-tighter">₹{p.price}<span className="text-sm font-medium text-zinc-600 tracking-normal">/mo</span></div>
+                   </div>
+                   
+                   <button 
+                     onClick={() => p.type === 'vps' ? window.open('https://discord.gg/b2PqWqSEU3', '_blank') : setSelectedPlan(p)}
+                     className={`w-full md:w-52 h-16 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-3 ${p.highlight ? 'bg-brand-cyan text-bg-dark shadow-[0_20px_40px_rgba(0,240,255,0.2)] hover:scale-105' : 'bg-white/5 text-white hover:bg-white hover:text-bg-dark border border-white/10'}`}
+                   >
+                     Deploy Node
+                     <ChevronRight size={14} />
+                   </button>
+                 </div>
                </div>
-
-               <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 opacity-50 group-hover:opacity-100 transition-opacity duration-500">
-                  {['KVM Virtualization', 'VNC Console', 'DDoS Protection', 'Docker Ready'].map(feature => (
-                    <div key={feature} className="flex items-center gap-2 text-[10px] font-bold text-zinc-400">
-                      <CheckCircle2 size={12} className="text-brand-cyan" />
-                      {feature}
-                    </div>
-                  ))}
-                </div>
-             </div>
-
-             <div className="relative z-10 w-full md:w-auto shrink-0">
-               <button 
-                 onClick={() => {
-                   if (p.type === 'vps') {
-                     window.open('https://discord.gg/b2PqWqSEU3', '_blank');
-                   } else {
-                     setSelectedPlan(p);
-                   }
-                 }}
-                 className={`w-full md:w-[200px] h-16 rounded-2xl font-black transition-all duration-500 text-xs uppercase tracking-[0.1em] flex items-center justify-center gap-2 shadow-xl ${p.highlight ? 'bg-brand-cyan text-bg-dark hover:shadow-[0_0_40px_rgba(0,240,255,0.3)]' : 'bg-white/5 hover:bg-white text-white hover:text-bg-dark border border-white/10'} `}>
-                 <span>Configure VPS</span>
-                 <ChevronRight size={16} />
-               </button>
-             </div>
-           </motion.div>
+            </motion.div>
           ))}
             </>
           )}
@@ -786,11 +887,41 @@ export default function PricingList() {
                                    <div className="col-span-2">
                                      <Input label="Server Name" {...register("serverName", {required: true})} defaultValue={`${selectedPlan.name} Server`} />
                                    </div>
-                                   <Input label="Control Panel Email" {...register("email", {required: true})} type="email" />
-                                   <Input label="Panel Username" {...register("username", {required: true})} />
-                                   <div className="col-span-2">
-                                      <Input label="Panel Password" {...register("password", {required: true})} type="password" />
-                                   </div>
+                                   
+                                   {savedCreds && (
+                                     <div className="col-span-2 p-4 bg-brand-cyan/5 border border-brand-cyan/20 rounded-2xl flex items-center justify-between mb-2">
+                                       <div className="flex items-center gap-3">
+                                         <div className="w-10 h-10 rounded-xl bg-brand-cyan/10 flex items-center justify-center text-brand-cyan">
+                                           <Users size={18} />
+                                         </div>
+                                         <div>
+                                           <p className="text-xs font-black text-white uppercase tracking-widest">Existing Account Found</p>
+                                           <p className="text-[10px] text-white/40 uppercase tracking-tighter">Username: {savedCreds.username}</p>
+                                         </div>
+                                       </div>
+                                       <button 
+                                         type="button"
+                                         onClick={() => setUseExistingAccount(!useExistingAccount)}
+                                         className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${useExistingAccount ? 'bg-brand-cyan text-bg-dark' : 'bg-white/5 text-white/60'}`}
+                                       >
+                                         {useExistingAccount ? 'USING SAVED' : 'CREATE NEW'}
+                                       </button>
+                                     </div>
+                                   )}
+
+                                   {!useExistingAccount ? (
+                                     <>
+                                       <Input label="Control Panel Email" {...register("email", {required: !useExistingAccount})} type="email" />
+                                       <Input label="Panel Username" {...register("username", {required: !useExistingAccount})} />
+                                       <div className="col-span-2">
+                                          <Input label="Panel Password" {...register("password", {required: !useExistingAccount})} type="password" />
+                                       </div>
+                                     </>
+                                   ) : (
+                                     <div className="col-span-2 text-center p-4 border border-dashed border-white/10 rounded-2xl opacity-50">
+                                       <p className="text-[10px] uppercase font-black tracking-widest text-zinc-500">Deploying with saved credentials</p>
+                                     </div>
+                                   )}
                                 </div>
                              </div>
 
@@ -956,17 +1087,17 @@ function StepItem({ active, completed, label, icon }: any) {
 }
 
 function CredentialItem({ label, value, isPassword }: any) {
-  const [show, setShow] = React.useState(!isPassword);
+  const [show, setShow] = React.useState(false);
   return (
     <div className="group relative">
       <div className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] mb-1">{label}</div>
       <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3 group-hover:border-white/20 transition-all">
         <span className="flex-1 font-mono text-sm text-white truncate">
-          {show ? value : "••••••••••••"}
+          {show || !isPassword ? value : "••••••••••••"}
         </span>
         <div className="flex gap-1">
            {isPassword && (
-             <button onClick={() => setShow(!show)} className="p-1.5 text-white/40 hover:text-white">
+             <button type="button" onClick={() => setShow(!show)} className="p-1.5 text-white/40 hover:text-white">
                 {show ? <X size={14}/> : <Activity size={14}/>}
              </button>
            )}
@@ -981,24 +1112,25 @@ function CredentialItem({ label, value, isPassword }: any) {
 
 function PlanSkeleton({ highlight }: { highlight: boolean }) {
   return (
-    <div className={`bg-[var(--color-surface)] border ${highlight ? 'border-[#00F0FF]/30 glow-primary' : 'border-[var(--color-border)]'} rounded-4xl p-8 flex flex-col md:flex-row items-center gap-8 justify-between opacity-50`}>
-      <div className="flex-1 w-full space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="w-48 h-8 rounded-lg animate-pulse" />
-          <div className="w-24 h-6 rounded animate-pulse" />
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full animate-pulse" />
-              <div className="w-20 h-4 rounded animate-pulse" />
-            </div>
-          ))}
-        </div>
+    <div className={`relative bg-white/[0.02] border ${highlight ? 'border-brand-cyan/20 shadow-[0_0_20px_rgba(0,240,255,0.05)]' : 'border-white/5'} rounded-[2.5rem] p-8 md:p-12 mb-8 animate-skeleton min-h-[280px] flex flex-col md:flex-row gap-8 justify-between items-center overflow-hidden`}>
+      <div className="flex-1 w-full space-y-10">
+         <div className="flex gap-4 items-center">
+            <div className="w-48 h-10 rounded-xl bg-white/5" />
+            <div className="w-24 h-5 rounded-full bg-white/5" />
+         </div>
+         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="space-y-3">
+                <div className="w-12 h-2 bg-white/5 rounded-full" />
+                <div className="h-6 bg-white/10 rounded-lg w-full" />
+              </div>
+            ))}
+         </div>
+         <div className="flex gap-6">
+            {[1,2,3].map(i => <div key={i} className="w-24 h-2 rounded-full bg-white/3" />)}
+         </div>
       </div>
-      <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto">
-        <div className="flex-1 md:w-44 h-14 rounded-2xl animate-pulse" />
-      </div>
+      <div className="w-full md:w-52 h-16 rounded-2xl bg-white/5 border border-white/5" />
     </div>
   );
 }
