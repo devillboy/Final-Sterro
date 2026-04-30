@@ -1,22 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Outfit", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   
+  --color-brand-cyan: #00F0FF;
+  --color-brand-blue: #0066FF;
+  --color-bg-dark: #050914;
+  --color-bg-card: #0A0F1E;
   --color-primary: #00F0FF;
   --color-primary-hover: #00D8E6;
-  --color-bg-main: #000000;
-  --color-surface: #080C14;
-  --color-surface-hover: #0E1420;
-  --color-border: #121B2B;
+  --color-bg-main: #050914;
+  --color-surface: #0A1222;
+  --color-surface-hover: #0E1830;
+  --color-border: #1A2740;
   --color-text-dim: #94A3B8;
 }
 
 @layer base {
   body {
-    @apply bg-[var(--color-bg-main)] text-white font-sans antialiased selection:bg-[#00F0FF] selection:text-black;
+    @apply bg-bg-dark text-white font-sans antialiased selection:bg-brand-cyan selection:text-bg-dark;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl;
+  }
+  
+  .btn-primary {
+    @apply px-6 py-3 bg-brand-cyan text-bg-dark font-bold rounded-xl hover:bg-white transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(0,240,255,0.3)];
   }
 }
 
@@ -25,10 +39,6 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-[#00F0FF] to-cyan-400;
   }
   
-  .glass-card {
-    @apply bg-[var(--color-surface)] border border-[var(--color-border)];
-  }
-
   .glow-primary {
     box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
   }
@@ -39,14 +49,6 @@
 
   .perspective-2000 {
     perspective: 2000px;
-  }
-
-  .rounded-3xl {
-    border-radius: 1.5rem;
-  }
-
-  .rounded-4xl {
-    border-radius: 2rem;
   }
 
   .shadow-3d {
@@ -80,15 +82,6 @@
       0 10px 20px rgba(0, 240, 255, 0.4);
   }
 
-  .text-3d-white {
-    text-shadow: 
-      0 1px 0 #e2e8f0,
-      0 2px 0 #cbd5e1,
-      0 3px 0 #94a3b8,
-      0 4px 0 #64748b,
-      0 10px 20px rgba(0, 0, 0, 0.5);
-  }
-
   .animate-skeleton {
     @apply relative overflow-hidden bg-white/5;
   }
@@ -110,11 +103,7 @@
   }
 
   @keyframes shimmer {
-    0% {
-      transform: translateX(-100%);
-    }
-    100% {
-      transform: translateX(100%);
-    }
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
   }
 }

@@ -86,28 +86,30 @@ export default function SupportChat() {
     setIsTyping(true);
 
     const systemPrompt = `
-      You are Qurob AI, the official Advanced Automated Agent for SterroCloud.
-      SterroCloud Knowledge Base:
-      - Services: High-performance Game Hosting (Minecraft, GTA, etc.), VPS (Intel Xeon), and Root Servers.
-      - Pricing: 
-        * Minecraft: Plan One (₹130, 2GB RAM), Plan Two (₹260, 4GB RAM), Plan Three (₹390, 6GB RAM).
-        * VPS: Plan 1 (₹240, 4GB RAM), Plan 2 (₹480, 8GB RAM), Plan 3 (₹960, 16GB RAM).
-        * Trial: 1 Hour Free Trial (4GB RAM) for Minecraft.
-      - Locations: India (🇮🇳), Singapore (🇸🇬), Germany (🇩🇪), USA (🇺🇸).
-      - Protection: 10Gbps EdgeGuard DDoS Protection.
+      You are Sterro Agent, a senior concierge for SterroCloud High-Performance Infrastructure.
       
-      User Context:
-      - Name: ${firebaseUser?.displayName || 'Guest'}
-      - Email: ${firebaseUser?.email || 'Not logged in'}
-      - Verified: ${firebaseUser?.emailVerified ? 'Yes' : 'No'}
+      Your personality: Professional, technically precise, and highly reliable. You speak like a senior systems engineer who genuinely cares about client success.
       
-      Capabilities & Guidance:
-      1. Verification Help: If a user is not verified, guide them to check their email or offer to assist with "Manual Verification Request" (you can log this for admins).
-      2. Support: Assist with technical steps for Pterodactyl panel, payment verification (UTR/UPI), and server deployment.
-      3. Language: Seamlessly handle Hindi, English, and Hinglish. 
-      4. Professionalism: Be concise, technical, and always helpful.
+      SterroCloud Operational Parameters:
+      - Core Fleet: High-frequency Minecraft Nodes (Ryzen/EPYC) and enterprise Intel Xeon VPS.
+      - Service Catalog:
+        * Minecraft Nodes: Plan 1 (2GB, ₹130), Plan 2 (4GB, ₹260), Plan 3 (6GB, ₹390).
+        * Scalable VPS: Entry (4GB, ₹240), Pro (8GB, ₹480), Elite (16GB, ₹960).
+        * Sandbox: 1 Hour Complimentary Trial (4GB) for proof-of-concept testing.
+      - Global Infrastructure: India, Singapore, Germany, USA. All nodes protected by 10Gbps EdgeGuard.
       
-      Current Request contains attached file: ${fileName || 'None'}
+      Security & Compliance:
+      - Trial Policy: Strictly one sandbox per user. If they've already tested, politely inform them: "Our records indicate you've already utilized the test environment. All systems are stable and bugs are squashed—we recommend moving to a dedicated production plan for full access."
+      
+      User Intelligence:
+      - Current Contact: ${firebaseUser?.displayName || 'Authorized Guest'}
+      - Account ID: ${firebaseUser?.email || 'Unauthorized'}
+      - Authentication: ${firebaseUser?.emailVerified ? 'Verified' : 'Verification Pending'}
+      
+      Engagement Rules:
+      1. Technical Assistance: Provide clear, sequential steps for panel operations or payment verification.
+      2. Linguistics: Professional English, Hindi, or technical Hinglish.
+      3. Tone: Confident but never arrogant. Use terms like "infrastructure", "nodes", "low-latency", "provisioning".
     `;
 
     try {
@@ -167,30 +169,36 @@ export default function SupportChat() {
             className="w-[320px] sm:w-[400px] h-[550px] bg-[#050914] border border-[#00F0FF]/20 rounded-2xl shadow-[0_20px_80px_-20px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden backdrop-blur-xl"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-[#00F0FF]/10 to-[#00b8cc]/10 border-b border-white/5 p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#00F0FF]/20 flex items-center justify-center text-[#00F0FF]">
-                  <Bot size={18} />
+            <div className="bg-white/[0.03] border-b border-white/10 p-6 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-xl bg-brand-cyan/10 flex items-center justify-center text-brand-cyan border border-brand-cyan/20">
+                    <Bot size={20} />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-bg-dark" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-sm">Qurob AI Support</h3>
-                  <p className="text-xs text-zinc-400">Online</p>
+                  <h3 className="font-black text-white text-xs uppercase tracking-widest">Sterro Agent</h3>
+                  <p className="text-[10px] text-brand-cyan font-bold uppercase tracking-tight">Systems Online</p>
                 </div>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-zinc-400 hover:text-white transition-colors">
-                <X size={20} />
+              <button 
+                onClick={() => setIsOpen(false)} 
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors text-zinc-500 hover:text-white"
+              >
+                <X size={18} />
               </button>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
               {messages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.role === 'user' ? 'bg-[#00F0FF] text-black rounded-tr-sm font-medium' : 'bg-white/5 text-zinc-300 rounded-tl-sm border border-white/5'}`}>
+                  <div className={`max-w-[85%] p-4 rounded-2xl text-[13px] leading-relaxed ${msg.role === 'user' ? 'bg-brand-cyan text-bg-dark font-bold rounded-tr-none shadow-[0_10px_30px_rgba(0,240,255,0.1)]' : 'bg-white/5 text-zinc-100 rounded-tl-none border border-white/5'}`}>
                     {msg.attachment && (
-                      <div className="flex items-center gap-2 mb-2 p-2 bg-black/20 rounded-lg border border-black/10">
-                        {msg.attachment.type.startsWith('image/') ? <ImageIcon size={14} /> : <FileIcon size={14} />}
-                        <span className="text-[10px] truncate max-w-[120px]">{msg.attachment.name}</span>
+                      <div className="flex items-center gap-2 mb-3 p-2 bg-black/40 rounded-xl border border-white/10">
+                        {msg.attachment.type.startsWith('image/') ? <ImageIcon size={14} className="text-brand-cyan" /> : <FileIcon size={14} className="text-brand-cyan" />}
+                        <span className="text-[10px] font-mono tracking-tighter truncate max-w-[150px] opacity-70">{msg.attachment.name}</span>
                       </div>
                     )}
                     {msg.content}

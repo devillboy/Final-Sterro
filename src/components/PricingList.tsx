@@ -348,47 +348,42 @@ export default function PricingList() {
   return (
     <section className="py-24 px-6 bg-gradient-to-b from-[var(--color-bg-main)] to-[var(--color-surface)]/30 border-t border-[var(--color-border)] min-h-screen">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-            Hosting Built for<br/>
-            <span className="text-[#00F0FF]">Speed & Stability</span>
+        <div className="text-center mb-20 animate-in fade-in slide-in-from-bottom-5 duration-1000">
+          <h2 className="text-5xl md:text-6xl font-extrabold mb-6 tracking-tight">
+            Superior <span className="text-brand-cyan">Performance</span><br/>
+            Unmatched Support
           </h2>
-          <p className="text-[var(--color-text-dim)] max-w-2xl mx-auto mb-10 font-medium">
-            Deploy in minutes, scale anytime. Choose between our Premium Minecraft Hosting or high-performance Intel VPS solutions.
+          <p className="text-zinc-400 max-w-2xl mx-auto mb-12 text-lg font-light tracking-wide">
+            Enterprise-grade hardware meets simplified management. 
+            Select your architecture and deploy your project in under 60 seconds.
           </p>
           
-          <div className="inline-flex flex-col md:flex-row p-2 bg-[#050914]/80 backdrop-blur-lg border border-white/5 rounded-2xl relative z-20 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] mx-auto mb-12">
+          <div className="inline-flex p-1.5 bg-white/5 border border-white/10 rounded-2xl relative z-20 backdrop-blur-3xl mx-auto mb-16 px-2">
             <button
               onClick={() => setActiveTab('minecraft')}
-              className={`flex items-center justify-center gap-3 px-10 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 ${activeTab === 'minecraft' ? 'bg-gradient-to-r from-[#00F0FF] to-[#00b8cc] text-black shadow-[0_0_20px_rgba(0,240,255,0.2)]' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+              className={`flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-sm transition-all duration-500 ${activeTab === 'minecraft' ? 'bg-brand-cyan text-bg-dark shadow-[0_10px_30px_rgba(0,240,255,0.2)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
             >
-              <Gamepad2 size={20} /> <span className="tracking-wide">PREMIUM MINECRAFT</span>
+              <Gamepad2 size={18} /> <span>MINECRAFT NODES</span>
             </button>
             <button
               onClick={() => setActiveTab('vps')}
-              className={`flex items-center justify-center gap-3 px-10 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 ${activeTab === 'vps' ? 'bg-gradient-to-r from-[#00F0FF] to-[#00b8cc] text-black shadow-[0_0_20px_rgba(0,240,255,0.2)]' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+              className={`flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-sm transition-all duration-500 ${activeTab === 'vps' ? 'bg-brand-cyan text-bg-dark shadow-[0_10px_30px_rgba(0,240,255,0.2)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
             >
-              <Server size={20} /> <span className="tracking-wide">INTEL VPS PLANS</span>
+              <Server size={18} /> <span>SCALABLE VPS</span>
             </button>
           </div>
 
-          {activeTab === 'minecraft' && (
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-sm font-semibold text-[var(--color-text-dim)] bg-[var(--color-surface)]/50 border border-[var(--color-border)] py-3 px-6 rounded-lg max-w-3xl mx-auto mb-4">
-               <div>Locations: 🇮🇳 🇸🇬 🇩🇪 🇺🇸</div>
-               <div className="hidden md:block w-1.5 h-1.5 rounded-full bg-[var(--color-border)]"></div>
-               <div>Active Nodes: 17</div>
-               <div className="hidden md:block w-1.5 h-1.5 rounded-full bg-[var(--color-border)]"></div>
-               <div>CPUs: AMD Ryzen 9 7900x, AMD EPYC 9965x, Intel Xeon Gold</div>
-            </div>
-          )}
-
-          {activeTab === 'vps' && (
-             <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-sm font-semibold text-[var(--color-text-dim)] bg-[var(--color-surface)]/50 border border-[var(--color-border)] py-3 px-6 rounded-lg max-w-2xl mx-auto mb-4">
-               <div>All plans run on Intel Xeon processors</div>
-               <div className="hidden md:block w-1.5 h-1.5 rounded-full bg-[var(--color-border)]"></div>
-               <div>Locations: 🇮🇳 🇩🇪 🇺🇸 🇸🇬</div>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-xs font-mono tracking-widest text-zinc-500 uppercase max-w-3xl mx-auto mb-8">
+             <div className="flex items-center gap-2">
+               <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+               Global Regions: IN, US, DE, SG
              </div>
-          )}
+             <div className="hidden md:block w-px h-4 bg-white/10" />
+             <div className="flex items-center gap-2">
+               <Shield size={14} className="text-brand-cyan" />
+               Anti-DDoS EdgeGuard Active
+             </div>
+          </div>
         </div>
 
         <motion.div 
@@ -412,46 +407,59 @@ export default function PricingList() {
             </>
           ) : (
             <>
-              {activeTab === 'minecraft' && minecraftPlans.filter(p => hasClaimedTrial ? !p.isTrial : true).map((p, i) => (
+              {activeTab === 'minecraft' && minecraftPlans.map((p, i) => (
                 <motion.div
                   key={`mc-${i}`}
               variants={{
                 hidden: { opacity: 0, y: 30, scale: 0.95 },
-                visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50 } }
+                visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50, damping: 20 } }
               }}
               whileHover={{ 
-                y: -4,
-                boxShadow: "0 20px 40px -12px rgba(0, 240, 255, 0.15)"
+                y: -6,
+                borderColor: "rgba(0, 240, 255, 0.4)",
               }}
-              className={`bg-[var(--color-surface)] border ${p.highlight ? 'border-[#00F0FF]/50 shadow-[0_0_30px_rgba(0,240,255,0.1)] relative z-10' : 'border-[var(--color-border)]'} rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 justify-between hover:border-[#00F0FF]/50 transition-all cursor-default group overflow-hidden`}
+              className={`group relative bg-white/[0.02] border ${p.highlight ? 'border-brand-cyan/40 shadow-[0_0_50px_rgba(0,240,255,0.05)]' : 'border-white/5'} rounded-[2rem] p-8 md:p-10 flex flex-col md:flex-row items-center gap-8 justify-between transition-all duration-500 overflow-hidden backdrop-blur-3xl`}
             >
-              {p.imageUrl && (
-                <div className="absolute inset-0 z-0 opacity-[0.05] mix-blend-screen pointer-events-none transition-opacity duration-500 group-hover:opacity-10 flex items-center justify-center overflow-hidden">
-                   <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover scale-110" onError={(e) => (e.currentTarget.style.display = 'none')} />
-                   <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-surface)] via-[var(--color-surface)]/80 to-transparent" />
-                </div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#00F0FF]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              {/* Background Glow */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-brand-cyan/5 blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none group-hover:bg-brand-cyan/10 transition-all duration-700" />
               
               <div className="flex-1 w-full relative z-10">
-                <div className="flex items-center gap-3 mb-6">
-                  <h4 className="text-2xl font-bold tracking-tight text-white group-hover:text-[#00F0FF] transition-colors">{p.name}</h4>
-                  <span className="bg-[#1A233A] text-[#00F0FF] text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider border border-[#00F0FF]/20">₹{p.price} / month</span>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
+                  <h4 className="text-3xl font-extrabold tracking-tight text-white group-hover:text-brand-cyan transition-colors duration-500">{p.name}</h4>
+                  <div className="flex items-center gap-2">
+                    <span className="bg-brand-cyan/10 text-brand-cyan text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border border-brand-cyan/20">₹{p.price} / MO</span>
+                    {p.highlight && <span className="bg-brand-blue/10 text-brand-blue text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border border-brand-blue/20">Most Popular</span>}
+                  </div>
                 </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-4 text-[13px] font-semibold">
-                  <div className="flex items-center gap-2"><MemoryStick size={16} className="text-[#00F0FF]"/> <span className="text-zinc-200">{p.ram}</span></div>
-                  <div className="flex items-center gap-2"><HardDrive size={16} className="text-[#00F0FF]"/> <span className="text-zinc-200">{p.storage || p.ssd}</span></div>
-                  <div className="flex items-center gap-2"><Cpu size={16} className="text-[#00F0FF]"/> <span className="text-zinc-200">{p.cpu}</span></div>
-                  <div className="flex items-center gap-2"><Network size={16} className="text-[#00F0FF]"/> <span className="text-zinc-400">{p.ports}</span></div>
-                  <div className="flex items-center gap-2"><Archive size={16} className="text-[#00F0FF]"/> <span className="text-zinc-400">{p.backups || 'Standard Backups'}</span></div>
-                  <div className="flex items-center gap-2"><Database size={16} className="text-[#00F0FF]"/> <span className="text-zinc-400">{p.db || 'MySQL DB'}</span></div>
-                  <div className="flex items-center gap-2"><Shield size={16} className="text-[#00F0FF]"/> <span className="text-zinc-400">{p.ddos || '10Gbps Protection'}</span></div>
-                  <div className="flex items-center gap-2"><Users size={16} className="text-[#00F0FF]"/> <span className="text-zinc-400">{p.players || 'Unlimited'}</span></div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[
+                    { icon: MemoryStick, label: "RAM", value: p.ram },
+                    { icon: HardDrive, label: "NVMe SSD", value: p.storage || p.ssd },
+                    { icon: Cpu, label: "CPU CORE", value: p.cpu },
+                    { icon: Shield, label: "DDoS", value: "Enterprise" },
+                  ].map((spec, idx) => (
+                    <div key={idx} className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                        <spec.icon size={12} className="text-brand-cyan/60" />
+                        {spec.label}
+                      </div>
+                      <div className="text-sm font-bold text-zinc-200 group-hover:text-white transition-colors">{spec.value}</div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 opacity-50 group-hover:opacity-100 transition-opacity duration-500">
+                  {['Instant Setup', 'Root Access', '24/7 Support', 'Dedicated IP'].map(feature => (
+                    <div key={feature} className="flex items-center gap-2 text-[10px] font-bold text-zinc-400">
+                      <CheckCircle2 size={12} className="text-brand-cyan" />
+                      {feature}
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div className="flex flex-col items-end gap-5 w-full md:w-auto mt-6 md:mt-0 pt-6 md:pt-0 border-t md:border-t-0 border-[var(--color-border)] shrink-0 pl-0 md:pl-8">
+              <div className="relative z-10 w-full md:w-auto shrink-0 flex flex-col items-center sm:items-end gap-3">
                <button 
                  onClick={() => {
                    if (p.type === 'vps') {
@@ -460,9 +468,11 @@ export default function PricingList() {
                      setSelectedPlan(p);
                    }
                  }}
-                 className={`w-full md:w-auto px-10 py-3.5 rounded-lg font-bold text-white transition-all duration-300 text-sm shadow-md ${(p as any).isTrial ? 'bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40' : (p.highlight ? 'bg-[#00F0FF] text-black hover:bg-[#00D8E6]' : 'bg-black hover:bg-white/5 border border-white/10 hover:border-white/30')} `}>
-                 {(p as any).isTrial ? 'Claim Free Trial' : p.type === 'vps' ? 'Buy VPS' : 'Deploy Now'}
+                 className={`w-full md:w-[200px] h-16 rounded-2xl font-black transition-all duration-500 text-xs uppercase tracking-[0.1em] flex items-center justify-center gap-2 shadow-xl ${(p as any).isTrial ? 'bg-white/5 hover:bg-white/10 text-white border border-white/10' : (p.highlight ? 'bg-brand-cyan text-bg-dark hover:shadow-[0_0_40px_rgba(0,240,255,0.3)]' : 'bg-white/5 hover:bg-white text-white hover:text-bg-dark border border-white/10')} `}>
+                 <span>{(p as any).isTrial ? 'Claim Free Trial' : 'Get Started'}</span>
+                 <ChevronRight size={16} />
                </button>
+               {(p as any).isTrial && <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">No Credit Card Required</span>}
               </div>
             </motion.div>
           ))}
@@ -472,41 +482,53 @@ export default function PricingList() {
               key={`vps-${i}`}
               variants={{
                 hidden: { opacity: 0, y: 30, scale: 0.95 },
-                visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50 } }
+                visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50, damping: 20 } }
               }}
               whileHover={{ 
-                y: -4,
-                boxShadow: "0 20px 40px -12px rgba(0, 240, 255, 0.15)"
+                y: -6,
+                borderColor: "rgba(0, 240, 255, 0.4)",
               }}
-              className={`bg-[var(--color-surface)] border ${p.highlight ? 'border-[#00F0FF]/50 shadow-[0_0_30px_rgba(0,240,255,0.1)] relative z-10' : 'border-[var(--color-border)]'} rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 justify-between hover:border-[#00F0FF]/50 transition-all cursor-default group overflow-hidden`}
+              className={`group relative bg-white/[0.02] border ${p.highlight ? 'border-brand-cyan/40 shadow-[0_0_50px_rgba(0,240,255,0.05)]' : 'border-white/5'} rounded-[2rem] p-8 md:p-10 flex flex-col md:flex-row items-center gap-8 justify-between transition-all duration-500 overflow-hidden backdrop-blur-3xl`}
            >
-              {p.imageUrl && (
-                <div className="absolute inset-0 z-0 opacity-[0.05] mix-blend-screen pointer-events-none transition-opacity duration-500 group-hover:opacity-10 flex items-center justify-center overflow-hidden">
-                   <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover scale-110" onError={(e) => (e.currentTarget.style.display = 'none')} />
-                   <div className="absolute inset-0 bg-gradient-to-l from-[var(--color-surface)] via-[var(--color-surface)]/80 to-transparent" />
-                </div>
-              )}
-             <div className="absolute inset-0 bg-gradient-to-bl from-[#00F0FF]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-             
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-blue/5 blur-[80px] translate-y-1/2 -translate-x-1/2 pointer-events-none group-hover:bg-brand-blue/10 transition-all duration-700" />
+              
              <div className="flex-1 w-full relative z-10">
-               <div className="flex items-center gap-3 mb-6">
-                 <h4 className="text-2xl font-bold tracking-tight text-white group-hover:text-[#00F0FF] transition-colors">{p.ram} Intel VPS</h4>
-                 <span className="bg-[#1A233A] text-[#00F0FF] text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider border border-[#00F0FF]/20">₹{p.price} / month</span>
+               <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
+                 <h4 className="text-3xl font-extrabold tracking-tight text-white group-hover:text-brand-cyan transition-colors duration-500">{p.name}</h4>
+                 <div className="flex items-center gap-2">
+                    <span className="bg-brand-cyan/10 text-brand-cyan text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border border-brand-cyan/20">₹{p.price} / MO</span>
+                    <span className="bg-white/5 text-white/50 text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border border-white/10">INTEL XEON</span>
+                 </div>
                </div>
                
-               <div className="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-4 text-[14px] font-semibold">
-                 <div className="flex items-center gap-2"><MemoryStick size={18} className="text-[#00F0FF]"/> <span className="text-zinc-200">{p.ram}</span></div>
-                 <div className="flex items-center gap-2"><Cpu size={18} className="text-[#00F0FF]"/> <span className="text-zinc-200">{p.cpu}</span></div>
-                 <div className="flex items-center gap-2"><HardDrive size={18} className="text-[#00F0FF]"/> <span className="text-zinc-400">NVMe SSD</span></div>
-                 <div className="flex items-center gap-2"><Network size={18} className="text-[#00F0FF]"/> <span className="text-zinc-400">High Speed Uplink</span></div>
+               <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[
+                    { icon: MemoryStick, label: "RAM", value: p.ram },
+                    { icon: Cpu, label: "VCORE CPU", value: p.cpu },
+                    { icon: HardDrive, label: "NVMe STORAGE", value: p.storage },
+                    { icon: Network, label: "UPLINK", value: "1 Gbps" },
+                  ].map((spec, idx) => (
+                    <div key={idx} className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                        <spec.icon size={12} className="text-brand-cyan/60" />
+                        {spec.label}
+                      </div>
+                      <div className="text-sm font-bold text-zinc-200 group-hover:text-white transition-colors">{spec.value}</div>
+                    </div>
+                  ))}
                </div>
+
+               <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 opacity-50 group-hover:opacity-100 transition-opacity duration-500">
+                  {['KVM Virtualization', 'VNC Console', 'DDoS Protection', 'Docker Ready'].map(feature => (
+                    <div key={feature} className="flex items-center gap-2 text-[10px] font-bold text-zinc-400">
+                      <CheckCircle2 size={12} className="text-brand-cyan" />
+                      {feature}
+                    </div>
+                  ))}
+                </div>
              </div>
 
-             <div className="flex flex-col items-end gap-5 w-full md:w-auto mt-6 md:mt-0 pt-6 md:pt-0 border-t md:border-t-0 border-[var(--color-border)] shrink-0 pl-0 md:pl-8">
-               <div className="hidden md:flex flex-col items-end opacity-[0.2]">
-                  <span className="font-black text-xl tracking-[0.2em] leading-none mb-1">INTEL</span>
-                  <span className="font-black text-4xl tracking-tighter leading-none text-white whitespace-nowrap">XEON</span>
-                </div>
+             <div className="relative z-10 w-full md:w-auto shrink-0">
                <button 
                  onClick={() => {
                    if (p.type === 'vps') {
@@ -515,8 +537,9 @@ export default function PricingList() {
                      setSelectedPlan(p);
                    }
                  }}
-                 className={`w-full md:w-auto px-10 py-3.5 rounded-lg font-bold text-white transition-all duration-300 text-sm shadow-md ${p.highlight ? 'bg-[#00F0FF] text-black hover:bg-[#00D8E6]' : 'bg-black hover:bg-white/5 border border-white/10 hover:border-white/30'} `}>
-                 Deploy VPS
+                 className={`w-full md:w-[200px] h-16 rounded-2xl font-black transition-all duration-500 text-xs uppercase tracking-[0.1em] flex items-center justify-center gap-2 shadow-xl ${p.highlight ? 'bg-brand-cyan text-bg-dark hover:shadow-[0_0_40px_rgba(0,240,255,0.3)]' : 'bg-white/5 hover:bg-white text-white hover:text-bg-dark border border-white/10'} `}>
+                 <span>Configure VPS</span>
+                 <ChevronRight size={16} />
                </button>
              </div>
            </motion.div>

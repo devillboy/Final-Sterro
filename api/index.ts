@@ -396,7 +396,7 @@ app.post("/api/trial/claim", async (req, res) => {
       const trialRef = doc(db, "trials", email);
       const existing = await getDoc(trialRef);
       if (existing.exists()) {
-        return res.status(400).json({ error: "You've already claimed your free trial." });
+        return res.status(400).json({ error: "You have already tested our trial server and good news all bugs are fixed!!! Yeahhh" });
       }
     }
 

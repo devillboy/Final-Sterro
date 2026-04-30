@@ -60,50 +60,65 @@ export default function Hero() {
 
       <div className="max-w-7xl mx-auto w-full relative z-30 flex flex-col items-center text-center mt-12">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="max-w-4xl mx-auto flex flex-col items-center"
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="max-w-5xl mx-auto flex flex-col items-center"
         >
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="inline-flex items-center px-5 py-2 bg-[#00F0FF]/10 border border-[#00F0FF]/30 rounded-full text-xs font-bold text-[#00F0FF] mb-8 shadow-[0_0_20px_rgba(0,240,255,0.15)] backdrop-blur-xl uppercase tracking-widest"
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="inline-flex items-center px-4 py-2 bg-brand-cyan/10 border border-brand-cyan/20 rounded-full text-[10px] font-black text-brand-cyan mb-10 shadow-[0_0_30px_rgba(0,240,255,0.1)] backdrop-blur-3xl uppercase tracking-[0.2em]"
           >
-            <span className="relative flex h-2.5 w-2.5 mr-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00F0FF] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#00F0FF]"></span>
+            <span className="relative flex h-2 w-2 mr-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-cyan opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-cyan"></span>
             </span>
-            Welcome to the future of hosting
+            Next-Generation Infrastructure
           </motion.div>
           
-          <h1 className="text-5xl md:text-[5rem] lg:text-[6rem] font-black tracking-tighter mb-6 leading-[1.1] text-white selection:bg-white selection:text-black">
-            <span className="block mb-2 drop-shadow-xl text-white">High-Performance</span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00F0FF] via-[#00D8E6] to-blue-500 drop-shadow-[0_0_15px_rgba(0,240,255,0.3)]">
-              Game Servers & VPS
+          <h1 className="text-6xl md:text-[6rem] lg:text-[7.5rem] font-extrabold tracking-[-0.04em] mb-8 leading-[0.9] text-white">
+            <span className="block mb-2 text-white">Dominate the</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-br from-brand-cyan via-brand-cyan to-brand-blue">
+              Game World
             </span>
           </h1>
           
-          <p className="text-lg md:text-xl text-zinc-300 max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
-            Next-gen infrastructure for the ultimate gaming experience. 
-            Deploy powerful Minecraft nodes and Root Servers in under <span className="text-white font-bold pb-1 border-b border-[#00F0FF]/30">60 seconds</span> with DDoS protection included.
+          <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-14 leading-relaxed font-light tracking-wide">
+            Experience peak performance with SterroCloud's high-frequency hosting solutions. 
+            Deploy powerful nodes with <span className="text-white font-semibold">10Gbps EdgeGuard</span> protection and instant setup as standard.
           </p>
 
-          <motion.button 
-            onClick={handleGetStarted}
-            whileHover={{ scale: 1.02, boxShadow: "0 10px 40px -10px rgba(0, 240, 255, 0.6)" }}
-            whileTap={{ scale: 0.98 }}
-            className="group relative overflow-hidden bg-gradient-to-r from-[#00F0FF] to-[#00b8cc] text-[#050914] font-black px-12 py-5 rounded-2xl transition-all text-lg flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(0,240,255,0.3)]"
-          >
-            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out" />
-            <span className="relative z-10">{firebaseUser ? 'View Plans & Pricing' : 'Deploy Your Server Now'}</span>
-            {!firebaseUser && (
-              <svg className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            <motion.button 
+              onClick={handleGetStarted}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-10 py-5 bg-brand-cyan text-bg-dark font-black rounded-2xl transition-all text-lg shadow-[0_20px_50px_rgba(0,240,255,0.3)] hover:shadow-[0_25px_60px_rgba(0,240,255,0.4)] flex items-center gap-3"
+            >
+              <span>{firebaseUser ? 'Open Dashboard' : 'Deploy Instant Server'}</span>
+              <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
               </svg>
-            )}
-          </motion.button>
+            </motion.button>
+            <button 
+              onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+              className="px-10 py-5 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold rounded-2xl transition-all text-lg backdrop-blur-md"
+            >
+              View Services
+            </button>
+          </div>
+          
+          {/* Trust Batch */}
+          <div className="mt-20 flex flex-wrap justify-center gap-8 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
+            {['10Gbps Network', '99.9% Uptime', 'Tier-4 Datacenter', 'NVMe Storage'].map(item => (
+              <div key={item} className="flex items-center gap-2 text-xs font-mono tracking-widest uppercase">
+                <div className="w-1.5 h-1.5 bg-brand-cyan rounded-full" />
+                {item}
+              </div>
+            ))}
+          </div>
         </motion.div>
       </div>
     </section>

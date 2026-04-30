@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { motion } from "motion/react";
-import { Menu, X, Shield, LogOut, User as UserIcon, MessageCircle } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Menu, X, Shield, LogOut, User as UserIcon, MessageCircle, ChevronRight } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Navbar() {
@@ -17,108 +17,103 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Top Banner */}
-      <div className="bg-[#00F0FF]/10 border-b border-[#00F0FF]/20 text-[#00F0FF] py-2.5 text-xs flex justify-center px-6 items-center">
-        <a href="https://discord.gg/b2PqWqSEU3" target="_blank" rel="noreferrer" className="flex items-center gap-2 font-semibold hover:text-white transition-colors">
-          Join our Discord community for more information and instant support &rarr;
+      <div className="bg-brand-cyan/5 border-b border-brand-cyan/10 text-brand-cyan py-2 text-[10px] uppercase font-black tracking-[0.2em] flex justify-center px-6 items-center">
+        <a href="https://discord.gg/b2PqWqSEU3" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-white transition-all duration-300">
+          <span className="w-1 h-1 bg-brand-cyan rounded-full animate-pulse" />
+          Join our Discord community for instant support & updates
         </a>
       </div>
 
-      <nav className="sticky top-0 z-50 bg-[#050914]/80 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <nav className="sticky top-0 z-50 bg-bg-dark/70 backdrop-blur-3xl border-b border-white/5 transition-all duration-500">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 h-20 flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-3 group cursor-pointer" onClick={(e) => scrollTo("root", e)}>
-            <motion.img 
-              whileHover={{ scale: 1.05 }}
-              src="https://cdn.discordapp.com/icons/1391758924687999006/9d09b6eae193f8156683b959fd116e68.webp?size=2048" 
-              alt="Sterro Cloud Logo" 
-              className="w-8 h-8 rounded-lg shadow-lg"
-            />
-            <span className="text-xl font-bold tracking-tight text-white flex items-center">
-              <span>STERRO</span>
-              <span className="font-medium text-[#00F0FF] ml-1">CLOUD</span>
+          <div className="flex items-center gap-4 group cursor-pointer" onClick={(e) => scrollTo("root", e)}>
+            <div className="relative">
+              <motion.img 
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                src="https://cdn.discordapp.com/icons/1391758924687999006/9d09b6eae193f8156683b959fd116e68.webp?size=2048" 
+                alt="Sterro Cloud Logo" 
+                className="w-10 h-10 rounded-xl shadow-2xl relative z-10"
+              />
+              <div className="absolute inset-0 bg-brand-cyan/20 blur-xl rounded-xl scale-0 group-hover:scale-110 transition-transform duration-500" />
+            </div>
+            <span className="text-2xl font-extrabold tracking-tighter text-white">
+              STERRO<span className="text-brand-cyan">CLOUD</span>
             </span>
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden lg:flex items-center gap-8 text-sm font-semibold">
-            <a href="#" onClick={(e) => scrollTo("root", e)} className="text-zinc-300 hover:text-white transition-colors">Home</a>
-            <a href="#games" onClick={(e) => scrollTo("games", e)} className="text-zinc-300 hover:text-white transition-colors">Game Servers</a>
-            <a href="#pricing" onClick={(e) => scrollTo("pricing", e)} className="text-zinc-300 hover:text-white transition-colors">Root Servers</a>
+          <div className="hidden lg:flex items-center gap-10">
+            <div className="flex items-center gap-8 text-[11px] font-black uppercase tracking-[0.15em] text-zinc-400">
+              <a href="#" onClick={(e) => scrollTo("root", e)} className="hover:text-white transition-colors">Nodes</a>
+              <a href="#pricing" onClick={(e) => scrollTo("pricing", e)} className="hover:text-white transition-colors">Solutions</a>
+              <a href="#games" onClick={(e) => scrollTo("games", e)} className="hover:text-white transition-colors">Locations</a>
+            </div>
+            
+            <div className="h-6 w-px bg-white/10" />
+            
             <button 
               onClick={() => window.dispatchEvent(new CustomEvent('TOGGLE_SUPPORT_CHAT'))}
-              className="px-4 py-2 rounded-full bg-[#00F0FF]/10 text-[#00F0FF] border border-[#00F0FF]/20 hover:bg-[#00F0FF] hover:text-[#050914] transition-all flex items-center gap-2 text-sm font-bold shadow-[0_0_15px_rgba(0,240,255,0.1)]"
+              className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-brand-cyan hover:text-white transition-colors"
             >
-              <MessageCircle size={16} />
-              Support
+              <MessageCircle size={14} />
+              Assistant
             </button>
-            {isAdmin && (
-              <button 
-                onClick={() => window.dispatchEvent(new CustomEvent('OPEN_ADMIN_PANEL'))}
-                className="text-[#00F0FF] font-bold flex items-center gap-2 hover:brightness-125 transition-all"
-              >
-                  <Shield size={14} /> Panel
-              </button>
-            )}
           </div>
 
           {/* Actions */}
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="flex items-center gap-6">
             {loading ? (
-              <div className="w-20 h-8 bg-white/5 animate-pulse rounded-md" />
+              <div className="w-24 h-5 bg-white/5 animate-pulse rounded-full" />
             ) : user ? (
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 group cursor-pointer relative py-2">
-                  <div className="w-8 h-8 rounded-full border border-white/10 overflow-hidden bg-black/40">
+              <div className="group relative">
+                <div className="flex items-center gap-3 cursor-pointer py-1 pr-1 pl-4 rounded-full bg-white/5 border border-white/10 hover:border-brand-cyan/30 hover:bg-brand-cyan/5 transition-all duration-300">
+                  <div className="flex flex-col items-end">
+                    <span className="text-[11px] font-black uppercase tracking-widest text-white leading-none mb-1">{user.displayName?.split(' ')[0]}</span>
+                    <span className="text-[9px] font-bold text-brand-cyan/70 tracking-widest leading-none">{isAdmin ? 'OPERATOR' : 'CLIENT'}</span>
+                  </div>
+                  <div className="w-10 h-10 rounded-full border border-white/20 overflow-hidden shadow-lg group-hover:border-brand-cyan/50 transition-colors duration-500">
                     {user.photoURL ? (
-                      <img 
-                        src={user.photoURL} 
-                        alt={user.displayName || ''} 
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[#00F0FF]">
+                      <div className="w-full h-full bg-brand-cyan/10 flex items-center justify-center text-brand-cyan">
                         <UserIcon size={16} />
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col items-start leading-tight">
-                    <span className="text-white text-sm font-bold truncate max-w-[100px]">{user.displayName}</span>
-                    <span className="text-cyan-400 text-[10px] uppercase font-bold tracking-wider">{isAdmin ? 'Admin' : 'Member'}</span>
+                </div>
+                
+                {/* Refined Dropdown */}
+                <div className="absolute top-[120%] right-0 w-56 bg-bg-card/95 backdrop-blur-2xl border border-white/10 rounded-2xl py-4 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 shadow-3xl z-[60]">
+                  <div className="px-5 py-2 mb-2 border-b border-white/5 overflow-hidden">
+                    <div className="text-[9px] font-black text-zinc-500 tracking-widest mb-1">ACCOUNT IDENTIFIER</div>
+                    <div className="text-[11px] font-mono text-zinc-400 truncate">{user.email}</div>
                   </div>
-                  
-                  {/* Dropdown for desktop user */}
-                  <div className="absolute top-full right-0 mt-1 w-48 bg-[#0a101f] border border-white/10 rounded-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all shadow-2xl z-[60]">
-                    <div className="px-4 py-2 border-b border-white/5 mb-1 text-white text-xs font-bold truncate">
-                      {user.email || 'Cloud User'}
-                    </div>
-                    {isAdmin && (
-                      <button 
-                        onClick={() => window.dispatchEvent(new CustomEvent('OPEN_ADMIN_PANEL'))}
-                        className="w-full text-left px-4 py-2 text-sm text-[#00F0FF] hover:bg-[#00F0FF]/5 flex items-center gap-2 transition-colors font-bold"
-                      >
-                        <Shield size={14} /> Admin Panel
-                      </button>
-                    )}
+                  {isAdmin && (
                     <button 
-                      onClick={logout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 flex items-center gap-2 transition-colors"
+                      onClick={() => window.dispatchEvent(new CustomEvent('OPEN_ADMIN_PANEL'))}
+                      className="w-full text-left px-5 py-3 text-[11px] font-black text-brand-cyan hover:bg-brand-cyan/5 flex items-center gap-3 transition-colors uppercase tracking-widest"
                     >
-                      <LogOut size={14} /> Logout
+                      <Shield size={14} /> System Core
                     </button>
-                  </div>
+                  )}
+                  <button 
+                    onClick={logout}
+                    className="w-full text-left px-5 py-3 text-[11px] font-black text-red-400 hover:bg-red-400/5 flex items-center gap-3 transition-colors uppercase tracking-widest"
+                  >
+                    <LogOut size={14} /> Terminate
+                  </button>
                 </div>
               </div>
             ) : (
-              <div className="flex gap-2">
-                <button 
-                  onClick={loginGoogle}
-                  className="bg-white text-black hover:bg-zinc-200 px-5 py-2.5 rounded-lg transition-all text-sm font-bold shadow-md flex items-center gap-2"
-                >
-                  <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 7.368l6.817 5.281C43.518 35.803 48 29.5 48 24c0-1.353-.167-2.673-.448-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.368l6.19 5.238C36.971 39.205 44 34 44 24c0-1.353-.167-2.673-.448-3.917z"/></svg>
-                  Login with Google
-                </button>
-              </div>
+              <button 
+                onClick={loginGoogle}
+                className="group relative px-6 py-3 bg-white text-bg-dark font-black rounded-xl text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xl flex items-center gap-3"
+              >
+                <div className="absolute inset-0 bg-brand-cyan translate-y-full group-hover:translate-y-0 transition-transform duration-300 rounded-xl" />
+                <span className="relative z-10">Access Terminal</span>
+                <ChevronRight size={14} className="relative z-10" />
+              </button>
             )}
           </div>
 
@@ -132,77 +127,78 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Menu */}
-        {isOpen && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="lg:hidden bg-[#050914] border-b border-white/5 p-6 absolute w-full left-0 top-16 shadow-2xl"
-          >
-            <div className="flex flex-col gap-6 font-medium">
-              <a href="#" onClick={(e) => scrollTo("root", e)} className="text-white">Home</a>
-              <a href="#games" onClick={(e) => scrollTo("games", e)} className="text-zinc-300">Game Servers</a>
-              <a href="#pricing" onClick={(e) => scrollTo("pricing", e)} className="text-zinc-300">Root Servers</a>
-              <button 
-                onClick={() => { setIsOpen(false); window.dispatchEvent(new CustomEvent('TOGGLE_SUPPORT_CHAT')); }} 
-                className="text-[#00F0FF] font-bold text-left flex items-center gap-2"
-              >
-                <span className="w-2 h-2 rounded-full bg-[#00F0FF] animate-pulse"></span>
-                Support Chat
-              </button>
-              {isAdmin && (
-                <button 
-                  onClick={() => { setIsOpen(false); window.dispatchEvent(new CustomEvent('OPEN_ADMIN_PANEL')); }} 
-                  className="text-[#00F0FF] font-bold text-left"
-                >
-                  Admin Panel
-                </button>
-              )}
-              <div className="pt-4 border-t border-white/5 flex flex-col gap-4">
-                {loading ? (
-                  <div className="h-10 bg-white/5 animate-pulse rounded-md" />
-                ) : user ? (
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
-                      <div className="w-10 h-10 rounded-full border border-white/10 overflow-hidden bg-black">
-                        {user.photoURL ? (
-                          <img 
-                            src={user.photoURL} 
-                            alt={user.displayName || ''} 
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[#00F0FF]">
-                            <UserIcon size={20} />
-                          </div>
-                        )}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="lg:hidden bg-bg-dark border-b border-white/5 overflow-hidden"
+            >
+              <div className="px-6 py-10 flex flex-col gap-8">
+                <div className="flex flex-col gap-6">
+                  <a href="#" onClick={(e) => scrollTo("root", e)} className="text-[11px] font-black uppercase tracking-[0.2em] text-white">Infrastructure</a>
+                  <a href="#games" onClick={(e) => scrollTo("games", e)} className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-400">Nodes</a>
+                  <a href="#pricing" onClick={(e) => scrollTo("pricing", e)} className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-400">Pricing</a>
+                  <button 
+                    onClick={() => { setIsOpen(false); window.dispatchEvent(new CustomEvent('TOGGLE_SUPPORT_CHAT')); }} 
+                    className="text-[11px] font-black uppercase tracking-[0.2em] text-brand-cyan flex items-center gap-3"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-cyan animate-pulse" />
+                    Connect to Support
+                  </button>
+                </div>
+
+                <div className="pt-8 border-t border-white/5 flex flex-col gap-6">
+                  {loading ? (
+                    <div className="h-14 bg-white/5 animate-pulse rounded-xl" />
+                  ) : user ? (
+                    <div className="flex flex-col gap-6">
+                      <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                        <div className="w-12 h-12 rounded-xl border border-white/10 overflow-hidden bg-bg-card">
+                          {user.photoURL ? (
+                            <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-brand-cyan">
+                              <UserIcon size={20} />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-col overflow-hidden">
+                          <span className="text-sm font-black text-white truncate uppercase tracking-wider">{user.displayName}</span>
+                          <span className="text-[10px] font-mono text-zinc-500 truncate">{user.email}</span>
+                        </div>
                       </div>
-                      <div className="flex flex-col overflow-hidden">
-                        <span className="text-white text-sm font-bold truncate">{user.displayName}</span>
-                        <span className="text-zinc-400 text-xs truncate">{user.email || 'Cloud User'}</span>
+                      <div className="grid grid-cols-2 gap-3">
+                        {isAdmin && (
+                          <button 
+                            onClick={() => { setIsOpen(false); window.dispatchEvent(new CustomEvent('OPEN_ADMIN_PANEL')); }} 
+                            className="bg-brand-cyan/10 text-brand-cyan px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border border-brand-cyan/20"
+                          >
+                            System
+                          </button>
+                        )}
+                        <button 
+                          onClick={logout}
+                          className="bg-red-500/10 text-red-500 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border border-red-500/20"
+                        >
+                          Logout
+                        </button>
                       </div>
                     </div>
-                    <button 
-                      onClick={logout}
-                      className="border border-red-500/30 text-red-400 py-2.5 rounded-lg hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2 font-bold"
-                    >
-                      <LogOut size={16} /> Logout
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-2">
+                  ) : (
                     <button 
                       onClick={loginGoogle}
-                      className="bg-white text-black font-bold py-3 rounded-lg hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
+                      className="bg-white text-bg-dark font-black py-4 rounded-xl hover:bg-zinc-200 transition-colors flex items-center justify-center gap-3 text-[10px] uppercase tracking-widest"
                     >
-                      <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 7.368l6.817 5.281C43.518 35.803 48 29.5 48 24c0-1.353-.167-2.673-.448-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.368l6.19 5.238C36.971 39.205 44 34 44 24c0-1.353-.167-2.673-.448-3.917z"/></svg>
-                      Login with Google
+                      Access Terminal
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
     </>
   );
