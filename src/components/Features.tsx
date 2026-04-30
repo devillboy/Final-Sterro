@@ -46,11 +46,11 @@ export default function Features() {
               whileHover={{ scale: 1.02 }}
               className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-10 flex flex-col group hover:border-[#00F0FF]/40 transition-colors cursor-default"
             >
-              <div className="w-full h-48 mb-8 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border)] flex flex-col items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity bg-gradient-to-b from-[#0a1021] to-[#050814] relative overflow-hidden shrink-0">
+              <div className="w-full h-48 mb-8 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border)] flex flex-col items-center justify-center group-hover:opacity-100 transition-opacity bg-gradient-to-b from-[#0a1021] to-[#050814] relative overflow-hidden shrink-0">
                  <img 
                    src={i === 0 ? "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?q=80&w=800" : (i === 1 ? "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?q=80&w=800" : (i === 2 ? "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800" : "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=800"))} 
                    alt="" 
-                   className="absolute inset-0 w-full h-full object-cover grayscale opacity-20 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" 
+                   className="absolute inset-0 w-full h-full object-cover grayscale opacity-40 group-hover:opacity-100 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" 
                  />
                  <div className="absolute inset-0 bg-gradient-to-t from-bg-dark to-transparent" />
                  <div className="relative z-10 w-16 h-16 bg-[#00F0FF]/10 rounded-lg border border-[#00F0FF]/30 flex items-center justify-center backdrop-blur-sm">

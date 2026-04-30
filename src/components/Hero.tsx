@@ -6,7 +6,7 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Hero() {
-  const [bgUrl, setBgUrl] = useState("https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2000&auto=format&fit=crop");
+  const [bgUrl, setBgUrl] = useState("https://cdn.discordapp.com/attachments/1414251304741638191/1496919234364706988/Download_Free_Minecraft_Wallpapers_and_Backgrounds.jpg?ex=69f433ec&is=69f2e26c&hm=b71364ad8c4d831b99d16ce45d777ca54578b519e492f5e9003192c4d04f6165&");
   const { firebaseUser, loginGoogle } = useAuth();
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export default function Hero() {
         <img 
           src={bgUrl} 
           alt="" 
-          className="w-full h-full object-cover opacity-30 grayscale"
+          className="w-full h-full object-cover opacity-60 grayscale hover:grayscale-0 transition-all duration-1000"
           referrerPolicy="no-referrer"
           onError={() => {
              setBgUrl("https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000&auto=format&fit=crop");
