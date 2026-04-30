@@ -107,8 +107,13 @@ router.get("/test", (req, res) => {
 
 // --- Pterodactyl Automation Service ---
 class PterodactylService {
-  private static API_KEY = process.env.PTERODACTYL_API_KEY || 'ptla_WKMXC7QZlIfhBJJckJmIfqVDvr9UbUgU9NUJHZ2SQVN';
-  private static PANEL_URL = (process.env.PTERODACTYL_PANEL_URL || "https://panel.sterro.cloud").trim().replace(/\/$/, "");
+  private static get PANEL_URL() {
+    return (process.env.PTERODACTYL_PANEL_URL || "https://panel.sterro.cloud").trim().replace(/\/$/, "");
+  }
+
+  private static get API_KEY() {
+    return process.env.PTERODACTYL_API_KEY || "ptla_opliizScxJGyv6YzoglfiSuLBJCnfYolKE4zHuOmUJf";
+  }
 
   private static EGG_CONFIGS: Record<string, any> = {
     "1": { id: 1, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "BungeeCord.jar" } },
@@ -119,6 +124,10 @@ class PterodactylService {
   };
 
   static async request(endpoint: string, method = 'GET', body?: any) {
+    if (!this.API_KEY) {
+      console.error("[PTERO] Missing PTERODACTYL_API_KEY in environment variables.");
+      throw new Error("Pterodactyl API key is not configured in the environment.");
+    }
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = `${this.PANEL_URL}/api/application${cleanEndpoint}`;
     

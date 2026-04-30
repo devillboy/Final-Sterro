@@ -5,7 +5,7 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Hero() {
-  const [bgUrl, setBgUrl] = useState("https://cdn.discordapp.com/attachments/1414251304741638191/1497103165689167923/qHFzGKFBz7kvxiVyjoe6JJ-1024-80.jpg.webp?ex=69ef9939&is=69ee47b9&hm=9a8a35041d2aa644a390c81f07f60b874b2c14e45981ffec7827092e0a1bca4e&");
+  const [bgUrl, setBgUrl] = useState("https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2000&auto=format&fit=crop");
   const { firebaseUser, loginGoogle } = useAuth();
 
   useEffect(() => {
