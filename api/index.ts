@@ -119,8 +119,8 @@ class PterodactylService {
     "1": { id: 1, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "BungeeCord.jar" } },
     "2": { id: 2, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "forge.jar" } },
     "3": { id: 3, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "sponge.jar" } },
-    "4": { id: 4, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "server.jar", MINECRAFT_VERSION: "latest" } },
-    "5": { id: 5, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "vanilla.jar", MINECRAFT_VERSION: "latest" } },
+    "4": { id: 4, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "server.jar", MINECRAFT_VERSION: "latest", BUILD_NUMBER: "latest" } },
+    "5": { id: 5, docker_image: "ghcr.io/pterodactyl/yolks:java_21", startup: "java -Xms128M -XX:MaxRAMPercentage=95.0 -jar {{SERVER_JARFILE}}", environment: { SERVER_JARFILE: "vanilla.jar", MINECRAFT_VERSION: "latest", BUILD_NUMBER: "latest" } },
   };
 
   static async request(endpoint: string, method = 'GET', body?: any) {
