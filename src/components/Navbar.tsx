@@ -39,12 +39,12 @@ export default function Navbar() {
                   <div className="absolute inset-0 bg-brand-cyan/10 blur-2xl rounded-full scale-0 group-hover:scale-150 transition-transform duration-700" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-2xl font-black tracking-[-0.04em] text-white leading-none font-display uppercase italic">
+                  <span className="text-2xl font-black tracking-[-0.04em] text-white leading-none font-display uppercase italic text-glow-cyan">
                     STEREO<span className="font-light text-brand-cyan/90 ml-1">CLOUD</span>
                   </span>
                   <span className="text-[7.5px] font-black text-white/30 uppercase tracking-[0.4em] mt-1.5 flex items-center gap-2">
                     <span className="w-4 h-px bg-white/10" />
-                    Distributed Infrastructure Architecture
+                    Secure Distributed Infrastructure
                   </span>
                 </div>
               </div>

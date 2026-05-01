@@ -10,14 +10,14 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
           <div className="lg:col-span-2 space-y-8">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <img 
                 src="https://cdn.discordapp.com/icons/1391758924687999006/9d09b6eae193f8156683b959fd116e68.webp?size=2048" 
                 alt="Stereo Cloud Logo" 
-                className="w-12 h-12 rounded-xl"
+                className="w-12 h-12 rounded-xl shadow-3d-sm"
               />
               <div className="flex flex-col">
-                <span className="text-2xl font-black tracking-[-0.04em] text-white leading-none font-display uppercase italic">
+                <span className="text-2xl font-black tracking-[-0.04em] text-white leading-none font-display uppercase italic text-glow-cyan">
                   STEREO<span className="font-light text-brand-cyan/80 ml-1">CLOUD</span>
                 </span>
                 <span className="text-[10px] font-black tracking-[0.4em] text-white/20 uppercase mt-2">Elastic Compute Node</span>

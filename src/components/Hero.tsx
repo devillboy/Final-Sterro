@@ -10,20 +10,18 @@ const HERO_SLIDES = [
   {
     id: "minecraft",
     title: "Minecraft",
-    highlight: "Hosting",
-    description: "Experience premium Minecraft hosting powered by high-frequency processors. Lag-free gameplay without the premium price tag. Provisioned on our low-latency global network.",
+    highlight: "Optimization",
+    description: "Experience premium Minecraft hosting powered by high-frequency processors. Lag-free gameplay with instant provisioning on our global edge network.",
     price: "₹90",
-    bgUrl: "https://images.unsplash.com/photo-1627398242454-45a1465c2479?q=80&w=2000&auto=format&fit=crop", // Game/MC feel
-    fallbackBg: "https://cdn.discordapp.com/attachments/1414251304741638191/1496919234364706988/Download_Free_Minecraft_Wallpapers_and_Backgrounds.jpg?ex=69f433ec&is=69f2e26c&hm=b71364ad8c4d831b99d16ce45d777ca54578b519e492f5e9003192c4d04f6165&"
+    bgUrl: "https://cdn.discordapp.com/attachments/1414251304741638191/1496919234364706988/Download_Free_Minecraft_Wallpapers_and_Backgrounds.jpg?ex=69f5856c&is=69f433ec&hm=4c8910092041209010fde2ee1d46323b3cc01a1afbd1161d17e140b02c910576&"
   },
   {
     id: "vps",
     title: "VPS",
-    highlight: "Hosting",
+    highlight: "Cloud",
     description: "Secure, scalable, and lightning-fast KVM hosting solutions. Give your projects the enterprise foundation they deserve with our high-performance infrastructure.",
     price: "₹240",
-    bgUrl: "https://images.unsplash.com/photo-1597733336794-12d05021d510?q=80&w=2000&auto=format&fit=crop", // Ultra reliable network image
-    fallbackBg: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=2000&auto=format&fit=crop"
+    bgUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?q=80&w=2000&auto=format&fit=crop"
   }
 ];
 
@@ -67,9 +65,9 @@ export default function Hero() {
             animate={{ opacity: 0.9, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.5 }}
-            src={slide.id === 'minecraft' ? slide.fallbackBg : slide.bgUrl} 
+            src={slide.bgUrl} 
             alt="" 
-            className="absolute inset-0 w-full h-full object-cover transition-all duration-1000"
+            className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 brightness-75"
             referrerPolicy="no-referrer"
           />
         </AnimatePresence>
@@ -86,7 +84,7 @@ export default function Hero() {
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               className="preserve-3d"
             >
-              <h1 className="text-5xl md:text-7xl lg:text-[7.5rem] font-black tracking-[-0.04em] mb-6 leading-[0.9] text-white whitespace-nowrap font-display uppercase italic shadow-3d-lg">
+              <h1 className="text-5xl md:text-7xl lg:text-[7.5rem] font-black tracking-[-0.04em] mb-6 leading-[0.9] text-white whitespace-nowrap font-display uppercase italic shadow-3d-lg text-glow-cyan">
                 {slide.title}<span className="font-light text-brand-cyan/80 ml-4 not-italic"> {slide.highlight}</span>
               </h1>
               

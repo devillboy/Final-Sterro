@@ -436,7 +436,7 @@ export default function PricingList() {
       
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-24 animate-in fade-in slide-in-from-bottom-5 duration-1000">
-          <h2 className="text-5xl md:text-[5.5rem] font-black mb-10 tracking-tighter leading-none text-premium-gradient uppercase italic">
+          <h2 className="text-5xl md:text-[5.5rem] font-black mb-10 tracking-tighter leading-none text-premium-gradient uppercase italic font-display text-glow-cyan">
             Elite <span className="text-brand-cyan not-italic antialiased">Infrastructure</span>
           </h2>
           <p className="text-zinc-500 max-w-3xl mx-auto mb-20 text-xl font-medium tracking-tight leading-relaxed">
@@ -492,13 +492,13 @@ export default function PricingList() {
                   minecraftPlans.map((p, i) => (
                     <motion.div
                       key={`mc-${p.id}-${i}`}
-                      whileHover={{ y: -8, rotateX: 1, rotateY: -1 }}
-                      className={`group relative platinum-glass platinum-glass-hover ${p.highlight ? 'border-brand-cyan/60 shadow-[0_40px_100px_-20px_rgba(0,240,255,0.2)]' : ''} rounded-[3rem] p-1.5 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-700 overflow-hidden backdrop-blur-3xl preserve-3d`}
+                      whileHover={{ y: -12, rotateX: 2, rotateY: -2, translateZ: 20 }}
+                      className={`group relative platinum-glass platinum-glass-hover ${p.highlight ? 'border-brand-cyan/60 shadow-glow-cyan-strong' : ''} rounded-[3rem] p-1.5 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-700 overflow-hidden backdrop-blur-3xl preserve-3d`}
                     >
                       {/* Visual Side */}
                       <div className="relative w-full md:w-[380px] h-64 md:h-auto overflow-hidden shrink-0">
                         <motion.img 
-                          src={p.isTrial ? "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200" : (i % 2 === 0 ? "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1200" : "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200")} 
+                          src="https://cdn.discordapp.com/attachments/1414251304741638191/1496919234364706988/Download_Free_Minecraft_Wallpapers_and_Backgrounds.jpg?ex=69f5856c&is=69f433ec&hm=4c8910092041209010fde2ee1d46323b3cc01a1afbd1161d17e140b02c910576&"
                           alt="" 
                           className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-1000" 
                         />
@@ -580,8 +580,8 @@ export default function PricingList() {
                   vpsPlans.map((p, i) => (
                     <motion.div
                       key={`vps-${p.id}-${i}`}
-                      whileHover={{ y: -8, rotateX: 1, rotateY: -1 }}
-                      className={`group relative platinum-glass platinum-glass-hover ${p.highlight ? 'border-brand-cyan/60 shadow-[0_40px_100px_-20px_rgba(0,240,255,0.2)]' : ''} rounded-[3rem] p-1.5 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-700 overflow-hidden backdrop-blur-3xl preserve-3d`}
+                      whileHover={{ y: -12, rotateX: 2, rotateY: -2, translateZ: 20 }}
+                      className={`group relative platinum-glass platinum-glass-hover ${p.highlight ? 'border-brand-cyan/60 shadow-glow-cyan-strong' : ''} rounded-[3rem] p-1.5 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-700 overflow-hidden backdrop-blur-3xl preserve-3d`}
                     >
                        {/* Visual Side */}
                        <div className="relative w-full md:w-[420px] h-72 md:h-auto overflow-hidden shrink-0 border-r border-white/5">
@@ -596,7 +596,7 @@ export default function PricingList() {
                          <div className="absolute inset-0 flex flex-col justify-center items-center p-10 z-20">
                             <div className="flex flex-col items-center">
                               <span className="text-[10px] font-black text-brand-cyan uppercase tracking-[0.6em] mb-4">Enterprise Cloud</span>
-                              <h4 className="text-6xl font-black text-white uppercase tracking-tighter leading-none font-display italic text-center drop-shadow-2xl">{p.name}</h4>
+                              <h4 className="text-6xl font-black text-white uppercase tracking-tighter leading-none font-display italic text-center drop-shadow-2xl text-glow-cyan">{p.name}</h4>
                               <div className="mt-6 w-20 h-px bg-white/20 group-hover:w-40 transition-all duration-700" />
                             </div>
                          </div>
