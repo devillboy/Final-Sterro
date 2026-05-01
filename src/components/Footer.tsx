@@ -1,8 +1,10 @@
 import React from "react";
 import { motion } from "motion/react";
+import { useSounds } from "../utils/sounds";
 import { Mail, MessageCircle, Github, Twitter, Instagram } from "lucide-react";
 
 export default function Footer() {
+  const { playClick } = useSounds();
   return (
     <footer className="bg-surface pt-20 pb-10 px-6 border-t border-white/5">
       <div className="max-w-7xl mx-auto">
@@ -11,16 +13,18 @@ export default function Footer() {
             <div className="flex items-center gap-3">
               <img 
                 src="https://cdn.discordapp.com/icons/1391758924687999006/9d09b6eae193f8156683b959fd116e68.webp?size=2048" 
-                alt="Sterro Cloud Logo" 
+                alt="Stereo Cloud Logo" 
                 className="w-12 h-12 rounded-xl"
               />
               <div className="flex flex-col">
-                <span className="text-2xl font-bold tracking-tight text-white">Sterro <span className="text-[#00F0FF]">Cloud</span></span>
-                <span className="text-xs uppercase tracking-[0.3em] text-white/40 font-medium leading-none mt-1">IT Solution</span>
+                <span className="text-2xl font-black tracking-[-0.04em] text-white leading-none font-display uppercase italic">
+                  STEREO<span className="font-light text-brand-cyan/80 ml-1">CLOUD</span>
+                </span>
+                <span className="text-[10px] font-black tracking-[0.4em] text-white/20 uppercase mt-2">Elastic Compute Node</span>
               </div>
             </div>
             <p className="text-white/40 max-w-sm leading-relaxed">
-              Sterro Cloud provides high-performance hosting solutions engineered for speed, security, and scalability. Your vision, our hardware.
+              Stereo Cloud provides high-performance hosting solutions engineered for speed, security, and scalability. Your vision, our hardware.
             </p>
           </div>
 
@@ -48,7 +52,7 @@ export default function Footer() {
 
         <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-white/30 text-xs font-medium">
-            © 2026 Sterro Cloud | IT Solution. All rights reserved.
+            © 2026 Stereo Cloud | IT Solution. All rights reserved.
           </div>
           <div className="flex gap-8 text-[10px] uppercase font-bold tracking-widest text-white/30">
             <FooterLink>Terms of Service</FooterLink>
@@ -61,9 +65,14 @@ export default function Footer() {
   );
 }
 
-function FooterLink({ children }: { children: React.ReactNode }) {
+function FooterLink({ children, onClick }: { children: React.ReactNode, onClick?: () => void }) {
+  const { playClick } = useSounds();
   return (
-    <a href="#" className="hover:text-[#00F0FF] transition-colors cursor-pointer">
+    <a 
+      href="#" 
+      onClick={(e) => { e.preventDefault(); playClick(); onClick?.(); }}
+      className="hover:text-[#00F0FF] transition-colors cursor-pointer"
+    >
       {children}
     </a>
   );

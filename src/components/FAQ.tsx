@@ -25,9 +25,9 @@ export default function FAQ() {
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-            Your Questions, <span className="text-[#00F0FF]">Our Answers</span>
+            FAQ
           </h2>
-          <p className="text-[var(--color-text-dim)] font-medium text-lg">Everything you need to know to launch your own server</p>
+          <p className="text-[var(--color-text-dim)] font-medium text-lg">Have questions regarding Kaarma hosting? Find the answers down below</p>
         </div>
 
         <div className="space-y-4 perspective-2000">

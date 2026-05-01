@@ -73,7 +73,7 @@ export default function UserDashboard() {
             <div className="w-full md:w-64 bg-white/5 border-r border-white/5 p-8 flex flex-col gap-2">
               <div className="mb-10">
                 <h3 className="text-xl font-black text-white italic tracking-tighter uppercase">Client <span className="text-brand-cyan">Portal</span></h3>
-                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1 underline decoration-brand-cyan/30 underline-offset-4">Sterro Operational Stack</p>
+                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1 underline decoration-brand-cyan/30 underline-offset-4">Stereo Operational Stack</p>
               </div>
 
               <div className="space-y-1">
@@ -232,7 +232,7 @@ export default function UserDashboard() {
                                   </div>
                                   <div className="flex items-center gap-2 p-3 bg-red-400/5 rounded-xl border border-red-400/10">
                                      <AlertCircle size={14} className="text-red-400 shrink-0" />
-                                     <p className="text-[9px] font-bold text-red-400 leading-tight uppercase tracking-widest">Never share your panel credentials. Sterro engineers will never ask for your password.</p>
+                                     <p className="text-[9px] font-bold text-red-400 leading-tight uppercase tracking-widest">Never share your panel credentials. Stereo engineers will never ask for your password.</p>
                                   </div>
                                </div>
                             </div>

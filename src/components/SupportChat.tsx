@@ -18,7 +18,7 @@ export default function SupportChat() {
   const { firebaseUser, loginGoogle } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', role: 'assistant', content: 'Connection established. Establishing secure link with Sterro Concierge. How may I assist your operations today?' }
+    { id: '1', role: 'assistant', content: 'Connection established. Establishing secure link with Stereo Concierge. How may I assist your operations today?' }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -86,11 +86,11 @@ export default function SupportChat() {
     setIsTyping(true);
 
     const systemPrompt = `
-      You are Sterro Agent, a senior operations specialist for SterroCloud High-Performance Infrastructure.
+      You are Stereo Agent, a senior operations specialist for Stereo Cloud High-Performance Infrastructure.
       
       Your personality: Professional, technically precise, and authoritative yet helpful. You speak like a senior systems engineer.
       
-      SterroCloud Operational Parameters:
+      Stereo Cloud Operational Parameters:
       - Core Fleet: High-frequency Minecraft Nodes (Ryzen 7950X based) and Enterprise KVM Virtualization nodes.
       - Service Catalog:
         * Core Series (MC): Core-01 (2GB, ₹130), Core-02 (4GB, ₹260), Sigma Pro (6GB, ₹390).

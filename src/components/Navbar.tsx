@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useSounds } from "../utils/sounds";
 import { Menu, X, Shield, LogOut, User as UserIcon, MessageCircle, ChevronRight, LayoutTemplate, Database } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { firebaseUser, isAdmin, loginGoogle, logout, loading } = useAuth();
+  const { playClick } = useSounds();
 
   const user = firebaseUser;
 
@@ -26,38 +28,44 @@ export default function Navbar() {
 
       <nav className="sticky top-0 z-50 bg-bg-dark/80 backdrop-blur-2xl border-b border-white/5 transition-all duration-500">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 h-24 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-5 group cursor-pointer" onClick={(e) => scrollTo("root", e)}>
-            <div className="relative">
-              <motion.img 
-                whileHover={{ scale: 1.05, rotate: 2 }}
-                src="https://cdn.discordapp.com/icons/1391758924687999006/9d09b6eae193f8156683b959fd116e68.webp?size=2048" 
-                alt="Sterro Cloud Logo" 
-                className="w-12 h-12 rounded-2xl shadow-3xl relative z-10 border border-white/10"
-              />
-              <div className="absolute inset-0 bg-brand-cyan/10 blur-2xl rounded-full scale-0 group-hover:scale-150 transition-transform duration-700" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-black tracking-[-0.05em] text-white leading-none">
-                STERRO<span className="text-brand-cyan">CLOUD</span>
-              </span>
-              <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em] mt-1">High-Frequency Computing</span>
-            </div>
-          </div>
+              <div className="flex items-center gap-5 group cursor-pointer" onClick={(e) => { playClick(); scrollTo("root", e); }}>
+                <div className="relative">
+                  <motion.img 
+                    whileHover={{ scale: 1.05, rotate: 2 }}
+                    src="https://cdn.discordapp.com/icons/1391758924687999006/9d09b6eae193f8156683b959fd116e68.webp?size=2048" 
+                    alt="Sterro Cloud Logo" 
+                    className="w-12 h-12 rounded-2xl shadow-3xl relative z-10 border border-white/10"
+                  />
+                  <div className="absolute inset-0 bg-brand-cyan/10 blur-2xl rounded-full scale-0 group-hover:scale-150 transition-transform duration-700" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-2xl font-black tracking-[-0.04em] text-white leading-none font-display uppercase italic">
+                    STEREO<span className="font-light text-brand-cyan/90 ml-1">CLOUD</span>
+                  </span>
+                  <span className="text-[7.5px] font-black text-white/30 uppercase tracking-[0.4em] mt-1.5 flex items-center gap-2">
+                    <span className="w-4 h-px bg-white/10" />
+                    Distributed Infrastructure Architecture
+                  </span>
+                </div>
+              </div>
 
           {/* Desktop Menu */}
           <div className="hidden lg:flex items-center gap-12">
             <div className="flex items-center gap-10 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
-              <a href="#" onClick={(e) => scrollTo("root", e)} className="hover:text-white transition-colors relative group/link">
-                Infrastructure
+              <a href="#" onClick={(e) => { playClick(); scrollTo("root", e); }} className="hover:text-white transition-colors relative group/link">
+                Home
                 <span className="absolute -bottom-2 left-0 w-0 h-px bg-brand-cyan transition-all duration-300 group-hover/link:w-full" />
               </a>
-              <a href="#pricing" onClick={(e) => scrollTo("pricing", e)} className="hover:text-white transition-colors relative group/link">
-                Solutions
+              <a href="#features" onClick={(e) => { playClick(); scrollTo("features", e); }} className="hover:text-white transition-colors relative group/link">
+                Features
                 <span className="absolute -bottom-2 left-0 w-0 h-px bg-brand-cyan transition-all duration-300 group-hover/link:w-full" />
               </a>
-              <a href="#games" onClick={(e) => scrollTo("games", e)} className="hover:text-white transition-colors relative group/link">
-                Uplink Map
+              <a href="#games" onClick={(e) => { playClick(); scrollTo("games", e); }} className="hover:text-white transition-colors relative group/link">
+                Games
+                <span className="absolute -bottom-2 left-0 w-0 h-px bg-brand-cyan transition-all duration-300 group-hover/link:w-full" />
+              </a>
+              <a href="#pricing" onClick={(e) => { playClick(); scrollTo("pricing", e); }} className="hover:text-white transition-colors relative group/link">
+                Pricing
                 <span className="absolute -bottom-2 left-0 w-0 h-px bg-brand-cyan transition-all duration-300 group-hover/link:w-full" />
               </a>
             </div>
@@ -166,8 +174,9 @@ export default function Navbar() {
             >
               <div className="px-6 py-10 flex flex-col gap-8">
                 <div className="flex flex-col gap-6">
-                  <a href="#" onClick={(e) => scrollTo("root", e)} className="text-[11px] font-black uppercase tracking-[0.2em] text-white">Infrastructure</a>
-                  <a href="#games" onClick={(e) => scrollTo("games", e)} className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-400">Nodes</a>
+                  <a href="#" onClick={(e) => scrollTo("root", e)} className="text-[11px] font-black uppercase tracking-[0.2em] text-white">Home</a>
+                  <a href="#features" onClick={(e) => scrollTo("features", e)} className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-400">Features</a>
+                  <a href="#games" onClick={(e) => scrollTo("games", e)} className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-400">Games</a>
                   <a href="#pricing" onClick={(e) => scrollTo("pricing", e)} className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-400">Pricing</a>
                   <button 
                     onClick={() => { setIsOpen(false); window.dispatchEvent(new CustomEvent('TOGGLE_SUPPORT_CHAT')); }} 

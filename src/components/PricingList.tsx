@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Cpu, HardDrive, MemoryStick, Activity, Network, Archive, LayoutTemplate, Shield, Database, Users, Gamepad2, Server, X, Upload, CheckCircle2, Loader2, AlertCircle, MapPin, Copy, CreditCard, ChevronRight, ChevronLeft, Info, HelpCircle, Settings, Paperclip, Folder, ImagePlus } from 'lucide-react';
+import { useSounds } from '../utils/sounds';
+import { Cpu, HardDrive, MemoryStick, Activity, Network, Archive, LayoutTemplate, Shield, Database, Users, Gamepad2, Server, X, Upload, CheckCircle2, Loader2, AlertCircle, MapPin, Copy, CreditCard, ChevronRight, ChevronLeft, Info, HelpCircle, Settings, Paperclip, Folder, ImagePlus, Star, Zap } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext';
 import WorldMap from './WorldMap';
@@ -80,6 +81,7 @@ const fallbackVpsPlans: Plan[] = [
 
 export default function PricingList() {
   const [activeTab, setActiveTab] = useState<'minecraft' | 'vps'>('minecraft');
+  const [selectedLocation, setSelectedLocation] = useState('1'); // India as default
   const [minecraftPlans, setMinecraftPlans] = useState<Plan[]>(fallbackMinecraftPlans);
   const [vpsPlans, setVpsPlans] = useState<Plan[]>(fallbackVpsPlans);
   const [loading, setLoading] = useState(true);
@@ -94,6 +96,7 @@ export default function PricingList() {
   const [savedCreds, setSavedCreds] = useState<any>(null);
   const [useExistingAccount, setUseExistingAccount] = useState(true);
   const { firebaseUser: user } = useAuth();
+  const { playClick } = useSounds();
 
   useEffect(() => {
     async function fetchSavedCreds() {
@@ -424,30 +427,35 @@ export default function PricingList() {
   };
 
   return (
-    <section id="pricing" className="py-24 px-6 bg-gradient-to-b from-[var(--color-bg-main)] to-[var(--color-surface)]/30 border-t border-[var(--color-border)] min-h-screen">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-20 animate-in fade-in slide-in-from-bottom-5 duration-1000">
-          <h2 className="text-5xl md:text-6xl font-extrabold mb-6 tracking-tight">
-            Superior <span className="text-brand-cyan">Performance</span><br/>
-            Unmatched Support
+    <section id="pricing" className="relative py-32 px-6 bg-[#050914] overflow-hidden min-h-screen">
+      {/* Background Decor */}
+      <div className="absolute inset-0 z-0 opacity-20">
+        <WorldMap selectedId={selectedLocation} onSelect={setSelectedLocation} />
+      </div>
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand-cyan/20 to-transparent" />
+      
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className="text-center mb-24 animate-in fade-in slide-in-from-bottom-5 duration-1000">
+          <h2 className="text-5xl md:text-[5.5rem] font-black mb-10 tracking-tighter leading-none text-premium-gradient uppercase italic">
+            Elite <span className="text-brand-cyan not-italic antialiased">Infrastructure</span>
           </h2>
-          <p className="text-zinc-400 max-w-2xl mx-auto mb-12 text-lg font-light tracking-wide">
-            Enterprise-grade hardware meets simplified management. 
-            Select your architecture and deploy your project in under 60 seconds.
+          <p className="text-zinc-500 max-w-3xl mx-auto mb-20 text-xl font-medium tracking-tight leading-relaxed">
+            Provision enterprise-grade nodes engineered for zero-latency operations. 
+            Choose your cluster and scale globally.
           </p>
           
-          <div className="inline-flex p-1.5 bg-white/5 border border-white/10 rounded-2xl relative z-20 backdrop-blur-3xl mx-auto mb-16 px-2">
+          <div className="inline-flex p-2 bg-white/[0.03] border border-white/10 rounded-3xl relative z-20 backdrop-blur-3xl mx-auto mb-16 px-3">
             <button
-              onClick={() => setActiveTab('minecraft')}
-              className={`flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-sm transition-all duration-500 ${activeTab === 'minecraft' ? 'bg-brand-cyan text-bg-dark shadow-[0_10px_30px_rgba(0,240,255,0.2)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
+              onClick={() => { playClick(); setActiveTab('minecraft'); }}
+              className={`flex items-center justify-center gap-3 px-10 py-5 rounded-[1.25rem] font-black text-xs tracking-widest transition-all duration-500 uppercase ${activeTab === 'minecraft' ? 'bg-brand-cyan text-bg-dark shadow-[0_15px_40px_rgba(0,240,255,0.3)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
             >
-              <Gamepad2 size={18} /> <span>MINECRAFT NODES</span>
+              <Gamepad2 size={16} /> Minecraft Fleet
             </button>
             <button
-              onClick={() => setActiveTab('vps')}
-              className={`flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-sm transition-all duration-500 ${activeTab === 'vps' ? 'bg-brand-cyan text-bg-dark shadow-[0_10px_30px_rgba(0,240,255,0.2)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
+              onClick={() => { playClick(); setActiveTab('vps'); }}
+              className={`flex items-center justify-center gap-3 px-10 py-5 rounded-[1.25rem] font-black text-xs tracking-widest transition-all duration-500 uppercase ${activeTab === 'vps' ? 'bg-brand-cyan text-bg-dark shadow-[0_15px_40px_rgba(0,240,255,0.3)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
             >
-              <Server size={18} /> <span>SCALABLE VPS</span>
+              <Server size={16} /> VPS Cluster
             </button>
           </div>
 
@@ -464,190 +472,204 @@ export default function PricingList() {
           </div>
         </div>
 
-        <motion.div 
-          className="flex flex-col gap-8 perspective-2000"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
-          variants={{
-            hidden: { opacity: 0 },
-            visible: {
-              opacity: 1,
-              transition: { staggerChildren: 0.15 }
-            }
-          }}
-        >
-          {loading ? (
-            <>
-              <PlanSkeleton highlight={false} />
-              <PlanSkeleton highlight={true} />
-              <PlanSkeleton highlight={false} />
-            </>
-          ) : (
-            <>
-              {activeTab === 'minecraft' && minecraftPlans.map((p, i) => (
-                <motion.div
-                  key={`mc-${i}`}
-                  variants={{
-                    hidden: { opacity: 0, y: 30, scale: 0.95 },
-                    visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50, damping: 20 } }
-                  }}
-                  whileHover={{ y: -4 }}
-                  className={`group relative bg-bg-card/40 border ${p.highlight ? 'border-brand-cyan/30 shadow-[0_30px_100px_-20px_rgba(0,240,255,0.1)]' : 'border-white/5'} rounded-[2.5rem] p-1 md:p-1 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-700 overflow-hidden backdrop-blur-3xl hover:bg-bg-card/60`}
-                >
-                  {/* Visual Side */}
-                  <div className="relative w-full md:w-72 h-48 md:h-auto overflow-hidden shrink-0">
-                    <img 
-                      src={p.isTrial ? "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800" : (i % 2 === 0 ? "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?q=80&w=800" : "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800")} 
-                      alt="" 
-                      className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:scale-110 group-hover:opacity-100 transition-all duration-1000" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-bg-card/40 md:to-transparent" />
-                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-bg-card/90 to-transparent md:hidden" />
-                    
-                    <div className="absolute inset-0 flex flex-col justify-end p-6 md:hidden">
-                       <h4 className="text-2xl font-black text-white uppercase tracking-tighter">{p.name}</h4>
-                    </div>
-                  </div>
-
-                  {/* Content Side */}
-                  <div className="flex-1 p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
-                    <div className="flex-1 w-full space-y-8">
-                      <div className="hidden md:block">
-                        <div className="flex items-center gap-4 mb-2">
-                           <h4 className="text-3xl font-black text-white uppercase tracking-tighter group-hover:text-brand-cyan transition-colors duration-500">{p.name}</h4>
-                           {p.highlight && <span className="admin-badge">Priority Node</span>}
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={activeTab}
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col gap-10"
+          >
+            {loading ? (
+              <div className="space-y-6">
+                <PlanSkeleton highlight={false} />
+                <PlanSkeleton highlight={true} />
+              </div>
+            ) : (
+              <>
+                {activeTab === 'minecraft' ? (
+                  minecraftPlans.map((p, i) => (
+                    <motion.div
+                      key={`mc-${p.id}-${i}`}
+                      whileHover={{ y: -8, rotateX: 1, rotateY: -1 }}
+                      className={`group relative platinum-glass platinum-glass-hover ${p.highlight ? 'border-brand-cyan/60 shadow-[0_40px_100px_-20px_rgba(0,240,255,0.2)]' : ''} rounded-[3rem] p-1.5 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-700 overflow-hidden backdrop-blur-3xl preserve-3d`}
+                    >
+                      {/* Visual Side */}
+                      <div className="relative w-full md:w-[380px] h-64 md:h-auto overflow-hidden shrink-0">
+                        <motion.img 
+                          src={p.isTrial ? "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200" : (i % 2 === 0 ? "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1200" : "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200")} 
+                          alt="" 
+                          className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-1000" 
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-bg-dark/80 via-transparent to-transparent hidden md:block" />
+                        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-bg-dark to-transparent" />
+                        
+                        <div className="absolute inset-0 flex flex-col justify-end p-10">
+                           <div className="flex items-center gap-3 mb-2">
+                             <div className="w-10 h-1 bg-brand-cyan/40 rounded-full" />
+                             <span className="text-[10px] font-black text-brand-cyan uppercase tracking-[0.4em]">Node-Alpha</span>
+                           </div>
+                           <h4 className="text-4xl font-black text-white uppercase tracking-tighter leading-none font-display italic">MC • {p.name}</h4>
                         </div>
-                        <p className="text-xs text-zinc-500 font-medium tracking-wide">Enterprise High-Frequency Instance</p>
                       </div>
 
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6">
-                        {[
-                          { icon: MemoryStick, label: "Allocation", value: p.ram },
-                          { icon: HardDrive, label: "NVMe Pool", value: p.storage || p.ssd },
-                          { icon: Cpu, label: "Compute", value: p.cpu },
-                          { icon: Network, label: "Protocol", value: "TCP/UDP Ready" },
-                        ].map((spec, idx) => (
-                          <div key={idx} className="flex flex-col gap-1">
-                            <div className="flex items-center gap-1.5 text-[10px] font-black text-zinc-600 uppercase tracking-widest">
-                              <spec.icon size={12} className="text-brand-cyan/40" />
-                              {spec.label}
+                      {/* Content Side */}
+                      <div className="flex-1 p-10 md:p-16 flex flex-col lg:flex-row items-center justify-between gap-12 bg-white/[0.01]">
+                        <div className="flex-1 w-full space-y-12">
+                          <div className="hidden lg:block">
+                            <div className="flex items-center gap-4 mb-4">
+                               <h4 className="text-5xl font-black text-white uppercase tracking-tighter group-hover:text-brand-cyan transition-colors duration-500 font-display italic">{p.name}</h4>
+                               {p.highlight && (
+                                 <motion.span 
+                                   animate={{ opacity: [0.5, 1, 0.5] }}
+                                   transition={{ duration: 2, repeat: Infinity }}
+                                   className="bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full flex items-center gap-2"
+                                 >
+                                   <Star size={10} fill="currentColor" /> MUST BUY
+                                 </motion.span>
+                               )}
                             </div>
-                            <div className="text-base font-bold text-zinc-300 font-mono tracking-tight">{spec.value}</div>
+                            <p className="text-sm text-zinc-500 font-bold uppercase tracking-[0.4em] flex items-center gap-3">
+                              <Zap size={14} className="text-brand-cyan" />
+                              Titan Series • Distributed Compute Cluster
+                            </p>
                           </div>
-                        ))}
-                      </div>
 
-                      <div className="flex flex-wrap gap-x-6 gap-y-2">
-                        {['99.9% Uptime SLA', 'Ryzen 9 7950X', 'DDR5 ECC RAM'].map(f => (
-                          <div key={f} className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-                            <span className="w-1 h-1 bg-brand-cyan rounded-full" />
-                            {f}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
+                            {[
+                              { icon: MemoryStick, label: "Core Memory", value: p.ram },
+                              { icon: Cpu, label: "Ryzen vCore", value: p.cpu },
+                              { icon: HardDrive, label: "NVMe SSD", value: p.storage || p.ssd },
+                              { icon: Network, label: "Latency", value: "Low-Ping" },
+                            ].map((spec, idx) => (
+                              <div key={idx} className="relative p-6 rounded-3xl bg-white/[0.02] border border-white/5 group/spec transition-all duration-500 hover:bg-white/[0.05] hover:border-white/10 hover:shadow-2d-sm">
+                                <div className="flex items-center gap-2 text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                                  <spec.icon size={12} className="text-brand-cyan/40" />
+                                  {spec.label}
+                                </div>
+                                <div className="text-xl font-black text-white font-mono tracking-tighter italic">{spec.value}</div>
+                                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-cyan scale-x-0 group-hover/spec:scale-x-100 transition-transform duration-500" />
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="w-full md:w-auto flex flex-col items-center md:items-end gap-6 shrink-0">
-                      <div className="text-center md:text-right">
-                         <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Cost Identifier</div>
-                         <div className="text-4xl font-black text-white tracking-tighter">₹{p.price}<span className="text-sm font-medium text-zinc-600 tracking-normal">/mo</span></div>
-                      </div>
-                      
-                      <button 
-                        onClick={() => p.type === 'vps' ? window.open('https://discord.gg/b2PqWqSEU3', '_blank') : setSelectedPlan(p)}
-                        className={`w-full md:w-52 h-16 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-3 ${p.highlight ? 'bg-brand-cyan text-bg-dark shadow-[0_20px_40px_rgba(0,240,255,0.2)] hover:scale-105' : 'bg-white/5 text-white hover:bg-white hover:text-bg-dark border border-white/10'}`}
-                      >
-                        {p.isTrial ? 'Claim Sandbox' : 'Provision Node'}
-                        <ChevronRight size={14} />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-
-              {activeTab === 'vps' && vpsPlans.map((p, i) => (
-             <motion.div
-               key={`vps-${i}`}
-               variants={{
-                 hidden: { opacity: 0, y: 30, scale: 0.95 },
-                 visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50, damping: 20 } }
-               }}
-               whileHover={{ y: -4 }}
-               className={`group relative bg-bg-card/40 border ${p.highlight ? 'border-brand-cyan/30 shadow-[0_30px_100px_-20px_rgba(0,240,255,0.1)]' : 'border-white/5'} rounded-[2.5rem] p-1 md:p-1 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-700 overflow-hidden backdrop-blur-3xl hover:bg-bg-card/60`}
-            >
-               {/* Visual Side */}
-               <div className="relative w-full md:w-72 h-48 md:h-auto overflow-hidden shrink-0">
-                 <img 
-                   src={i === 2 ? "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?q=80&w=800" : "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=800"} 
-                   alt="" 
-                   className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:scale-110 group-hover:opacity-100 transition-all duration-1000" 
-                 />
-                 <div className="absolute inset-0 bg-gradient-to-r from-transparent to-bg-card/40 md:to-transparent" />
-                 
-                 <div className="absolute inset-0 flex flex-col justify-end p-6 md:hidden">
-                    <h4 className="text-2xl font-black text-white uppercase tracking-tighter">{p.name}</h4>
-                 </div>
-               </div>
-
-               {/* Content Side */}
-               <div className="flex-1 p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
-                 <div className="flex-1 w-full space-y-8">
-                   <div className="hidden md:block">
-                     <div className="flex items-center gap-4 mb-2">
-                        <h4 className="text-3xl font-black text-white uppercase tracking-tighter group-hover:text-brand-cyan transition-colors duration-500">{p.name}</h4>
-                        {p.highlight && <span className="admin-badge">Premium Compute</span>}
-                     </div>
-                     <p className="text-xs text-zinc-500 font-medium tracking-wide">Enterprise KVM Virtualization</p>
-                   </div>
-
-                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6">
-                      {[
-                        { icon: MemoryStick, label: "RAM Pool", value: p.ram },
-                        { icon: Cpu, label: "KVM vCore", value: p.cpu },
-                        { icon: HardDrive, label: "NVMe Raid", value: p.storage },
-                        { icon: Network, label: "BGP Port", value: "1 Gbps" },
-                      ].map((spec, idx) => (
-                        <div key={idx} className="flex flex-col gap-1">
-                          <div className="flex items-center gap-1.5 text-[10px] font-black text-zinc-600 uppercase tracking-widest">
-                            <spec.icon size={12} className="text-brand-cyan/40" />
-                            {spec.label}
-                          </div>
-                          <div className="text-base font-bold text-zinc-300 font-mono tracking-tight">{spec.value}</div>
                         </div>
-                      ))}
-                   </div>
 
-                   <div className="flex flex-wrap gap-x-6 gap-y-2">
-                      {['Tier-3 Datacenter', 'Full Root Access', 'IPv6 Ready'].map(f => (
-                        <div key={f} className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-                          <span className="w-1 h-1 bg-brand-cyan rounded-full" />
-                          {f}
+                        <div className="w-full lg:w-auto flex flex-col items-center lg:items-end gap-10 shrink-0">
+                          <div className="text-center lg:text-right">
+                             <div className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em] mb-3">Provision Cost</div>
+                             <div className="text-6xl font-black text-white tracking-tighter leading-none italic">
+                               ₹{p.price}
+                               <span className="text-sm font-bold text-zinc-500 tracking-widest ml-2 not-italic">/ Monthly</span>
+                             </div>
+                          </div>
+                          
+                          <button 
+                            onClick={() => { playClick(); p.type === 'vps' ? window.open('https://discord.gg/b2PqWqSEU3', '_blank') : setSelectedPlan(p); }}
+                            className={`w-full lg:w-72 h-24 rounded-[2rem] font-black text-[12px] uppercase tracking-[0.4em] transition-all duration-700 flex items-center justify-center gap-4 relative overflow-hidden group/btn ${p.highlight ? 'bg-brand-cyan text-bg-dark shadow-[0_30px_60px_rgba(0,240,255,0.4)]' : 'bg-white/5 text-white hover:bg-white hover:text-bg-dark border border-white/10 shadow-3d-sm'}`}
+                          >
+                            <span className="relative z-10">{p.isTrial ? 'Claim Sandbox' : 'Provision Node'}</span>
+                            <ChevronRight size={20} className="relative z-10 transition-transform group-hover/btn:translate-x-2" />
+                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500" />
+                          </button>
                         </div>
-                      ))}
-                    </div>
-                 </div>
+                      </div>
+                    </motion.div>
+                  ))
+                ) : (
+                  vpsPlans.map((p, i) => (
+                    <motion.div
+                      key={`vps-${p.id}-${i}`}
+                      whileHover={{ y: -8, rotateX: 1, rotateY: -1 }}
+                      className={`group relative platinum-glass platinum-glass-hover ${p.highlight ? 'border-brand-cyan/60 shadow-[0_40px_100px_-20px_rgba(0,240,255,0.2)]' : ''} rounded-[3rem] p-1.5 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-700 overflow-hidden backdrop-blur-3xl preserve-3d`}
+                    >
+                       {/* Visual Side */}
+                       <div className="relative w-full md:w-[420px] h-72 md:h-auto overflow-hidden shrink-0 border-r border-white/5">
+                         <motion.img 
+                           src={p.id.includes(' Xeon') ? "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1200" : "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200"} 
+                           alt="" 
+                           className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:scale-110 group-hover:opacity-100 transition-all duration-1000" 
+                         />
+                         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg-dark z-10" />
+                         <div className="absolute inset-0 bg-brand-blue/20 mix-blend-overlay group-hover:opacity-0 transition-opacity duration-1000" />
+                         
+                         <div className="absolute inset-0 flex flex-col justify-center items-center p-10 z-20">
+                            <div className="flex flex-col items-center">
+                              <span className="text-[10px] font-black text-brand-cyan uppercase tracking-[0.6em] mb-4">Enterprise Cloud</span>
+                              <h4 className="text-6xl font-black text-white uppercase tracking-tighter leading-none font-display italic text-center drop-shadow-2xl">{p.name}</h4>
+                              <div className="mt-6 w-20 h-px bg-white/20 group-hover:w-40 transition-all duration-700" />
+                            </div>
+                         </div>
+                       </div>
 
-                 <div className="w-full md:w-auto flex flex-col items-center md:items-end gap-6 shrink-0">
-                   <div className="text-center md:text-right">
-                      <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Pricing Model</div>
-                      <div className="text-4xl font-black text-white tracking-tighter">₹{p.price}<span className="text-sm font-medium text-zinc-600 tracking-normal">/mo</span></div>
-                   </div>
-                   
-                   <button 
-                     onClick={() => p.type === 'vps' ? window.open('https://discord.gg/b2PqWqSEU3', '_blank') : setSelectedPlan(p)}
-                     className={`w-full md:w-52 h-16 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-3 ${p.highlight ? 'bg-brand-cyan text-bg-dark shadow-[0_20px_40px_rgba(0,240,255,0.2)] hover:scale-105' : 'bg-white/5 text-white hover:bg-white hover:text-bg-dark border border-white/10'}`}
-                   >
-                     Deploy Node
-                     <ChevronRight size={14} />
-                   </button>
-                 </div>
-               </div>
-            </motion.div>
-          ))}
-            </>
-          )}
-        </motion.div>
+                       {/* Content Side */}
+                       <div className="flex-1 p-10 md:p-16 flex flex-col lg:flex-row items-center justify-between gap-12 bg-white/[0.01]">
+                         <div className="flex-1 w-full space-y-12">
+                           <div className="hidden lg:block">
+                             <div className="flex items-center gap-4 mb-4">
+                                <h4 className="text-5xl font-black text-white uppercase tracking-tighter group-hover:text-brand-cyan transition-colors duration-500 font-display italic">{p.name}</h4>
+                                {p.highlight && (
+                                  <motion.span 
+                                    animate={{ opacity: [0.5, 1, 0.5] }}
+                                    transition={{ duration: 2, repeat: Infinity }}
+                                    className="bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full flex items-center gap-2"
+                                  >
+                                    <Star size={10} fill="currentColor" /> BEST VALUE
+                                  </motion.span>
+                                )}
+                             </div>
+                             <p className="text-sm text-zinc-500 font-bold uppercase tracking-[0.4em] flex items-center gap-3">
+                               <Zap size={14} className="text-brand-cyan" />
+                               Quantum Series • Enterprise Cloud Architecture
+                             </p>
+                           </div>
+
+                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
+                             {[
+                               { icon: MemoryStick, label: "Core Memory", value: p.ram },
+                               { icon: Cpu, label: "KVM Compute", value: p.cpu },
+                               { icon: HardDrive, label: "NVMe Raid", value: p.storage },
+                               { icon: Network, label: "Uplink", value: "2 Gbps" },
+                             ].map((spec, idx) => (
+                               <div key={idx} className="relative p-6 rounded-3xl bg-white/[0.02] border border-white/5 group/spec transition-all duration-500 hover:bg-white/[0.05] hover:border-white/10 hover:shadow-2d-sm">
+                                 <div className="flex items-center gap-2 text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-3">
+                                   <spec.icon size={12} className="text-brand-cyan/40" />
+                                   {spec.label}
+                                 </div>
+                                 <div className="text-xl font-black text-white font-mono tracking-tighter italic">{spec.value}</div>
+                                 <div className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-cyan scale-x-0 group-hover/spec:scale-x-100 transition-transform duration-500" />
+                               </div>
+                             ))}
+                           </div>
+                         </div>
+
+                         <div className="w-full lg:w-auto flex flex-col items-center lg:items-end gap-10 shrink-0">
+                           <div className="text-center lg:text-right">
+                              <div className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em] mb-3">Annual Run Rate</div>
+                              <div className="text-6xl font-black text-white tracking-tighter leading-none italic">
+                                ₹{p.price}
+                                <span className="text-sm font-bold text-zinc-500 tracking-widest ml-2 not-italic">/ Monthly</span>
+                              </div>
+                           </div>
+                           
+                           <button 
+                             onClick={() => { playClick(); p.type === 'vps' ? window.open('https://discord.gg/b2PqWqSEU3', '_blank') : setSelectedPlan(p); }}
+                             className={`w-full lg:w-72 h-24 rounded-[2rem] font-black text-[12px] uppercase tracking-[0.4em] transition-all duration-700 flex items-center justify-center gap-4 relative overflow-hidden group/btn ${p.highlight ? 'bg-brand-cyan text-bg-dark shadow-[0_30px_60px_rgba(0,240,255,0.4)]' : 'bg-white/5 text-white hover:bg-white hover:text-bg-dark border border-white/10 shadow-3d-sm'}`}
+                           >
+                             <span className="relative z-10">Deploy Cloud</span>
+                             <ChevronRight size={20} className="relative z-10 transition-transform group-hover/btn:translate-x-2" />
+                             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500" />
+                           </button>
+                         </div>
+                       </div>
+                    </motion.div>
+                  ))
+                )}
+              </>
+            )}
+          </motion.div>
+        </AnimatePresence>
+
       </div>
 
       {/* AI Verification Payment Gateway Modal */}
@@ -820,7 +842,7 @@ export default function PricingList() {
                                   <div className="col-span-2">
                                     <Input label="Email Address" {...register("email", {required: true})} type="email" placeholder="you@example.com" />
                                   </div>
-                                  <Input label="Server Name" {...register("serverName", {required: true})} defaultValue="Sterro Trial Server" />
+                                  <Input label="Server Name" {...register("serverName", {required: true})} defaultValue="Stereo Trial Server" />
                                   <Input label="Panel Username" {...register("username", {required: true})} />
                                   <Input label="Panel Password" {...register("password", {required: true})} type="password" />
                                </div>
@@ -974,7 +996,7 @@ export default function PricingList() {
                                 </h4>
                                 <div className="flex flex-col md:flex-row gap-8 items-center">
                                    <div className="w-32 h-32 bg-white rounded-2xl flex items-center justify-center p-2 shadow-2xl shrink-0">
-                                      <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=ayushlegit@fam&pn=SterroCloud&am=${selectedPlan.price}&cu=INR`} alt="Payment QR" className="w-full h-full" />
+                                      <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=ayushlegit@fam&pn=StereoCloud&am=${selectedPlan.price}&cu=INR`} alt="Payment QR" className="w-full h-full" />
                                    </div>
                                    <div className="flex-1 text-center md:text-left">
                                       <p className="text-white/60 text-sm mb-1 uppercase tracking-tighter">Pay to UPI ID:</p>

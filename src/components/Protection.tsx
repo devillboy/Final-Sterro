@@ -1,62 +1,61 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { MapPin } from 'lucide-react';
 
 export default function Protection() {
+  const regions = [
+    {
+      continent: "Asia",
+      locations: ["India - Noida", "India - Mumbai", "Singapore - Singapore"]
+    },
+    {
+      continent: "Europe",
+      locations: ["Germany - Frankfurt"]
+    }
+  ];
+
   return (
-    <section className="py-24 px-6 bg-[#03060d]">
+    <section id="locations" className="py-24 px-6 bg-[#03060d]">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 leading-tight tracking-tight">
-            Always <span className="text-[#00F0FF]">Protected.</span><br/>
-            Always <span className="text-[#00F0FF]">Recoverable.</span>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight tracking-tight">
+            Global Presence, <br className="md:hidden" />
+            <span className="text-brand-cyan">Local Performance</span>
           </h2>
-          <p className="text-[var(--color-text-dim)] max-w-2xl mx-auto font-medium text-lg">
-            Network-level security and instant snapshots work together to keep your VPS safe and quickly restorable.
+          <p className="text-zinc-400 max-w-2xl mx-auto font-medium text-lg leading-relaxed">
+            Our rapidly expanding datacenter network spans across the Americas and Europe, delivering ultra-low latency from anywhere and lightning-fast connections wherever you play.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 text-white font-bold">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="bg-[#0a1024] border border-[var(--color-border)] rounded-2xl p-8 flex flex-col"
-          >
-            <div className="h-48 bg-[#050814] rounded-xl border border-[var(--color-border)] mb-8 flex items-center justify-center relative overflow-hidden group">
-               <div className="absolute inset-0 bg-gradient-to-tr from-[#00F0FF]/5 to-transparent" />
-               <button className="w-56 h-12 bg-[#00F0FF] border border-[#00D8E6] text-black rounded font-black transition-all shadow-[0_0_20px_rgba(0,240,255,0.4)] group-hover:bg-[#00D8E6] group-hover:scale-105 z-10 flex items-center justify-center uppercase tracking-tighter">
-                  Restore My Server
-               </button>
-            </div>
-            <h3 className="text-xl font-bold mb-3 tracking-tight">Snapshots & Backups</h3>
-            <p className="text-[var(--color-text-dim)] font-medium text-sm leading-relaxed">
-              Create snapshots before updates or major changes. Restore your VPS anytime with just one click.
-            </p>
-          </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="bg-[#0a1024] border border-[var(--color-border)] rounded-2xl p-8 flex flex-col"
-          >
-            <div className="h-48 bg-[#050814] rounded-xl border border-[var(--color-border)] mb-8 flex items-center justify-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#ff004c]/10 via-[#050814] to-[#050814]" />
+        <div className="grid md:grid-cols-2 gap-8 text-white">
+          {regions.map((region, idx) => (
+            <motion.div 
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+              className="bg-[#0a1024] border border-white/5 rounded-[2rem] p-8 flex flex-col hover:border-brand-cyan/20 transition-all duration-300 relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-64 h-64 bg-brand-cyan/5 rounded-full blur-[80px]" />
               
-              <div className="w-24 h-24 rounded-full border-4 border-[#00F0FF]/20 flex flex-col gap-2 items-center justify-center z-10 bg-[#0a1024]/50 backdrop-blur">
-                <div className="w-8 h-3 bg-[#00F0FF] rounded-sm shadow-[0_0_10px_rgba(0,240,255,0.8)]" />
-                <div className="w-8 h-3 bg-[#00F0FF] rounded-sm shadow-[0_0_10px_rgba(0,240,255,0.8)]" />
-              </div>
+              <h3 className="text-3xl font-black mb-8 tracking-tight text-white relative z-10">{region.continent}</h3>
               
-              {/* Little red triangles around */}
-              <div className="absolute right-12 top-10 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[10px] border-b-[#ff4d4d] rotate-45 opacity-50 blur-[1px]" />
-              <div className="absolute left-10 bottom-12 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[10px] border-b-[#ff4d4d] -rotate-45 opacity-50 blur-[1px]" />
-            </div>
-            <h3 className="text-xl font-bold mb-3 tracking-tight">Network Protection</h3>
-            <p className="text-[var(--color-text-dim)] font-medium text-sm leading-relaxed">
-              All VPS instances are protected by default against common network attacks, ensuring consistent uptime and reliability.
-            </p>
-          </motion.div>
+              <ul className="space-y-4 relative z-10 font-bold">
+                {region.locations.map((loc, i) => (
+                  <li key={i} className="flex items-center gap-4 text-zinc-300 text-lg hover:text-brand-cyan transition-colors">
+                    <div className="w-12 h-12 rounded-2xl border border-white/10 bg-black/40 flex items-center justify-center shrink-0 shadow-2xl">
+                      <MapPin size={22} className="text-brand-cyan" />
+                    </div>
+                    <div>
+                      <span className="block text-white text-xl">{loc}</span>
+                      <span className="text-[10px] text-zinc-600 uppercase tracking-widest font-black">Connected Node</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>
