@@ -38,18 +38,19 @@ export default function GameGrid() {
     syncAssets();
   }, []);
   return (
-    <section className="py-24 px-6 bg-[var(--color-bg-main)]">
-      <div className="max-w-7xl mx-auto text-center">
-        <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight text-white">
-          Your favorite games &amp; services<br/>
-          <span className="text-[#00F0FF]">Ready to deploy instantly.</span>
+    <section id="games" className="py-32 px-6 bg-bg-dark relative overflow-hidden">
+      <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent top-0" />
+      
+      <div className="max-w-7xl mx-auto text-center relative z-10">
+        <h2 className="text-5xl md:text-6xl font-black mb-6 tracking-tighter text-white uppercase italic font-display text-glow-cyan">
+          Elite <span className="text-brand-cyan not-italic antialiased">Deployment</span> Fleet
         </h2>
-        <p className="text-[var(--color-text-dim)] mb-16 max-w-2xl mx-auto text-lg font-medium">
-          Choose your service and get started instantly. We take care of setup, performance, and stability.
+        <p className="text-zinc-500 mb-16 max-w-2xl mx-auto text-sm font-bold uppercase tracking-[0.4em]">
+          Automated orchestration for next-gen workloads.
         </p>
 
         <motion.div 
-          className="flex flex-wrap justify-center gap-6 perspective-2000"
+          className="flex flex-wrap justify-center gap-10 perspective-2000"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -71,21 +72,27 @@ export default function GameGrid() {
                   visible: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 60 } }
                 }}
                 whileHover={{ 
-                  y: -5,
-                  boxShadow: "0 20px 40px -12px rgba(0, 240, 255, 0.15)"
+                  y: -10,
+                  rotateX: 2,
+                  rotateY: -2,
+                  translateZ: 20
                 }}
-                className="relative bg-[#050914] border border-[#121b2b] rounded-3xl overflow-hidden group cursor-pointer w-full md:w-[calc(50%-1rem)] h-80 hover:border-[#00F0FF]/30 transition-all duration-300"
+                className="relative platinum-glass platinum-glass-hover rounded-[3rem] overflow-hidden group cursor-pointer w-full md:w-[calc(45%-1rem)] h-[400px] border border-white/5 transition-all duration-700 preserve-3d"
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-[#000000] via-black/60 to-transparent z-10" />
-                <div className="absolute inset-0 opacity-40 group-hover:opacity-50 transition-all duration-700 ease-out group-hover:scale-105">
-                  <img src={game.imgUrl} className="w-full h-full object-cover" alt={game.name} onError={(e) => (e.currentTarget.style.display = 'none')} />
+                <div className="absolute inset-0 bg-gradient-to-t from-bg-dark via-bg-dark/40 to-transparent z-10" />
+                <div className="absolute inset-0 opacity-20 group-hover:opacity-40 transition-all duration-1000 ease-out group-hover:scale-110">
+                  <img src={game.imgUrl} className="w-full h-full object-cover grayscale group-hover:grayscale-0" alt={game.name} referrerPolicy="no-referrer" />
                 </div>
                 
-                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center pt-24">
-                  <div className="w-16 h-16 mb-4 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/10 group-hover:-translate-y-2 group-hover:bg-white/10 transition-all duration-300">
-                    <Icon className="text-white w-8 h-8" />
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-12 text-center pt-24">
+                  <div className="w-20 h-20 mb-8 bg-white/[0.03] backdrop-blur-xl rounded-3xl flex items-center justify-center border border-white/10 group-hover:-translate-y-4 group-hover:bg-brand-cyan/10 group-hover:border-brand-cyan/30 transition-all duration-700 shadow-3d">
+                    <Icon className="text-white group-hover:text-brand-cyan transition-colors w-10 h-10" />
                   </div>
-                  <h3 className="font-bold text-2xl text-white tracking-tight">{game.name}</h3>
+                  <div className="space-y-4">
+                    <span className="text-[10px] font-black text-brand-cyan uppercase tracking-[0.6em] block opacity-0 group-hover:opacity-100 transition-opacity duration-700">Cluster Alpha</span>
+                    <h3 className="font-black text-4xl text-white tracking-tighter uppercase font-display italic text-glow-cyan">{game.name}</h3>
+                    <div className="w-12 h-px bg-white/20 mx-auto group-hover:w-24 transition-all duration-700" />
+                  </div>
                 </div>
               </motion.div>
             );

@@ -34,14 +34,14 @@ export default function Features() {
 
   return (
     <section id="features" className="py-32 px-6 bg-bg-dark visible-grid relative perspective-2000">
-      <div className="absolute inset-0 bg-gradient-to-b from-bg-dark via-brand-cyan/[0.01] to-bg-dark pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-bg-dark via-brand-cyan/[0.02] to-bg-dark pointer-events-none" />
       
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-24 max-w-3xl mx-auto">
-          <h2 className="text-5xl md:text-6xl font-black mb-8 tracking-tighter text-white uppercase italic font-display">
-            Engineered for <span className="text-brand-cyan not-italic">Resilience</span>
+          <h2 className="text-5xl md:text-6xl font-black mb-8 tracking-tighter text-white uppercase italic font-display text-glow-cyan">
+            Engineered for <span className="text-brand-cyan not-italic antialiased">Resilience</span>
           </h2>
-          <p className="text-zinc-500 font-medium text-lg leading-relaxed uppercase tracking-[0.2em] text-xs">
+          <p className="text-zinc-500 font-bold text-sm leading-relaxed uppercase tracking-[0.4em] mb-12">
             Elite infrastructure architectures redefining the hosting landscape. 
           </p>
         </div>
