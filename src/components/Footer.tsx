@@ -17,35 +17,34 @@ export default function Footer() {
                 className="w-12 h-12 rounded-xl shadow-3d-sm"
               />
               <div className="flex flex-col">
-                <span className="text-2xl font-black tracking-[-0.04em] text-white leading-none font-display uppercase italic text-glow-cyan">
-                  STEREO<span className="font-light text-brand-cyan/80 ml-1">CLOUD</span>
+                <span className="text-xl font-bold tracking-tight text-white leading-none font-display uppercase text-premium-gradient">
+                  STERRO<span className="font-medium text-brand-cyan/80 ml-0.5">CLOUD</span>
                 </span>
-                <span className="text-[10px] font-black tracking-[0.4em] text-white/20 uppercase mt-2">Elastic Compute Node</span>
+                <span className="text-[10px] font-semibold tracking-[0.2em] text-slate-600 uppercase mt-2">Elite Compute Infrastructure</span>
               </div>
             </div>
-            <p className="text-white/40 max-w-sm leading-relaxed">
-              Stereo Cloud provides high-performance hosting solutions engineered for speed, security, and scalability. Your vision, our hardware.
+            <p className="text-slate-500 max-w-sm leading-relaxed text-sm">
+              Sterro Cloud provides high-performance hosting solutions engineered for speed, security, and scalability.
             </p>
           </div>
 
           <div>
-            <h4 className="text-sm font-black uppercase tracking-widest text-white mb-8">Products</h4>
-            <ul className="space-y-4 text-white/40 text-sm font-medium">
-              <li><FooterLink>Game Servers</FooterLink></li>
-              <li><FooterLink>vServer (VPS)</FooterLink></li>
-              <li><FooterLink>Dedicated Servers</FooterLink></li>
+            <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-white mb-8">Products</h4>
+            <ul className="space-y-4 text-slate-500 text-sm font-medium">
+              <li><FooterLink>Cloud Nodes</FooterLink></li>
+              <li><FooterLink>vServers (VPS)</FooterLink></li>
+              <li><FooterLink>Dedicated Cluster</FooterLink></li>
               <li><FooterLink>Web Hosting</FooterLink></li>
-              <li><FooterLink>Domains</FooterLink></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-sm font-black uppercase tracking-widest text-white mb-8">Support</h4>
-            <ul className="space-y-4 text-white/40 text-sm font-medium">
-              <li><FooterLink>Contact Support</FooterLink></li>
-              <li><FooterLink>Wiki & Knowledgebase</FooterLink></li>
+            <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-white mb-8">Support</h4>
+            <ul className="space-y-4 text-slate-500 text-sm font-medium">
+              <li><FooterLink>Contact Concierge</FooterLink></li>
+              <li><FooterLink>Documentation</FooterLink></li>
               <li><FooterLink>Discord Community</FooterLink></li>
-              <li><FooterLink>Status Page</FooterLink></li>
+              <li><FooterLink>System Status</FooterLink></li>
             </ul>
           </div>
         </div>

@@ -436,24 +436,23 @@ export default function PricingList() {
       
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-24 animate-in fade-in slide-in-from-bottom-5 duration-1000">
-          <h2 className="text-5xl md:text-[5.5rem] font-black mb-10 tracking-tighter leading-none text-premium-gradient uppercase italic font-display text-glow-cyan">
-            Elite <span className="text-brand-cyan not-italic antialiased">Infrastructure</span>
+          <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight leading-none text-premium-gradient uppercase font-display text-glow-cyan">
+            Elite <span className="text-brand-cyan/80 font-semibold font-display">Infrastructure</span>
           </h2>
-          <p className="text-zinc-500 max-w-3xl mx-auto mb-20 text-xl font-medium tracking-tight leading-relaxed">
-            Provision enterprise-grade nodes engineered for zero-latency operations. 
-            Choose your cluster and scale globally.
+          <p className="text-slate-500 max-w-2xl mx-auto mb-16 text-sm font-semibold uppercase tracking-[0.4em] leading-relaxed">
+            Provision enterprise-grade nodes engineered for low-latency operations. 
           </p>
           
-          <div className="inline-flex p-2 bg-white/[0.03] border border-white/10 rounded-3xl relative z-20 backdrop-blur-3xl mx-auto mb-16 px-3">
+          <div className="inline-flex p-1.5 bg-slate-900/50 border border-slate-800 rounded-3xl relative z-20 backdrop-blur-3xl mx-auto mb-16 shadow-2xl">
             <button
               onClick={() => { playClick(); setActiveTab('minecraft'); }}
-              className={`flex items-center justify-center gap-3 px-10 py-5 rounded-[1.25rem] font-black text-xs tracking-widest transition-all duration-500 uppercase ${activeTab === 'minecraft' ? 'bg-brand-cyan text-bg-dark shadow-[0_15px_40px_rgba(0,240,255,0.3)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
+              className={`flex items-center justify-center gap-3 px-10 py-4 rounded-2xl font-bold text-[11px] tracking-widest transition-all duration-500 uppercase ${activeTab === 'minecraft' ? 'bg-brand-cyan text-slate-950 shadow-glow-cyan' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
             >
               <Gamepad2 size={16} /> Minecraft Fleet
             </button>
             <button
               onClick={() => { playClick(); setActiveTab('vps'); }}
-              className={`flex items-center justify-center gap-3 px-10 py-5 rounded-[1.25rem] font-black text-xs tracking-widest transition-all duration-500 uppercase ${activeTab === 'vps' ? 'bg-brand-cyan text-bg-dark shadow-[0_15px_40px_rgba(0,240,255,0.3)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
+              className={`flex items-center justify-center gap-3 px-10 py-4 rounded-2xl font-bold text-[11px] tracking-widest transition-all duration-500 uppercase ${activeTab === 'vps' ? 'bg-brand-cyan text-slate-950 shadow-glow-cyan' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
             >
               <Server size={16} /> VPS Cluster
             </button>
@@ -507,158 +506,152 @@ export default function PricingList() {
                         
                         <div className="absolute inset-0 flex flex-col justify-end p-10">
                            <div className="flex items-center gap-3 mb-2">
-                             <div className="w-10 h-1 bg-brand-cyan/40 rounded-full" />
-                             <span className="text-[10px] font-black text-brand-cyan uppercase tracking-[0.4em]">Node-Alpha</span>
+                             <div className="w-8 h-px bg-brand-cyan/60 rounded-full" />
+                             <span className="text-[9px] font-bold text-brand-cyan uppercase tracking-[0.4em]">Node Cluster</span>
                            </div>
-                           <h4 className="text-4xl font-black text-white uppercase tracking-tighter leading-none font-display italic">MC • {p.name}</h4>
+                           <h4 className="text-3xl font-bold text-white uppercase tracking-tight leading-none font-display text-premium-gradient">STERRO • {p.name}</h4>
                         </div>
                       </div>
 
                       {/* Content Side */}
-                      <div className="flex-1 p-10 md:p-16 flex flex-col lg:flex-row items-center justify-between gap-12 bg-white/[0.01]">
-                        <div className="flex-1 w-full space-y-12">
-                          <div className="hidden lg:block">
-                            <div className="flex items-center gap-4 mb-4">
-                               <h4 className="text-5xl font-black text-white uppercase tracking-tighter group-hover:text-brand-cyan transition-colors duration-500 font-display italic">{p.name}</h4>
-                               {p.highlight && (
-                                 <motion.span 
-                                   animate={{ opacity: [0.5, 1, 0.5] }}
-                                   transition={{ duration: 2, repeat: Infinity }}
-                                   className="bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full flex items-center gap-2"
-                                 >
-                                   <Star size={10} fill="currentColor" /> MUST BUY
-                                 </motion.span>
-                               )}
-                            </div>
-                            <p className="text-sm text-zinc-500 font-bold uppercase tracking-[0.4em] flex items-center gap-3">
-                              <Zap size={14} className="text-brand-cyan" />
-                              Titan Series • Distributed Compute Cluster
-                            </p>
-                          </div>
-
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
-                            {[
-                              { icon: MemoryStick, label: "Core Memory", value: p.ram },
-                              { icon: Cpu, label: "Ryzen vCore", value: p.cpu },
-                              { icon: HardDrive, label: "NVMe SSD", value: p.storage || p.ssd },
-                              { icon: Network, label: "Latency", value: "Low-Ping" },
-                            ].map((spec, idx) => (
-                              <div key={idx} className="relative p-6 rounded-3xl bg-white/[0.02] border border-white/5 group/spec transition-all duration-500 hover:bg-white/[0.05] hover:border-white/10 hover:shadow-2d-sm">
-                                <div className="flex items-center gap-2 text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-3">
-                                  <spec.icon size={12} className="text-brand-cyan/40" />
-                                  {spec.label}
-                                </div>
-                                <div className="text-xl font-black text-white font-mono tracking-tighter italic">{spec.value}</div>
-                                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-cyan scale-x-0 group-hover/spec:scale-x-100 transition-transform duration-500" />
+                        <div className="flex-1 p-10 md:p-14 flex flex-col lg:flex-row items-center justify-between gap-10">
+                          <div className="flex-1 w-full space-y-10">
+                            <div className="hidden lg:block">
+                              <div className="flex items-center gap-4 mb-3">
+                                 <h4 className="text-4xl font-bold text-slate-100 uppercase tracking-tight group-hover:text-brand-cyan transition-colors duration-500 font-display">{p.name}</h4>
+                                 {p.highlight && (
+                                   <motion.span 
+                                     animate={{ opacity: [0.6, 1, 0.6] }}
+                                     transition={{ duration: 3, repeat: Infinity }}
+                                     className="bg-brand-cyan/10 border border-brand-cyan/20 text-brand-cyan text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-2"
+                                   >
+                                     <Star size={10} fill="currentColor" /> Premium
+                                   </motion.span>
+                                 )}
                               </div>
-                            ))}
-                          </div>
-                        </div>
+                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] flex items-center gap-2">
+                                <Zap size={14} className="text-brand-cyan/60" />
+                                Enterprise Distributed Cluster
+                              </p>
+                            </div>
 
-                        <div className="w-full lg:w-auto flex flex-col items-center lg:items-end gap-10 shrink-0">
-                          <div className="text-center lg:text-right">
-                             <div className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em] mb-3">Provision Cost</div>
-                             <div className="text-6xl font-black text-white tracking-tighter leading-none italic">
-                               ₹{p.price}
-                               <span className="text-sm font-bold text-zinc-500 tracking-widest ml-2 not-italic">/ Monthly</span>
-                             </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                              {[
+                                { icon: MemoryStick, label: "Core Memory", value: p.ram },
+                                { icon: Cpu, label: "Host vCore", value: p.cpu },
+                                { icon: HardDrive, label: "NVMe Raid", value: p.storage || p.ssd },
+                                { icon: Network, label: "Latency", value: "Ultra-Low" },
+                              ].map((spec, idx) => (
+                                <div key={idx} className="relative p-6 rounded-2xl bg-white/[0.01] border border-white/5 transition-all duration-300 hover:border-brand-cyan/20">
+                                  <div className="flex items-center gap-2 text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+                                    <spec.icon size={12} className="text-brand-cyan/60" />
+                                    {spec.label}
+                                  </div>
+                                  <div className="text-xl font-bold text-white tracking-tight">{spec.value}</div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                          
-                          <button 
-                            onClick={() => { playClick(); p.type === 'vps' ? window.open('https://discord.gg/b2PqWqSEU3', '_blank') : setSelectedPlan(p); }}
-                            className={`w-full lg:w-72 h-24 rounded-[2rem] font-black text-[12px] uppercase tracking-[0.4em] transition-all duration-700 flex items-center justify-center gap-4 relative overflow-hidden group/btn ${p.highlight ? 'bg-brand-cyan text-bg-dark shadow-[0_30px_60px_rgba(0,240,255,0.4)]' : 'bg-white/5 text-white hover:bg-white hover:text-bg-dark border border-white/10 shadow-3d-sm'}`}
-                          >
-                            <span className="relative z-10">{p.isTrial ? 'Claim Sandbox' : 'Provision Node'}</span>
-                            <ChevronRight size={20} className="relative z-10 transition-transform group-hover/btn:translate-x-2" />
-                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500" />
-                          </button>
+
+                          <div className="w-full lg:w-auto flex flex-col items-center lg:items-end gap-8 shrink-0">
+                            <div className="text-center lg:text-right">
+                               <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">Service Rate</div>
+                               <div className="text-5xl font-bold text-white tracking-tight leading-none">
+                                 ₹{p.price}
+                                 <span className="text-xs font-semibold text-slate-500 tracking-widest ml-2">/ month</span>
+                               </div>
+                            </div>
+                            
+                            <button 
+                              onClick={() => { playClick(); p.type === 'vps' ? window.open('https://discord.gg/b2PqWqSEU3', '_blank') : setSelectedPlan(p); }}
+                              className={`w-full lg:w-64 h-20 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-3 group/btn shadow-xl ${p.highlight ? 'bg-brand-cyan text-slate-950 px-8' : 'bg-slate-900 text-slate-100 hover:bg-slate-800 px-8'}`}
+                            >
+                              {p.isTrial ? 'Deploy Sandbox' : 'Provision Instance'}
+                              <ChevronRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
+                            </button>
+                          </div>
                         </div>
-                      </div>
                     </motion.div>
                   ))
                 ) : (
                   vpsPlans.map((p, i) => (
                     <motion.div
                       key={`vps-${p.id}-${i}`}
-                      whileHover={{ y: -12, rotateX: 2, rotateY: -2, translateZ: 20 }}
-                      className={`group relative platinum-glass platinum-glass-hover ${p.highlight ? 'border-brand-cyan/60 shadow-glow-cyan-strong' : ''} rounded-[3rem] p-1.5 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-700 overflow-hidden backdrop-blur-3xl preserve-3d`}
+                      whileHover={{ y: -5 }}
+                      className={`group relative platinum-glass platinum-glass-hover ${p.highlight ? 'border-brand-cyan/40 shadow-glow-cyan' : ''} rounded-3xl p-1.5 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-500 overflow-hidden backdrop-blur-3xl`}
                     >
                        {/* Visual Side */}
-                       <div className="relative w-full md:w-[420px] h-72 md:h-auto overflow-hidden shrink-0 border-r border-white/5">
+                       <div className="relative w-full md:w-[320px] h-64 md:h-auto overflow-hidden shrink-0 border-r border-white/5">
                          <motion.img 
                            src={p.id.includes(' Xeon') ? "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1200" : "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200"} 
                            alt="" 
-                           className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:scale-110 group-hover:opacity-100 transition-all duration-1000" 
+                           className="w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-all duration-1000" 
                          />
                          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg-dark z-10" />
-                         <div className="absolute inset-0 bg-brand-blue/20 mix-blend-overlay group-hover:opacity-0 transition-opacity duration-1000" />
                          
-                         <div className="absolute inset-0 flex flex-col justify-center items-center p-10 z-20">
+                         <div className="absolute inset-0 flex flex-col justify-center items-center p-8 z-20">
                             <div className="flex flex-col items-center">
-                              <span className="text-[10px] font-black text-brand-cyan uppercase tracking-[0.6em] mb-4">Enterprise Cloud</span>
-                              <h4 className="text-6xl font-black text-white uppercase tracking-tighter leading-none font-display italic text-center drop-shadow-2xl text-glow-cyan">{p.name}</h4>
-                              <div className="mt-6 w-20 h-px bg-white/20 group-hover:w-40 transition-all duration-700" />
+                              <span className="text-[9px] font-bold text-brand-cyan uppercase tracking-[0.4em] mb-3">Enterprise Cloud</span>
+                              <h4 className="text-4xl font-bold text-white uppercase tracking-tight leading-none font-display text-center drop-shadow-2xl">{p.name}</h4>
                             </div>
                          </div>
                        </div>
 
                        {/* Content Side */}
-                       <div className="flex-1 p-10 md:p-16 flex flex-col lg:flex-row items-center justify-between gap-12 bg-white/[0.01]">
-                         <div className="flex-1 w-full space-y-12">
+                       <div className="flex-1 p-10 md:p-14 flex flex-col lg:flex-row items-center justify-between gap-10 bg-white/[0.01]">
+                         <div className="flex-1 w-full space-y-10">
                            <div className="hidden lg:block">
-                             <div className="flex items-center gap-4 mb-4">
-                                <h4 className="text-5xl font-black text-white uppercase tracking-tighter group-hover:text-brand-cyan transition-colors duration-500 font-display italic">{p.name}</h4>
+                             <div className="flex items-center gap-4 mb-3">
+                                <h4 className="text-4xl font-bold text-slate-100 uppercase tracking-tight group-hover:text-brand-cyan transition-colors duration-500 font-display">{p.name}</h4>
                                 {p.highlight && (
                                   <motion.span 
-                                    animate={{ opacity: [0.5, 1, 0.5] }}
-                                    transition={{ duration: 2, repeat: Infinity }}
-                                    className="bg-brand-cyan/20 border border-brand-cyan/40 text-brand-cyan text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full flex items-center gap-2"
+                                    animate={{ opacity: [0.6, 1, 0.6] }}
+                                    transition={{ duration: 3, repeat: Infinity }}
+                                    className="bg-brand-cyan/10 border border-brand-cyan/20 text-brand-cyan text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-2"
                                   >
-                                    <Star size={10} fill="currentColor" /> BEST VALUE
+                                    <Star size={10} fill="currentColor" /> Premium
                                   </motion.span>
                                 )}
                              </div>
-                             <p className="text-sm text-zinc-500 font-bold uppercase tracking-[0.4em] flex items-center gap-3">
-                               <Zap size={14} className="text-brand-cyan" />
-                               Quantum Series • Enterprise Cloud Architecture
+                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] flex items-center gap-2">
+                               <Zap size={14} className="text-brand-cyan/60" />
+                               Quantum Series • Cloud Architecture
                              </p>
                            </div>
 
-                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
+                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                              {[
                                { icon: MemoryStick, label: "Core Memory", value: p.ram },
                                { icon: Cpu, label: "KVM Compute", value: p.cpu },
                                { icon: HardDrive, label: "NVMe Raid", value: p.storage },
                                { icon: Network, label: "Uplink", value: "2 Gbps" },
                              ].map((spec, idx) => (
-                               <div key={idx} className="relative p-6 rounded-3xl bg-white/[0.02] border border-white/5 group/spec transition-all duration-500 hover:bg-white/[0.05] hover:border-white/10 hover:shadow-2d-sm">
-                                 <div className="flex items-center gap-2 text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-3">
-                                   <spec.icon size={12} className="text-brand-cyan/40" />
+                               <div key={idx} className="relative p-6 rounded-2xl bg-white/[0.01] border border-white/5 transition-all duration-300 hover:border-brand-cyan/20">
+                                 <div className="flex items-center gap-2 text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+                                   <spec.icon size={12} className="text-brand-cyan/60" />
                                    {spec.label}
                                  </div>
-                                 <div className="text-xl font-black text-white font-mono tracking-tighter italic">{spec.value}</div>
-                                 <div className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-cyan scale-x-0 group-hover/spec:scale-x-100 transition-transform duration-500" />
+                                 <div className="text-xl font-bold text-white tracking-tight">{spec.value}</div>
                                </div>
                              ))}
                            </div>
                          </div>
 
-                         <div className="w-full lg:w-auto flex flex-col items-center lg:items-end gap-10 shrink-0">
+                         <div className="w-full lg:w-auto flex flex-col items-center lg:items-end gap-8 shrink-0">
                            <div className="text-center lg:text-right">
-                              <div className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em] mb-3">Annual Run Rate</div>
-                              <div className="text-6xl font-black text-white tracking-tighter leading-none italic">
+                              <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">Service Rate</div>
+                              <div className="text-5xl font-bold text-white tracking-tight leading-none">
                                 ₹{p.price}
-                                <span className="text-sm font-bold text-zinc-500 tracking-widest ml-2 not-italic">/ Monthly</span>
+                                <span className="text-xs font-semibold text-slate-500 tracking-widest ml-2">/ month</span>
                               </div>
                            </div>
                            
                            <button 
                              onClick={() => { playClick(); p.type === 'vps' ? window.open('https://discord.gg/b2PqWqSEU3', '_blank') : setSelectedPlan(p); }}
-                             className={`w-full lg:w-72 h-24 rounded-[2rem] font-black text-[12px] uppercase tracking-[0.4em] transition-all duration-700 flex items-center justify-center gap-4 relative overflow-hidden group/btn ${p.highlight ? 'bg-brand-cyan text-bg-dark shadow-[0_30px_60px_rgba(0,240,255,0.4)]' : 'bg-white/5 text-white hover:bg-white hover:text-bg-dark border border-white/10 shadow-3d-sm'}`}
+                             className={`w-full lg:w-64 h-20 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-3 group/btn shadow-xl ${p.highlight ? 'bg-brand-cyan text-slate-950 px-8' : 'bg-slate-900 text-slate-100 hover:bg-slate-800 px-8'}`}
                            >
-                             <span className="relative z-10">Deploy Cloud</span>
-                             <ChevronRight size={20} className="relative z-10 transition-transform group-hover/btn:translate-x-2" />
-                             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500" />
+                             Deploy Cloud
+                             <ChevronRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
                            </button>
                          </div>
                        </div>

@@ -78,40 +78,40 @@ export default function Hero() {
           <AnimatePresence mode="wait">
             <motion.div
               key={slide.id}
-              initial={{ opacity: 0, x: -30, rotateY: -10 }}
-              animate={{ opacity: 1, x: 0, rotateY: 0 }}
-              exit={{ opacity: 0, x: 30, rotateY: 10 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="preserve-3d"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="relative z-10"
             >
-              <h1 className="text-5xl md:text-7xl lg:text-[7.5rem] font-black tracking-[-0.04em] mb-6 leading-[0.9] text-white whitespace-nowrap font-display uppercase italic shadow-3d-lg text-glow-cyan">
-                {slide.title}<span className="font-light text-brand-cyan/80 ml-4 not-italic"> {slide.highlight}</span>
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 leading-[1.1] text-white font-display text-premium-gradient">
+                {slide.title}<span className="text-brand-cyan/60 font-medium ml-2"> {slide.highlight}</span>
               </h1>
               
-              <p className="text-lg md:text-xl text-zinc-300 max-w-2xl mb-12 leading-relaxed">
+              <p className="text-lg md:text-xl text-slate-400 max-w-2xl mb-12 leading-relaxed">
                 {slide.description}
               </p>
 
-              <div className="flex flex-col gap-10">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-10">
+              <div className="flex flex-col gap-12">
+                <div className="flex flex-col sm:flex-row items-center gap-6">
                   <button 
                     onClick={() => { playClick(); handleGetStarted(); }}
-                    className="px-10 py-5 bg-brand-cyan hover:bg-brand-cyan/90 text-bg-dark font-black rounded-2xl transition-all uppercase tracking-widest flex items-center gap-3 shadow-[0_20px_40px_rgba(0,240,255,0.3)] hover:scale-105"
+                    className="px-12 py-5 bg-brand-cyan text-slate-950 font-bold rounded-2xl transition-all uppercase tracking-widest flex items-center gap-3 shadow-glow-cyan-strong hover:scale-[1.02] active:scale-[0.98] group/btn"
                   >
-                    GET STARTED
-                    <ChevronRight size={18} />
+                    Start Deployment
+                    <ChevronRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
                   </button>
                   <button 
                     onClick={() => { playClick(); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }); }}
-                    className="px-10 py-5 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-black rounded-2xl transition-all uppercase tracking-widest backdrop-blur-md hover:scale-105"
+                    className="px-10 py-5 bg-slate-900/50 border border-slate-800 text-slate-300 font-bold rounded-2xl transition-all uppercase tracking-widest backdrop-blur-md hover:bg-slate-800 hover:text-white"
                   >
-                    Why Choose Us
+                    Infrastructure
                   </button>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-zinc-400">Servers start at</span>
+                  <div className="flex flex-col pl-4 border-l border-slate-800">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Starting at</span>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold text-white">{slide.price}</span>
-                      <span className="text-sm text-zinc-400">/ Month</span>
+                      <span className="text-3xl font-bold text-white tracking-tight">{slide.price}</span>
+                      <span className="text-xs text-slate-500 font-medium lowercase"> / mo</span>
                     </div>
                   </div>
                 </div>
@@ -140,12 +140,12 @@ export default function Hero() {
       </div>
 
       {/* Slider Controls */}
-      <div className="absolute bottom-12 left-0 right-0 z-40 flex justify-center gap-3">
+      <div className="absolute bottom-12 left-0 right-0 z-40 flex justify-center gap-4">
         {HERO_SLIDES.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrentSlide(idx)}
-            className={`w-4 h-4 rounded-full border-2 transition-all ${currentSlide === idx ? 'bg-transparent border-white scale-110' : 'bg-transparent border-white/30'}`}
+            className={`h-1.5 transition-all duration-500 rounded-full ${currentSlide === idx ? 'w-12 bg-brand-cyan shadow-glow-cyan' : 'w-6 bg-white/20 hover:bg-white/40'}`}
           />
         ))}
       </div>
