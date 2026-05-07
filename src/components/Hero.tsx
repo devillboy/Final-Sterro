@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import { useSounds } from "../utils/sounds";
-import { ChevronRight, Cloud, CloudRain, Zap } from "lucide-react";
+import { ChevronRight, Cloud, CloudRain, Zap, LayoutTemplate } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
 const HERO_SLIDES = [
@@ -10,75 +10,86 @@ const HERO_SLIDES = [
     id: "minecraft",
     title: "Minecraft",
     highlight: "Optimization",
-    description: "Experience premium Minecraft hosting powered by high-frequency processors. Lag-free gameplay with instant provisioning on our global edge network.",
+    description: "Unleash your creativity on our ultra-low latency nodes. Powered by Ryzen 9 series processors for the ultimate block-building experience.",
     price: "₹90",
-    bgUrl: "https://images.unsplash.com/photo-1587573089734-09cb99c75cb6?q=80&w=2000&auto=format&fit=crop",
+    bgUrl: "https://cdn.discordapp.com/attachments/1414251304741638191/1496919234364706988/Download_Free_Minecraft_Wallpapers_and_Backgrounds.jpg?ex=69fd6e6c&is=69fc1cec&hm=d6e957a8daff31c254deb2a7212d7761be538ac58eff2819317259294e2f7d1d&",
     illustrationUrl: "https://images.unsplash.com/photo-1627398113743-bc0f3c473174?q=80&w=1000&auto=format&fit=crop"
   },
   {
     id: "vps",
-    title: "VPS",
-    highlight: "Cloud",
-    description: "Secure, scalable, and lightning-fast KVM hosting solutions. Give your projects the enterprise foundation they deserve with our high-performance infrastructure.",
+    title: "Cloud VPS",
+    highlight: "Performance",
+    description: "Enterprise-grade KVM virtualization with dedicated NVMe storage. Deploy your most demanding projects with absolute confidence.",
     price: "₹240",
-    bgUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000&auto=format&fit=crop",
-    illustrationUrl: "https://images.unsplash.com/photo-1551033406-611cf9a28f67?q=80&w=1000&auto=format&fit=crop"
+    bgUrl: "https://cdn.discordapp.com/attachments/1414251304741638191/1497103165689167923/qHFzGKFBz7kvxiVyjoe6JJ-1024-80.jpg.webp?ex=69fd70f9&is=69fc1f79&hm=e4e7fae7a3bc571675731dcf155f8334df1ecae822df8aec30f940b976e0b46e&",
+    illustrationUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc48?q=80&w=1000&auto=format&fit=crop"
   }
 ];
 
 const CloudRainEffect = () => {
   const particles = useMemo(() => {
-    return Array.from({ length: 40 }).map((_, i) => ({
+    return Array.from({ length: 60 }).map((_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
       delay: Math.random() * 5,
-      duration: 3 + Math.random() * 4,
-      opacity: 0.1 + Math.random() * 0.3,
-      size: 0.5 + Math.random() * 1.5,
+      duration: 2 + Math.random() * 3,
+      opacity: 0.1 + Math.random() * 0.4,
+      size: 1 + Math.random() * 2,
     }));
   }, []);
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
-      {particles.map((p) => (
-        <motion.div
-          key={p.id}
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ 
-            y: ['0vh', '100vh'],
-            opacity: [0, p.opacity, 0]
-          }}
-          transition={{
-            duration: p.duration,
-            repeat: Infinity,
-            delay: p.delay,
-            ease: "linear"
-          }}
-          style={{
-            position: 'absolute',
-            left: p.left,
-            width: `${p.size}px`,
-            height: `${p.size * 20}px`,
-            background: 'linear-gradient(to bottom, transparent, rgba(212, 175, 55, 0.3))',
-            borderRadius: '100%',
-          }}
-        />
-      ))}
-      {/* Floating Clouds */}
+      <AnimatePresence>
+        {particles.map((p) => (
+          <motion.div
+            key={p.id}
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ 
+              y: ['0vh', '110vh'],
+              opacity: [0, p.opacity, 0]
+            }}
+            transition={{
+              duration: p.duration,
+              repeat: Infinity,
+              delay: p.delay,
+              ease: "linear"
+            }}
+            style={{
+              position: 'absolute',
+              left: p.left,
+              width: `${p.size}px`,
+              height: `${p.size * 25}px`,
+              background: 'linear-gradient(to bottom, transparent, rgba(255, 193, 7, 0.4))',
+              borderRadius: '100px',
+              filter: 'blur(1px)',
+            }}
+          />
+        ))}
+      </AnimatePresence>
+      {/* Cinematic Clouds */}
       <motion.div 
-        animate={{ x: [-20, 20], y: [-10, 10] }}
-        transition={{ duration: 10, repeat: Infinity, repeatType: "mirror" }}
-        className="absolute top-20 left-1/4 opacity-10 blur-3xl"
+        animate={{ 
+          x: [-100, 100], 
+          y: [-20, 20],
+          scale: [1, 1.1, 1]
+        }}
+        transition={{ duration: 20, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
+        className="absolute -top-20 left-0 opacity-[0.03] blur-[120px]"
       >
-        <div className="w-96 h-64 bg-brand-gold rounded-full" />
+        <div className="w-[800px] h-[500px] bg-brand-gold rounded-full" />
       </motion.div>
       <motion.div 
-        animate={{ x: [20, -20], y: [10, -10] }}
-        transition={{ duration: 15, repeat: Infinity, repeatType: "mirror" }}
-        className="absolute bottom-40 right-1/4 opacity-10 blur-3xl"
+        animate={{ 
+          x: [100, -100], 
+          y: [20, -20],
+          scale: [1.1, 1, 1.1]
+        }}
+        transition={{ duration: 25, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
+        className="absolute -bottom-40 right-0 opacity-[0.03] blur-[150px]"
       >
-        <div className="w-96 h-64 bg-brand-gold rounded-full" />
+        <div className="w-[1000px] h-[600px] bg-brand-gold rounded-full" />
       </motion.div>
     </div>
   );
@@ -113,26 +124,32 @@ export default function Hero() {
   const slide = HERO_SLIDES[currentSlide];
 
   return (
-    <section className="relative pt-32 pb-32 px-6 overflow-hidden flex items-center border-b border-white/5 min-h-[90vh] perspective-2000">
+    <section className="relative pt-32 pb-32 px-6 overflow-hidden flex items-center border-b border-white/5 min-h-[95vh] perspective-2000">
       <CloudRainEffect />
+      <div className="absolute inset-0 grain-overlay z-40" />
+      <div className="absolute inset-0 cinematic-vignette z-30" />
       
+      {/* Letterbox Bars */}
+      <div className="absolute top-0 left-0 w-full h-12 bg-black z-50 md:block hidden" />
+      <div className="absolute bottom-0 left-0 w-full h-12 bg-black z-50 md:block hidden" />
+
       {/* Background Layer */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-r from-bg-dark via-bg-dark/80 to-bg-dark/40 z-20" />
-        <div className="absolute inset-0 bg-gradient-to-t from-bg-dark via-transparent to-transparent z-20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent z-20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-20" />
         
-        <div className="absolute inset-0 z-10 visible-grid opacity-20" />
+        <div className="absolute inset-0 z-10 visible-grid-gold opacity-10" />
         
-        <AnimatePresence initial={false}>
+        <AnimatePresence mode="wait">
           <motion.img 
             key={slide.id}
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 0.6, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.5 }}
+            initial={{ opacity: 0, scale: 1.1, filter: 'blur(10px) brightness(0.2)' }}
+            animate={{ opacity: 0.4, scale: 1, filter: 'blur(0px) brightness(0.4)' }}
+            exit={{ opacity: 0, scale: 1.05, filter: 'blur(5px) brightness(0.2)' }}
+            transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
             src={slide.bgUrl} 
             alt="" 
-            className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 brightness-[0.5]"
+            className="absolute inset-0 w-full h-full object-cover animate-ken-burns"
             referrerPolicy="no-referrer"
           />
         </AnimatePresence>
@@ -142,10 +159,10 @@ export default function Hero() {
         <AnimatePresence mode="wait">
           <motion.div
             key={slide.id}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -30 }}
-            transition={{ duration: 0.8 }}
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 30 }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
             className="grid lg:grid-cols-2 gap-12 items-center px-4"
           >
             <div className="flex flex-col items-start order-2 lg:order-1">
@@ -180,7 +197,14 @@ export default function Hero() {
                       Deploy Node
                       <ChevronRight size={18} />
                     </button>
-                    <div className="flex flex-col pl-6 border-l border-white/10">
+                    <button 
+                      onClick={() => { playClick(); navigate('/features'); }}
+                      className="w-full sm:w-auto px-10 py-5 bg-white/5 border border-white/10 text-white font-black rounded-2xl transition-all uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-white/10 hover:translate-y-[-2px] active:translate-y-[1px]"
+                    >
+                      View Features
+                      <LayoutTemplate size={18} className="text-brand-gold" />
+                    </button>
+                    <div className="flex flex-col pl-6 border-l border-white/10 h-12 justify-center">
                       <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Starting From</span>
                       <div className="flex items-baseline gap-1">
                         <span className="text-3xl font-bold text-white tracking-tight">{slide.price}</span>
@@ -194,55 +218,80 @@ export default function Hero() {
 
             <div className="relative order-1 lg:order-2 flex justify-center">
               <motion.div
-                initial={{ opacity: 0, scale: 0.8, rotateY: 20 }}
-                animate={{ opacity: 1, scale: 1, rotateY: -10 }}
-                transition={{ duration: 1, delay: 0.2 }}
+                initial={{ opacity: 0, scale: 0.8, rotateY: 30, x: 50 }}
+                animate={{ opacity: 1, scale: 1, rotateY: -15, x: 0 }}
+                transition={{ duration: 1.2, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 style={{ transformStyle: 'preserve-3d' }}
                 className="relative w-full max-w-[500px] aspect-square"
               >
-                <div className="absolute inset-0 bg-brand-gold/20 blur-[100px] rounded-full animate-pulse" />
+                <div className="absolute inset-0 bg-brand-gold/30 blur-[120px] rounded-full animate-pulse" />
                 <motion.div
                   animate={{ 
-                    y: [-10, 10, -10],
-                    rotateZ: [-2, 2, -2]
+                    y: [-15, 15, -15],
+                    rotateZ: [-3, 3, -3]
                   }}
-                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                  className="relative z-10 w-full h-full rounded-[3rem] overflow-hidden border border-white/10 shadow-glow-gold p-2 platinum-glass"
+                  transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                  className="relative z-10 w-full h-full rounded-[3.5rem] overflow-hidden border border-white/20 shadow-glow-gold-strong p-3 platinum-glass"
                 >
                   <img 
                     src={slide.illustrationUrl} 
                     alt={slide.title}
-                    className="w-full h-full object-cover rounded-[2.5rem] brightness-90 group-hover:brightness-100 transition-all duration-700"
+                    className="w-full h-full object-cover rounded-[2.8rem] brightness-100 transition-all duration-700"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-bg-dark/80 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  
+                  {/* Glass Shine */}
+                  <motion.div 
+                    animate={{ left: ['-100%', '200%'] }}
+                    transition={{ duration: 3, repeat: Infinity, repeatDelay: 5 }}
+                    className="absolute inset-y-0 w-32 bg-white/20 skew-x-[-20deg] blur-xl"
+                  />
                 </motion.div>
                 
                 {/* 3D Floating elements */}
                 <motion.div 
-                  animate={{ y: [0, -20, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-                  className="absolute -top-10 -right-10 w-32 h-32 platinum-glass border border-white/10 rounded-3xl p-4 shadow-3d z-20"
+                  animate={{ 
+                    y: [0, -30, 0],
+                    rotateZ: [0, 10, 0],
+                    translateZ: [0, 50, 0]
+                  }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                  className="absolute -top-12 -right-12 w-36 h-36 platinum-glass border border-white/20 rounded-[2rem] p-5 shadow-3d-lg z-20 flex items-center justify-center translate-z-50"
+                  style={{ transform: 'translateZ(50px)' }}
                 >
-                  <div className="w-full h-full bg-brand-gold/10 rounded-xl flex items-center justify-center">
-                    <Zap className="text-brand-gold" size={32} />
+                  <div className="w-full h-full bg-brand-gold/20 rounded-2xl flex items-center justify-center">
+                    <Zap className="text-brand-gold drop-shadow-glow" size={40} />
                   </div>
                 </motion.div>
 
                 <motion.div 
-                  animate={{ y: [0, 20, 0] }}
-                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                  className="absolute -bottom-10 -left-10 w-40 h-40 platinum-glass border border-white/10 rounded-3xl p-6 shadow-3d z-20"
+                  animate={{ 
+                    y: [0, 30, 0],
+                    rotateZ: [0, -5, 0],
+                    translateZ: [0, 80, 0]
+                  }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                  className="absolute -bottom-12 -left-12 w-48 h-48 platinum-glass border border-white/20 rounded-[2rem] p-8 shadow-3d-lg z-20 translate-z-80"
+                  style={{ transform: 'translateZ(80px)' }}
                 >
-                  <div className="space-y-4">
-                     <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full w-2/3 bg-brand-gold" />
+                  <div className="space-y-5">
+                     <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden">
+                        <motion.div 
+                          animate={{ width: ['0%', '85%', '85%'] }}
+                          transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                          className="h-full bg-brand-gold shadow-glow-gold" 
+                        />
                      </div>
-                     <div className="h-2 w-3/4 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full w-1/2 bg-brand-gold" />
+                     <div className="h-3 w-3/4 bg-white/5 rounded-full overflow-hidden">
+                        <motion.div 
+                          animate={{ width: ['0%', '65%', '65%'] }}
+                          transition={{ duration: 2, repeat: Infinity, repeatDelay: 3, delay: 0.2 }}
+                          className="h-full bg-brand-gold shadow-glow-gold" 
+                        />
                      </div>
-                     <div className="flex justify-between items-end mt-4">
-                        <div className="text-[10px] font-black text-brand-gold uppercase">Uptime</div>
-                        <div className="text-xl font-bold text-white">99.9%</div>
+                     <div className="flex justify-between items-end mt-6">
+                        <div className="text-[11px] font-black text-brand-gold uppercase tracking-[0.2em]">Efficiency</div>
+                        <div className="text-2xl font-bold text-white tracking-tighter">99<span className="text-brand-gold">.</span>9<span className="text-[12px] opacity-40 ml-1">%</span></div>
                      </div>
                   </div>
                 </motion.div>

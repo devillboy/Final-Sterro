@@ -239,81 +239,92 @@ export default function Billing() {
       setIsSkeletonLoading(false);
     }
   };
-
   if (!selectedPlan) return null;
 
   return (
-    <div className="min-h-screen pt-24 pb-20 px-6 relative overflow-hidden bg-bg-dark">
+    <div className="min-h-screen pt-40 pb-20 px-6 relative overflow-hidden bg-bg-dark">
+      <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-brand-gold/40 to-transparent top-0 shadow-glow-gold" />
+      <div className="absolute inset-0 cinematic-vignette opacity-60 z-10 pointer-events-none" />
+      <div className="absolute inset-0 visible-grid-gold opacity-[0.03] pointer-events-none" />
       <CloudRainEffect />
       
-      <div className="max-w-4xl mx-auto relative z-10">
-        <button 
+      <div className="max-w-6xl mx-auto relative z-20 overflow-visible">
+        <motion.button 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
           onClick={() => navigate('/pricing')}
-          className="group flex items-center gap-2 text-slate-500 hover:text-white transition-colors mb-12 uppercase text-[10px] font-black tracking-widest"
+          className="group flex items-center gap-4 text-zinc-500 hover:text-white transition-all mb-16 uppercase text-xs font-black tracking-[0.4em]"
         >
-          <div className="p-2 rounded-lg bg-white/5 group-hover:bg-brand-gold/10 transition-colors">
-            <ChevronLeft size={16} />
+          <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 group-hover:bg-brand-gold/20 group-hover:border-brand-gold/50 group-hover:shadow-glow-gold transition-all flex items-center justify-center">
+            <ChevronLeft size={20} />
           </div>
-          Back to Infrastructure
-        </button>
+          Return to Infrastructure Cluster
+        </motion.button>
 
-        <div className="grid lg:grid-cols-3 gap-12 items-start">
+        <div className="grid lg:grid-cols-12 gap-16 items-start perspective-2000">
           {/* Order Summary Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-4 space-y-8">
             <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="p-8 rounded-[2.5rem] platinum-glass border border-white/10 relative overflow-hidden group shadow-3d"
+              initial={{ opacity: 0, scale: 0.95, rotateY: 10 }}
+              animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+              className="p-12 rounded-[4rem] platinum-glass border border-white/10 relative overflow-hidden group shadow-3d-lg preserve-3d"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-brand-gold/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
               
-              <div className="relative z-10">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gold/10 border border-brand-gold/20 mb-4">
-                  <Star size={10} className="text-brand-gold" fill="currentColor" />
-                  <span className="text-[8px] font-black uppercase text-brand-gold tracking-widest">Order Summary</span>
+              <div className="relative z-10" style={{ transform: 'translateZ(50px)' }}>
+                <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-brand-gold/10 border border-brand-gold/20 mb-10">
+                  <Star size={14} className="text-brand-gold" fill="currentColor" />
+                  <span className="text-[10px] font-black uppercase text-brand-gold tracking-[0.3em]">Payload Configuration</span>
                 </div>
                 
-                <h2 className="text-3xl font-bold text-white mb-6 uppercase tracking-tight">{selectedPlan.name}</h2>
+                <h2 className="text-5xl font-black text-white mb-10 uppercase tracking-tighter font-display text-glow-gold">{selectedPlan.name}</h2>
                 
-                <div className="space-y-4 mb-8 border-b border-white/5 pb-8">
-                  <SummaryItem icon={<Cpu size={14}/>} label="Compute" value={selectedPlan.cpu} />
-                  <SummaryItem icon={<MemoryStick size={14}/>} label="Memory" value={selectedPlan.ram} />
-                  <SummaryItem icon={<HardDrive size={14}/>} label="Storage" value={selectedPlan.storage || selectedPlan.ssd} />
-                  <SummaryItem icon={<Network size={14}/>} label="Network" value="Gigabit" />
+                <div className="space-y-6 mb-12 border-b border-white/5 pb-12">
+                  <SummaryItem icon={<Cpu size={18}/>} label="Compute Engine" value={selectedPlan.cpu} />
+                  <SummaryItem icon={<MemoryStick size={18}/>} label="DDR4 Memory" value={selectedPlan.ram} />
+                  <SummaryItem icon={<HardDrive size={18}/>} label="NVMe Storage" value={selectedPlan.storage || selectedPlan.ssd} />
+                  <SummaryItem icon={<Network size={18}/>} label="Edge Uplink" value="Gigabit Active" />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Rate</div>
-                  <div className="text-3xl font-black text-brand-gold tracking-tight">₹{selectedPlan.price}</div>
+                <div className="flex items-end justify-between bg-white/[0.03] p-8 rounded-[2rem] border border-white/5 shadow-3d group-hover:border-brand-gold/30 transition-colors duration-700">
+                  <div className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-1">Settlement Total</div>
+                  <div className="text-5xl font-black text-brand-gold tracking-tight drop-shadow-glow">₹{selectedPlan.price}</div>
                 </div>
               </div>
             </motion.div>
 
-            <div className="p-6 rounded-2xl border border-white/5 bg-white/[0.02] flex items-center gap-4">
-               <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
-                  <Shield size={20} />
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="p-8 rounded-[2.5rem] border border-white/5 bg-white/[0.01] flex items-center gap-6 group hover:bg-white/[0.03] transition-all duration-700 shadow-3d-sm"
+            >
+               <div className="w-14 h-14 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 shrink-0 group-hover:scale-110 group-hover:shadow-glow-orange transition-all duration-500">
+                  <Shield size={28} />
                </div>
                <div>
-                  <p className="text-xs font-bold text-white uppercase tracking-widest">Enterprise Guard</p>
-                  <p className="text-[10px] text-zinc-500 uppercase tracking-tighter">Your data is secured by Quantum Encryption protocols.</p>
+                  <p className="text-sm font-black text-white uppercase tracking-widest leading-none mb-2">Enterprise Security</p>
+                  <p className="text-[10px] text-zinc-600 uppercase font-bold leading-tight">Quantum-grade encryption secured by Stereocloud Engine.</p>
                </div>
-            </div>
+            </motion.div>
           </div>
 
           {/* Checkout Main Area */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-8">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-8 md:p-12 rounded-[3rem] platinum-glass border border-white/10 shadow-3d relative overflow-hidden"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+              className="p-12 md:p-20 rounded-[4rem] platinum-glass border border-white/10 shadow-3d-lg relative overflow-hidden preserve-3d"
             >
               {!verificationResult && !selectedPlan.isTrial && (
-                <div className="flex items-center justify-between mb-12 max-w-sm mx-auto">
-                    <StepItem active={billingStep >= 1} completed={billingStep > 1} label="Config" icon={<Settings size={14}/>} />
-                    <div className={`flex-1 h-px mx-4 ${billingStep > 1 ? 'bg-brand-gold' : 'bg-white/10'}`} />
-                    <StepItem active={billingStep >= 2} completed={billingStep > 2} label="Payment" icon={<CreditCard size={14}/>} />
-                    <div className={`flex-1 h-px mx-4 ${billingStep > 2 ? 'bg-brand-gold' : 'bg-white/10'}`} />
-                    <StepItem active={billingStep >= 3} completed={billingStep > 3} label="Finish" icon={<CheckCircle2 size={14}/>} />
+                <div className="flex items-center justify-between mb-20 max-w-lg mx-auto overflow-visible relative z-30">
+                    <StepItem active={billingStep >= 1} completed={billingStep > 1} label="Identity" icon={<Settings size={18}/>} />
+                    <div className={`flex-1 h-px mx-6 transition-all duration-1000 ${billingStep > 1 ? 'bg-brand-gold shadow-glow-gold' : 'bg-white/10'}`} />
+                    <StepItem active={billingStep >= 2} completed={billingStep > 2} label="Settlement" icon={<CreditCard size={18}/>} />
+                    <div className={`flex-1 h-px mx-6 transition-all duration-1000 ${billingStep > 2 ? 'bg-brand-gold shadow-glow-gold' : 'bg-white/10'}`} />
+                    <StepItem active={billingStep >= 3} completed={billingStep > 3} label="Broadcast" icon={<CheckCircle2 size={18}/>} />
                 </div>
               )}
 
