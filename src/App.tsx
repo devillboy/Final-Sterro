@@ -9,6 +9,7 @@ import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Pricing from "./pages/Pricing";
 import FeaturesPage from "./pages/Features";
+import Billing from "./pages/Billing";
 import { useState, useEffect, Suspense } from "react";
 import { AnimatePresence } from "motion/react";
 
@@ -52,6 +53,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/features" element={<FeaturesPage />} />
+            <Route path="/billing/:planId" element={<Billing />} />
           </Routes>
         </AnimatePresence>
       </Layout>

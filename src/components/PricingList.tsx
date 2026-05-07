@@ -1,49 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSounds } from '../utils/sounds';
+import { useNavigate } from 'react-router-dom';
 import { Cpu, HardDrive, MemoryStick, Activity, Network, Archive, LayoutTemplate, Shield, Database, Users, Gamepad2, Server, X, Upload, CheckCircle2, Loader2, AlertCircle, MapPin, Copy, CreditCard, ChevronRight, ChevronLeft, Info, HelpCircle, Settings, Paperclip, Folder, ImagePlus, Star, Zap } from 'lucide-react';
-import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext';
-import WorldMap from './WorldMap';
-import { db, handleFirestoreError } from '../lib/firebase';
-import { collection, query, orderBy, getDocs, getDoc, doc, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
-
-const LoadingMessages = ({ isSubmitting, isCreatingServer }: { isSubmitting: boolean, isCreatingServer: boolean }) => {
-  const [msgIdx, setMsgIdx] = useState(0);
-  const msgs = isSubmitting 
-    ? ["Analyzing payment screenshot...", "Scanning UTR number...", "Verifying payment with AI..."]
-    : ["Connecting to Pterodactyl Panel...", "Creating User Account...", "Assigning Allocations & Ports...", "Allocating Server RAM & CPU...", "Waiting for Panel Response..."];
-
-  useEffect(() => {
-    setMsgIdx(0);
-    const interval = setInterval(() => {
-      setMsgIdx(prev => Math.min(prev + 1, msgs.length - 1));
-    }, 2500);
-    return () => clearInterval(interval);
-  }, [isSubmitting, isCreatingServer]);
-
-  return <p className="text-white/60 text-sm animate-pulse">{msgs[msgIdx]}</p>;
-}
-
-interface PaymentFormData {
-  utrId: string;
-  upiId: string;
-  date: string;
-  email: string;
-  username: string;
-  serverName: string;
-  password?: string;
-  nodeLocation: string;
-  eggId: string;
-}
-
-const EGG_OPTIONS = [
-  { id: "4", name: "Paper (Recommended)" },
-  { id: "5", name: "Vanilla" },
-  { id: "1", name: "Bungeecord" },
-  { id: "2", name: "Forge" },
-  { id: "3", name: "Sponge" }
-];
+import { db } from '../lib/firebase';
+import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 
 interface Plan {
   id: string;
@@ -81,57 +43,11 @@ const fallbackVpsPlans: Plan[] = [
 
 export default function PricingList() {
   const [activeTab, setActiveTab] = useState<'minecraft' | 'vps'>('minecraft');
-  const [selectedLocation, setSelectedLocation] = useState('1'); // India as default
   const [minecraftPlans, setMinecraftPlans] = useState<Plan[]>(fallbackMinecraftPlans);
   const [vpsPlans, setVpsPlans] = useState<Plan[]>(fallbackVpsPlans);
   const [loading, setLoading] = useState(true);
-  const [selectedPlan, setSelectedPlan] = useState<any>(null);
-  const [screenshot, setScreenshot] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCreatingServer, setIsCreatingServer] = useState(false);
-  const [verificationResult, setVerificationResult] = useState<{success?: boolean, error?: string, credentials?: any, serverDetails?: any, serverStatus?: string} | null>(null);
-  const [billingStep, setBillingStep] = useState(1); // 1: Config, 2: Payment, 3: Success
-  const [hasClaimedTrial, setHasClaimedTrial] = useState(false);
-  const [savedCreds, setSavedCreds] = useState<any>(null);
-  const [useExistingAccount, setUseExistingAccount] = useState(true);
-  const { firebaseUser: user } = useAuth();
   const { playClick } = useSounds();
-
-  useEffect(() => {
-    async function fetchSavedCreds() {
-      if (user?.uid) {
-        try {
-          const credDoc = await getDoc(doc(db, "users", user.uid, "settings", "panel"));
-          if (credDoc.exists()) {
-            const data = credDoc.data();
-            setSavedCreds(data);
-            setUseExistingAccount(true);
-          } else {
-            setUseExistingAccount(false);
-          }
-        } catch (e) {
-          console.warn("Failed to fetch saved creds");
-          setUseExistingAccount(false);
-        }
-      }
-    }
-    fetchSavedCreds();
-  }, [user, selectedPlan]);
-
-  useEffect(() => {
-    async function checkTrialStatus() {
-      if (user?.email) {
-        try {
-          const trialDoc = await getDoc(doc(db, "trials", user.email));
-          if (trialDoc.exists()) {
-            setHasClaimedTrial(true);
-          }
-        } catch(e) { }
-      }
-    }
-    checkTrialStatus();
-  }, [user]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function loadPlans() {
@@ -514,30 +430,32 @@ export default function PricingList() {
                     minecraftPlans.map((p, i) => (
                       <motion.div
                         key={`mc-${p.id}-${i}`}
-                        whileHover={{ y: -12, rotateX: 2, rotateY: -2, translateZ: 20 }}
-                        className={`group relative platinum-glass platinum-glass-hover ${p.highlight ? 'border-brand-gold/60 shadow-glow-gold-strong' : ''} rounded-[3rem] p-1.5 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-700 overflow-hidden backdrop-blur-3xl preserve-3d`}
+                        whileHover={{ y: -12, rotateX: 2, rotateY: -2, z: 20 }}
+                        className={`group relative platinum-glass border border-white/10 ${p.highlight ? 'shadow-[0_0_50px_rgba(212,175,55,0.2)]' : ''} rounded-[3rem] p-1.5 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-700 overflow-hidden backdrop-blur-3xl preserve-3d`}
                       >
+                        <div className="absolute inset-0 bg-gradient-to-br from-brand-gold/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                        
                         {/* Visual Side */}
                         <div className="relative w-full md:w-[380px] h-64 md:h-auto overflow-hidden shrink-0">
                           <motion.img 
-                            src="https://cdn.discordapp.com/attachments/1414251304741638191/1496919234364706988/Download_Free_Minecraft_Wallpapers_and_Backgrounds.jpg?ex=69f5856c&is=69f433ec&hm=4c8910092041209010fde2ee1d46323b3cc01a1afbd1161d17e140b02c910576&"
+                            src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000&auto=format&fit=crop"
                             alt="" 
                             className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-1000" 
                           />
-                          <div className="absolute inset-0 bg-gradient-to-r from-bg-dark/80 via-transparent to-transparent hidden md:block" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-bg-dark via-bg-dark/40 to-transparent hidden md:block" />
                           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-bg-dark to-transparent" />
                           
-                          <div className="absolute inset-0 flex flex-col justify-end p-10">
+                          <div className="absolute inset-0 flex flex-col justify-end p-10" style={{ transform: 'translateZ(30px)' }}>
                              <div className="flex items-center gap-3 mb-2">
                                <div className="w-8 h-px bg-brand-gold/60 rounded-full" />
                                <span className="text-[9px] font-bold text-brand-gold uppercase tracking-[0.4em]">Infrastructure Unit</span>
                              </div>
-                             <h4 className="text-3xl font-bold text-white uppercase tracking-tight leading-none font-display text-premium-gradient">STERRO • {p.name}</h4>
+                             <h4 className="text-3xl font-bold text-white uppercase tracking-tight leading-none font-display">STERRO • {p.name}</h4>
                           </div>
                         </div>
 
                         {/* Content Side */}
-                          <div className="flex-1 p-10 md:p-14 flex flex-col lg:flex-row items-center justify-between gap-10">
+                          <div className="flex-1 p-10 md:p-14 flex flex-col lg:flex-row items-center justify-between gap-10 relative z-10" style={{ transform: 'translateZ(40px)' }}>
                             <div className="flex-1 w-full space-y-10">
                               <div className="hidden lg:block">
                                 <div className="flex items-center gap-4 mb-3">
@@ -565,9 +483,9 @@ export default function PricingList() {
                                   { icon: HardDrive, label: "Enterprise NVMe", value: p.storage || p.ssd },
                                   { icon: Network, label: "Bandwidth", value: "Gigabit" },
                                 ].map((spec, idx) => (
-                                  <div key={idx} className="relative p-6 rounded-2xl bg-white/[0.01] border border-white/5 transition-all duration-300 hover:border-brand-gold/20">
-                                    <div className="flex items-center gap-2 text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-3">
-                                      <spec.icon size={12} className="text-brand-gold/60" />
+                                  <div key={idx} className="relative p-6 rounded-2xl bg-white/[0.02] border border-white/5 transition-all duration-300 hover:border-brand-gold/40 hover:bg-white/[0.05] group/spec">
+                                    <div className="flex items-center gap-2 text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-3 transition-colors group-hover/spec:text-brand-gold/80">
+                                      <spec.icon size={12} className="text-brand-gold/60 group-hover/spec:scale-110 transition-transform" />
                                       {spec.label}
                                     </div>
                                     <div className="text-xl font-bold text-white tracking-tight">{spec.value}</div>
@@ -581,15 +499,15 @@ export default function PricingList() {
                                  <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Service Fee</div>
                                  <div className="text-5xl font-bold text-white tracking-tight leading-none">
                                    ₹{p.price}
-                                   <span className="text-xs font-semibold text-slate-500 tracking-widest ml-2">/ billing cycle</span>
+                                   <span className="text-xs font-semibold text-slate-500 tracking-widest ml-2">/ month</span>
                                  </div>
                               </div>
                               
                               <button 
-                                onClick={() => { playClick(); p.type === 'vps' ? window.open('https://discord.gg/b2PqWqSEU3', '_blank') : setSelectedPlan(p); }}
-                                className={`w-full lg:w-64 h-20 rounded-2xl font-bold text-[10px] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-3 group/btn shadow-xl ${p.highlight ? 'bg-brand-gold text-slate-950 px-8' : 'bg-slate-900 text-slate-100 hover:bg-slate-800 px-8'}`}
+                                onClick={() => { playClick(); navigate(`/billing/${p.id}`); }}
+                                className={`w-full lg:w-64 h-20 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-3 group/btn shadow-glow-gold hover:translate-y-[-4px] active:translate-y-[2px] ${p.highlight ? 'bg-brand-gold text-slate-950 px-8' : 'bg-slate-900 border border-white/10 text-slate-100 hover:bg-slate-800 px-8'}`}
                               >
-                                {p.isTrial ? 'Claim Sandbox' : 'Provision Resource'}
+                                {p.isTrial ? 'Claim Sandbox' : 'Provision Node'}
                                 <ChevronRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
                               </button>
                             </div>
@@ -606,19 +524,19 @@ export default function PricingList() {
                     vpsPlans.map((p, i) => (
                       <motion.div
                         key={`vps-${p.id}-${i}`}
-                        whileHover={{ y: -5 }}
-                        className={`group relative platinum-glass platinum-glass-hover ${p.highlight ? 'border-brand-gold/40 shadow-glow-gold' : ''} rounded-3xl p-1.5 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-500 overflow-hidden backdrop-blur-3xl`}
+                        whileHover={{ y: -12, rotateX: -2, rotateY: 2, z: 20 }}
+                        className={`group relative platinum-glass border border-white/10 ${p.highlight ? 'shadow-[0_0_50px_rgba(212,175,55,0.1)]' : ''} rounded-[3rem] p-1.5 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-700 overflow-hidden backdrop-blur-3xl preserve-3d`}
                       >
                          {/* Visual Side */}
                          <div className="relative w-full md:w-[320px] h-64 md:h-auto overflow-hidden shrink-0 border-r border-white/5">
                            <motion.img 
-                             src={p.id.includes(' Xeon') ? "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1200" : "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200"} 
+                             src="https://images.unsplash.com/photo-1558494949-ef010cbdcc51?q=80&w=1200&auto=format&fit=crop" 
                              alt="" 
                              className="w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-all duration-1000" 
                            />
                            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg-dark z-10" />
                            
-                           <div className="absolute inset-0 flex flex-col justify-center items-center p-8 z-20">
+                           <div className="absolute inset-0 flex flex-col justify-center items-center p-8 z-20" style={{ transform: 'translateZ(30px)' }}>
                               <div className="flex flex-col items-center">
                                 <span className="text-[9px] font-bold text-brand-gold uppercase tracking-[0.4em] mb-3">Enterprise Cloud</span>
                                 <h4 className="text-4xl font-bold text-white uppercase tracking-tight leading-none font-display text-center drop-shadow-2xl">{p.name}</h4>
@@ -627,7 +545,7 @@ export default function PricingList() {
                          </div>
 
                          {/* Content Side */}
-                         <div className="flex-1 p-10 md:p-14 flex flex-col lg:flex-row items-center justify-between gap-10 bg-white/[0.01]">
+                         <div className="flex-1 p-10 md:p-14 flex flex-col lg:flex-row items-center justify-between gap-10 bg-white/[0.01] relative z-10" style={{ transform: 'translateZ(40px)' }}>
                            <div className="flex-1 w-full space-y-10">
                              <div className="hidden lg:block">
                                <div className="flex items-center gap-4 mb-3">
@@ -655,9 +573,9 @@ export default function PricingList() {
                                  { icon: HardDrive, label: "NVMe Raid", value: p.storage },
                                  { icon: Network, label: "Uplink", value: "2 Gbps" },
                                ].map((spec, idx) => (
-                                 <div key={idx} className="relative p-6 rounded-2xl bg-white/[0.01] border border-white/5 transition-all duration-300 hover:border-brand-gold/20">
-                                   <div className="flex items-center gap-2 text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-3">
-                                     <spec.icon size={12} className="text-brand-gold/60" />
+                                 <div key={idx} className="relative p-6 rounded-2xl bg-white/[0.02] border border-white/5 transition-all duration-300 hover:border-brand-gold/40 hover:bg-white/[0.05] group/spec">
+                                   <div className="flex items-center gap-2 text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-3 transition-colors group-hover/spec:text-brand-gold/80">
+                                     <spec.icon size={12} className="text-brand-gold/60 group-hover/spec:scale-110 transition-transform" />
                                      {spec.label}
                                    </div>
                                    <div className="text-xl font-bold text-white tracking-tight">{spec.value}</div>
@@ -676,8 +594,8 @@ export default function PricingList() {
                              </div>
                              
                              <button 
-                               onClick={() => { playClick(); p.type === 'vps' ? window.open('https://discord.gg/b2PqWqSEU3', '_blank') : setSelectedPlan(p); }}
-                               className={`w-full lg:w-64 h-20 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-3 group/btn shadow-xl ${p.highlight ? 'bg-brand-gold text-slate-950 px-8' : 'bg-slate-900 text-slate-100 hover:bg-slate-800 px-8'}`}
+                               onClick={() => { playClick(); navigate(`/billing/${p.id}`); }}
+                               className={`w-full lg:w-64 h-20 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-3 group/btn shadow-glow-gold hover:translate-y-[-4px] active:translate-y-[2px] ${p.highlight ? 'bg-brand-gold text-slate-950 px-8' : 'bg-slate-900 border border-white/10 text-slate-100 hover:bg-slate-800 px-8'}`}
                              >
                                Deploy Cloud
                                <ChevronRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
