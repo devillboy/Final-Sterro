@@ -37,6 +37,41 @@
         "email": { "type": "string" }
       },
       "required": ["email"]
+    },
+    "User": {
+      "title": "User Profile",
+      "description": "User specific data",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" }
+      }
+    },
+    "Subscription": {
+      "title": "User Subscription",
+      "description": "Record of a purchased or trial plan",
+      "type": "object",
+      "properties": {
+        "planId": { "type": "string" },
+        "planName": { "type": "string" },
+        "price": { "type": "number" },
+        "serverName": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "panelUrl": { "type": "string" }
+      }
+    },
+    "PanelSettings": {
+      "title": "Panel Credentials",
+      "description": "Stored credentials for the Pterodactyl panel",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "username": { "type": "string" },
+        "password": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "firestore": {
@@ -51,6 +86,14 @@
     "/admins/{adminId}": {
       "schema": "Admin",
       "description": "List of authorized administrators"
+    },
+    "/users/{userId}/settings/panel": {
+      "schema": "PanelSettings",
+      "description": "User's panel credentials"
+    },
+    "/users/{userId}/subscriptions/{subscriptionId}": {
+      "schema": "Subscription",
+      "description": "User's active and past subscriptions"
     },
     "/trials/{email}": {
       "schema": "object",

@@ -47,6 +47,22 @@ service cloud.firestore {
              (!data.keys().hasAny(['label']) || (data.label is string && data.label.size() <= 100));
     }
 
+    // -- PANEL SETTINGS VALIDATION --
+    function isValidPanelSettings(data) {
+      return data.keys().hasAll(['email', 'username', 'password', 'updatedAt']) &&
+             data.email is string && data.username is string &&
+             data.password is string && data.updatedAt is timestamp;
+    }
+
+    // -- SUBSCRIPTION VALIDATION --
+    function isValidSubscription(data) {
+      return data.keys().hasAll(['planId', 'planName', 'price', 'serverName', 'status', 'createdAt']) &&
+             data.planId is string && data.planName is string &&
+             (data.price is number || data.price is string) && data.serverName is string &&
+             data.status is string && data.createdAt is timestamp &&
+             (!data.keys().hasAny(['panelUrl']) || data.panelUrl is string);
+    }
+
     // -- TRANSACTION VALIDATION --
     function isValidTransaction(data) {
       return data.keys().hasAll(['utrId', 'email', 'status', 'planName']) &&
@@ -73,6 +89,20 @@ service cloud.firestore {
     match /admins/{adminId} {
       allow read: if isAdmin();
       allow write: if isAdmin() && isValidId(adminId);
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      
+      match /settings/panel {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow write: if isSignedIn() && request.auth.uid == userId && isValidPanelSettings(request.resource.data);
+      }
+
+      match /subscriptions/{subscriptionId} {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidSubscription(request.resource.data);
+      }
     }
 
     match /trials/{email} {

@@ -220,12 +220,12 @@ export default function AdminPanel() {
     <div className="fixed inset-0 z-[100] bg-black flex overflow-hidden font-sans">
       {/* Sidebar */}
       <aside className="w-64 bg-[#080C14] border-r border-[#121B2B] flex flex-col p-6 shadow-2xl">
-        <div className="flex items-center gap-3 mb-10">
-          <div className="w-10 h-10 rounded-xl bg-[#00F0FF]/10 flex items-center justify-center border border-[#00F0FF]/30">
-            <Settings className="text-[#00F0FF]" size={20} />
+          <div className="flex items-center gap-3 mb-10">
+            <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center border border-brand-gold/30">
+              <Settings className="text-brand-gold" size={20} />
+            </div>
+            <span className="font-bold text-xl tracking-tighter text-white font-display">SYSTEMS <span className="text-brand-gold">CORE</span></span>
           </div>
-          <span className="font-black text-xl tracking-tighter text-white">ADMIN<span className="text-[#00F0FF]">CORE</span></span>
-        </div>
 
         <nav className="flex flex-col gap-2">
           <SidebarButton 
@@ -285,8 +285,8 @@ export default function AdminPanel() {
               <div>
                 <div className="mb-12 flex justify-between items-end">
                   <div>
-                    <h1 className="text-4xl font-black text-white tracking-widest uppercase mb-2">Systems <span className="text-[#00F0FF]">Overview</span></h1>
-                    <p className="text-[var(--color-text-dim)] font-medium">Real-time infrastructure and sales intelligence.</p>
+                    <h1 className="text-4xl font-black text-white tracking-widest uppercase mb-2">Systems <span className="text-brand-gold">Overview</span></h1>
+                    <p className="text-slate-500 font-medium">Real-time infrastructure and sales intelligence.</p>
                   </div>
                   <div className="flex gap-4">
                     {loading ? (
@@ -297,9 +297,9 @@ export default function AdminPanel() {
                       </>
                     ) : (
                       <>
-                        <StatBox label="Live Plans" value={plans.length.toString()} delta="ACTIVE" color="#00F0FF" />
+                        <StatBox label="Live Plans" value={plans.length.toString()} delta="ACTIVE" color="var(--color-brand-gold)" />
                         <StatBox label="Revenue" value={`₹${transactions.filter(t => t.isVerified).length * 500}`} delta="ESTIMATED" color="#10B981" />
-                        <StatBox label="Verification Rate" value={`${Math.round((transactions.filter(t => t.isVerified).length / (transactions.length || 1)) * 100)}%`} delta="AI-VERIFIED" color="#00F0FF" />
+                        <StatBox label="Verification Rate" value={`${Math.round((transactions.filter(t => t.isVerified).length / (transactions.length || 1)) * 100)}%`} delta="AI-VERIFIED" color="var(--color-brand-gold)" />
                       </>
                     )}
                   </div>
@@ -309,10 +309,10 @@ export default function AdminPanel() {
                   <div className="col-span-2 bg-[#080C14] border border-[#121B2B] rounded-3xl p-8 h-[400px] shadow-3d relative overflow-hidden flex flex-col">
                     <div className="flex justify-between items-center mb-8">
                        <h3 className="font-bold text-lg text-white flex items-center gap-2">
-                        <BarChart3 size={18} className="text-[#00F0FF]" /> Order Velocity
+                        <BarChart3 size={18} className="text-brand-gold" /> Order Velocity
                        </h3>
                        <div className="flex gap-2">
-                          {['1H', '24H', '7D'].map(t => <button key={t} className="px-3 py-1 rounded-md text-[10px] font-black bg-white/5 border border-white/10 text-white/60 hover:text-[#00F0FF]">{t}</button>)}
+                          {['1H', '24H', '7D'].map(t => <button key={t} className="px-3 py-1 rounded-md text-[10px] font-black bg-white/5 border border-white/10 text-white/60 hover:text-brand-gold">{t}</button>)}
                        </div>
                     </div>
                     {/* Mock Chart Area */}
@@ -320,10 +320,10 @@ export default function AdminPanel() {
                       {Array.from({ length: 48 }).map((_, i) => (
                         <div 
                           key={i} 
-                          className="flex-1 bg-[#00F0FF]/20 rounded-t-sm group relative"
+                          className="flex-1 bg-brand-gold/20 rounded-t-sm group relative"
                           style={{ height: `${Math.random() * 80 + 10}%` }}
                         >
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#00F0FF] text-black text-[8px] font-black px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">₹{Math.floor(Math.random() * 5000)}</div>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-brand-gold text-black text-[8px] font-black px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">₹{Math.floor(Math.random() * 5000)}</div>
                         </div>
                       ))}
                     </div>
@@ -344,22 +344,22 @@ export default function AdminPanel() {
               <div>
                 <div className="flex justify-between items-end mb-12">
                   <div>
-                    <h1 className="text-4xl font-black text-white tracking-widest uppercase mb-2">Service <span className="text-[#00F0FF]">Architecture</span></h1>
-                    <p className="text-[var(--color-text-dim)] font-medium">Define, edit, and scale your hosting offerings.</p>
+                    <h1 className="text-4xl font-black text-white tracking-widest uppercase mb-2">Service <span className="text-brand-gold">Architecture</span></h1>
+                    <p className="text-slate-500 font-medium">Define, edit, and scale your hosting offerings.</p>
                   </div>
                   <div className="flex gap-4">
                     {plans.length === 0 && !loading && (
                       <button 
                          onClick={async () => {
                            const fallbackMinecraftPlans = [
-                             { name: 'Starter Node', price: 249, ram: '2GB', storage: '10GB NVMe', cpu: '1 vCore', ports: '1 Port', order: 1, type: 'minecraft' },
-                             { name: 'Performance Node', price: 469, ram: '4GB', storage: '20GB NVMe', cpu: '2 vCores', ports: '2 Ports', highlight: true, order: 2, type: 'minecraft' },
-                             { name: 'Extreme Node', price: 900, ram: '8GB', storage: '40GB NVMe', cpu: '3 vCores', ports: '3 Ports', order: 3, type: 'minecraft' }
+                             { name: 'Starter Node', price: 130, ram: '2GB', storage: '75GB NVMe', cpu: '100% CPU', ports: '1 Port', order: 1, type: 'minecraft' },
+                             { name: 'Performance Node', price: 260, ram: '4GB', storage: '100GB NVMe', cpu: '150% CPU', ports: '2 Ports', highlight: true, order: 2, type: 'minecraft' },
+                             { name: 'Extreme Node', price: 390, ram: '6GB', storage: '125GB NVMe', cpu: '200% CPU', ports: '3 Ports', order: 3, type: 'minecraft' }
                            ];
                            const fallbackVpsPlans = [
-                             { name: 'XEON Starter', price: 599, ram: '2GB', storage: '20GB NVMe', cpu: '2 vCores', ports: 'Full Root', order: 1, type: 'vps' },
-                             { name: 'XEON Pro', price: 899, ram: '4GB', storage: '40GB NVMe', cpu: '4 vCores', ports: 'Full Root', highlight: true, order: 2, type: 'vps' },
-                             { name: 'XEON Ultra', price: 1599, ram: '8GB', storage: '80GB NVMe', cpu: '6 vCores', ports: 'Full Root', order: 3, type: 'vps' }
+                             { name: 'Cloud-D Alpha', price: 240, ram: '4GB', storage: '50GB NVMe', cpu: '200% CPU', ports: 'Full Root', order: 1, type: 'vps' },
+                             { name: 'Cloud-D Beta', price: 480, ram: '8GB', storage: '100GB NVMe', cpu: '400% CPU', ports: 'Full Root', highlight: true, order: 2, type: 'vps' },
+                             { name: 'Cloud-D Xeon', price: 960, ram: '16GB', storage: '200GB NVMe', cpu: '800% CPU', ports: 'Full Root', order: 3, type: 'vps' }
                            ];
                            
                            for (const p of [...fallbackMinecraftPlans, ...fallbackVpsPlans]) {
@@ -373,13 +373,13 @@ export default function AdminPanel() {
                       </button>
                     )}
                     {selectedPlanIds.length > 0 && (
-                      <div className="flex items-center gap-2 px-6 py-2 bg-[#00F0FF]/10 border border-[#00F0FF]/30 rounded-xl mr-4">
-                         <span className="text-[#00F0FF] text-[10px] font-black uppercase tracking-widest">{selectedPlanIds.length} Selected</span>
-                         <div className="w-px h-4 bg-[#00F0FF]/20 mx-2" />
-                         <button onClick={() => handleBulkHighlight(true)} className="p-2 text-[#00F0FF] hover:bg-[#00F0FF]/20 rounded-lg transition-all" title="Highlight All">
+                      <div className="flex items-center gap-2 px-6 py-2 bg-brand-gold/10 border border-brand-gold/30 rounded-xl mr-4">
+                         <span className="text-brand-gold text-[10px] font-black uppercase tracking-widest">{selectedPlanIds.length} Selected</span>
+                         <div className="w-px h-4 bg-brand-gold/20 mx-2" />
+                         <button onClick={() => handleBulkHighlight(true)} className="p-2 text-brand-gold hover:bg-brand-gold/20 rounded-lg transition-all" title="Highlight All">
                             <Layers size={16} />
                          </button>
-                         <button onClick={() => handleBulkHighlight(false)} className="p-2 text-[var(--color-text-dim)] hover:bg-white/5 rounded-lg transition-all" title="Unhighlight All">
+                         <button onClick={() => handleBulkHighlight(false)} className="p-2 text-slate-500 hover:bg-white/5 rounded-lg transition-all" title="Unhighlight All">
                             <RefreshCw size={16} />
                          </button>
                          <button onClick={handleBulkDelete} className="p-2 text-red-500 hover:bg-red-500/20 rounded-lg transition-all" title="Delete Selected">
@@ -392,7 +392,7 @@ export default function AdminPanel() {
                     )}
                     <button 
                       onClick={() => setIsAddingPlan(true)}
-                      className="h-12 px-8 bg-[#00F0FF] text-black font-black rounded-xl hover:bg-[#00D8E6] transition-all flex items-center gap-2 uppercase tracking-tighter"
+                      className="h-12 px-8 bg-brand-gold text-black font-black rounded-xl hover:bg-brand-gold-muted transition-all flex items-center gap-2 uppercase tracking-tighter"
                     >
                       <Plus size={20} /> Create Plan
                     </button>
@@ -406,12 +406,12 @@ export default function AdminPanel() {
                     plans.map(plan => (
                       <div 
                         key={plan.id} 
-                        className={`bg-[#080C14] border rounded-3xl p-6 flex flex-col shadow-3d group transition-all relative overflow-hidden ${selectedPlanIds.includes(plan.id) ? 'border-[#00F0FF] ring-1 ring-[#00F0FF]' : 'border-[#121B2B] hover:border-[#00F0FF]/30'}`}
+                        className={`bg-[#080C14] border rounded-3xl p-6 flex flex-col shadow-3d group transition-all relative overflow-hidden ${selectedPlanIds.includes(plan.id) ? 'border-brand-gold ring-1 ring-brand-gold' : 'border-[#121B2B] hover:border-brand-gold/30'}`}
                       >
                         {/* Selection Overlay */}
                         <button 
                           onClick={() => setSelectedPlanIds(prev => prev.includes(plan.id) ? prev.filter(id => id !== plan.id) : [...prev, plan.id])}
-                          className={`absolute top-4 left-4 z-10 p-1.5 rounded-lg transition-all ${selectedPlanIds.includes(plan.id) ? 'bg-[#00F0FF] text-black' : 'bg-white/5 text-white/40 hover:text-white group-hover:opacity-100 opacity-0'}`}
+                          className={`absolute top-4 left-4 z-10 p-1.5 rounded-lg transition-all ${selectedPlanIds.includes(plan.id) ? 'bg-brand-gold text-black' : 'bg-white/5 text-white/40 hover:text-white group-hover:opacity-100 opacity-0'}`}
                         >
                           {selectedPlanIds.includes(plan.id) ? <CheckSquare size={16} /> : <Square size={16} />}
                         </button>
@@ -423,7 +423,7 @@ export default function AdminPanel() {
                             </span>
                           </div>
                           <div className="flex gap-2">
-                            <button onClick={() => setIsEditingPlan(plan)} className="p-2 bg-white/5 rounded-lg text-white/40 hover:text-[#00F0FF] hover:bg-[#00F0FF]/10 transition-all">
+                            <button onClick={() => setIsEditingPlan(plan)} className="p-2 bg-white/5 rounded-lg text-white/40 hover:text-brand-gold hover:bg-brand-gold/10 transition-all">
                               <Edit2 size={16} />
                             </button>
                             <button onClick={() => handleDeletePlan(plan.id)} className="p-2 bg-white/5 rounded-lg text-white/40 hover:text-red-500 hover:bg-red-500/10 transition-all">
@@ -432,7 +432,7 @@ export default function AdminPanel() {
                           </div>
                         </div>
                         <h4 className="text-xl font-bold text-white mb-1 truncate">{plan.name}</h4>
-                        <p className="text-[#00F0FF] font-black text-2xl mb-6">₹{plan.price}<span className="text-[var(--color-text-dim)] text-xs font-medium ml-1">/month</span></p>
+                        <p className="text-brand-gold font-black text-2xl mb-6">₹{plan.price}<span className="text-slate-500 text-xs font-medium ml-1">/month</span></p>
                         
                         <div className="grid grid-cols-2 gap-y-4 gap-x-2 text-xs border-t border-[#121B2B] pt-6 mb-6">
                           <PlanDetail label="RAM" value={plan.ram} />
@@ -442,7 +442,7 @@ export default function AdminPanel() {
                         </div>
 
                         {plan.highlight && (
-                          <div className="mt-auto bg-[#00F0FF]/10 text-[#00F0FF] text-[10px] font-black tracking-widest uppercase py-2 text-center rounded-lg border border-[#00F0FF]/25 mb-4">
+                          <div className="mt-auto bg-brand-gold/10 text-brand-gold text-[10px] font-black tracking-widest uppercase py-2 text-center rounded-lg border border-brand-gold/25 mb-4">
                             HIGHLIGHTED PLAN
                           </div>
                         )}
@@ -457,12 +457,12 @@ export default function AdminPanel() {
               <div>
                 <div className="flex justify-between items-end mb-12">
                   <div>
-                    <h1 className="text-4xl font-black text-white tracking-widest uppercase mb-2">Visual <span className="text-[#00F0FF]">Assets</span></h1>
-                    <p className="text-[var(--color-text-dim)] font-medium">Control headers, banners, and media links globally.</p>
+                    <h1 className="text-4xl font-black text-white tracking-widest uppercase mb-2">Visual <span className="text-brand-gold">Assets</span></h1>
+                    <p className="text-slate-500 font-medium">Control headers, banners, and media links globally.</p>
                   </div>
                   <button 
                     onClick={() => setIsAddingAsset(true)}
-                    className="h-12 px-8 bg-[#00F0FF] text-black font-black rounded-xl hover:bg-[#00D8E6] transition-all flex items-center gap-2 uppercase tracking-tighter"
+                    className="h-12 px-8 bg-brand-gold text-black font-black rounded-xl hover:bg-brand-gold-muted transition-all flex items-center gap-2 uppercase tracking-tighter"
                   >
                     <Plus size={20} /> Add Asset
                   </button>
@@ -480,13 +480,13 @@ export default function AdminPanel() {
                         
                         <div className="flex justify-between items-start mb-auto">
                           <div className="min-w-0">
-                            <h4 className="text-xs font-black uppercase tracking-widest text-[#00F0FF] mb-1 truncate">{asset.key}</h4>
+                            <h4 className="text-xs font-black uppercase tracking-widest text-brand-gold mb-1 truncate">{asset.key}</h4>
                             <h3 className="text-xl font-bold text-white truncate">{asset.label}</h3>
                           </div>
                           <div className="flex gap-2">
                             <button 
                               onClick={() => setIsEditingAsset(asset)}
-                              className="p-2 bg-white/5 border border-white/10 text-white/40 hover:text-[#00F0FF] hover:bg-[#00F0FF]/10 rounded-lg transition-all"
+                              className="p-2 bg-white/5 border border-white/10 text-white/40 hover:text-brand-gold hover:bg-brand-gold/10 rounded-lg transition-all"
                             >
                               <Edit2 size={16} />
                             </button>
@@ -499,8 +499,8 @@ export default function AdminPanel() {
                           </div>
                         </div>
 
-                        <div className="bg-black/80 backdrop-blur-md rounded-xl p-4 border border-white/10 truncate font-mono text-[10px] text-[var(--color-text-dim)] flex items-center gap-3">
-                          <ArrowRight size={12} className="text-[#00F0FF]" />
+                        <div className="bg-black/80 backdrop-blur-md rounded-xl p-4 border border-white/10 truncate font-mono text-[10px] text-slate-500 flex items-center gap-3">
+                          <ArrowRight size={12} className="text-brand-gold" />
                           {asset.url}
                         </div>
                       </div>
@@ -512,8 +512,8 @@ export default function AdminPanel() {
             {activeView === 'transactions' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
                 <div className="mb-12">
-                   <h1 className="text-4xl font-black text-white tracking-widest uppercase mb-2">Payment <span className="text-[#00F0FF]">Ledger</span></h1>
-                   <p className="text-[var(--color-text-dim)] font-medium">Audit real-time payment verifications and system logs.</p>
+                   <h1 className="text-4xl font-black text-white tracking-widest uppercase mb-2">Payment <span className="text-brand-gold">Ledger</span></h1>
+                   <p className="text-slate-500 font-medium">Audit real-time payment verifications and system logs.</p>
                 </div>
 
                 <div className="bg-[#080C14] border border-[#121B2B] rounded-3xl overflow-hidden shadow-3d">
@@ -546,7 +546,7 @@ export default function AdminPanel() {
                                    <div className="text-[10px] text-white/40">{t.date?.toDate().toLocaleTimeString()}</div>
                                 </td>
                                 <td className="px-6 py-4">
-                                   <div className="text-xs font-bold text-[#00F0FF]">{t.username}</div>
+                                   <div className="text-xs font-bold text-brand-gold">{t.username}</div>
                                    <div className="text-[10px] text-white/40">{t.email}</div>
                                    <div className="mt-1 text-[10px] font-black uppercase text-white/20">{t.planName}</div>
                                 </td>
@@ -587,7 +587,7 @@ export default function AdminPanel() {
             >
               <div className="flex justify-between items-center mb-10">
                 <h3 className="text-2xl font-black text-white tracking-widest uppercase">
-                  {isEditingPlan ? 'Edit' : 'Create'} <span className="text-[#00F0FF]">Plan</span>
+                  {isEditingPlan ? 'Edit' : 'Create'} <span className="text-brand-gold">Plan</span>
                 </h3>
                 <button onClick={() => { setIsEditingPlan(null); setIsAddingPlan(false); }} className="text-white/40 hover:text-white transition-colors">
                   <X size={24} />
@@ -613,20 +613,20 @@ export default function AdminPanel() {
                   
                   <div className="flex flex-col gap-2">
                     <label className="text-xs font-black uppercase tracking-widest text-[var(--color-text-dim)]">Server Type</label>
-                    <select name="type" defaultValue={isEditingPlan?.type} className="w-full bg-black/40 border border-[#121B2B] rounded-xl px-4 py-3 text-white focus:border-[#00F0FF] outline-none">
+                    <select name="type" defaultValue={isEditingPlan?.type} className="w-full bg-black/40 border border-[#121B2B] rounded-xl px-4 py-3 text-white focus:border-brand-gold outline-none">
                       <option value="minecraft">Minecraft</option>
                       <option value="vps">VPS</option>
                     </select>
                   </div>
                   
                   <div className="flex items-center gap-3 pt-6">
-                    <input type="checkbox" name="highlight" defaultChecked={isEditingPlan?.highlight} className="w-5 h-5 accent-[#00F0FF]" />
+                    <input type="checkbox" name="highlight" defaultChecked={isEditingPlan?.highlight} className="w-5 h-5 accent-brand-gold" />
                     <label className="text-sm font-bold text-white">Highlight this plan</label>
                   </div>
                 </div>
 
                 <div className="flex gap-4 pt-4">
-                  <button type="submit" className="flex-1 h-14 bg-[#00F0FF] text-black font-black rounded-2xl hover:bg-[#00D8E6] transition-all flex items-center justify-center gap-2 uppercase tracking-widest">
+                  <button type="submit" className="flex-1 h-14 bg-brand-gold text-black font-black rounded-2xl hover:bg-brand-gold-muted transition-all flex items-center justify-center gap-2 uppercase tracking-widest">
                     <Save size={18} /> Save Deployment
                   </button>
                   <button type="button" onClick={() => { setIsEditingPlan(null); setIsAddingPlan(false); }} className="flex-1 h-14 bg-white/5 text-white/40 font-black rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-2 uppercase tracking-widest">
@@ -648,7 +648,7 @@ export default function AdminPanel() {
             >
               <div className="flex justify-between items-center mb-8">
                 <h3 className="text-xl font-black text-white tracking-widest uppercase">
-                  {isEditingAsset ? 'Edit' : 'Create'} <span className="text-[#00F0FF]">Asset</span>
+                  {isEditingAsset ? 'Edit' : 'Create'} <span className="text-brand-gold">Asset</span>
                 </h3>
                 <button onClick={() => { setIsEditingAsset(null); setIsAddingAsset(false); }} className="text-white/40 hover:text-white transition-colors">
                   <X size={20} />
@@ -662,13 +662,13 @@ export default function AdminPanel() {
                   <Input label="Image URL" name="url" defaultValue={isEditingAsset?.url} required placeholder="https://..." />
                 </div>
                 
-                <div className="p-4 bg-[#00F0FF]/5 border border-[#00F0FF]/20 rounded-xl flex items-start gap-3">
-                   <AlertTriangle size={16} className="text-[#00F0FF] mt-1 shrink-0" />
-                   <p className="text-[10px] text-[var(--color-text-dim)] leading-relaxed">Ensure the link is public and high-resolution. Changes will reflect instantly for all users.</p>
+                <div className="p-4 bg-brand-gold/5 border border-brand-gold/20 rounded-xl flex items-start gap-3">
+                   <AlertTriangle size={16} className="text-brand-gold mt-1 shrink-0" />
+                   <p className="text-[10px] text-slate-500 leading-relaxed">Ensure the link is public and high-resolution. Changes will reflect instantly for all users.</p>
                 </div>
 
                 <div className="flex gap-4">
-                  <button type="submit" className="flex-1 h-14 bg-[#00F0FF] text-black font-black rounded-xl hover:bg-[#00D8E6] transition-all flex items-center justify-center gap-2 uppercase tracking-widest">
+                  <button type="submit" className="flex-1 h-14 bg-brand-gold text-black font-black rounded-xl hover:bg-brand-gold-muted transition-all flex items-center justify-center gap-2 uppercase tracking-widest">
                     <Check size={18} /> {isEditingAsset ? 'Update' : 'Create'} Asset
                   </button>
                 </div>
@@ -685,7 +685,7 @@ function SidebarButton({ active, icon, label, onClick }: { active: boolean; icon
   return (
     <button 
       onClick={onClick}
-      className={`h-12 w-full flex items-center gap-4 px-4 rounded-xl font-bold text-sm transition-all ${active ? 'bg-[#00F0FF] text-black shadow-[0_0_20px_rgba(0,240,255,0.3)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+      className={`h-12 w-full flex items-center gap-4 px-4 rounded-xl font-bold text-sm transition-all ${active ? 'bg-brand-gold text-bg-dark shadow-glow-gold' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
     >
       {icon}
       {label}
@@ -710,14 +710,14 @@ function AlertItem({ type, title, time }: { type: 'success' | 'warning' | 'error
     success: 'text-green-500 bg-green-500/10',
     warning: 'text-yellow-500 bg-yellow-500/10',
     error: 'text-red-500 bg-red-500/10',
-    info: 'text-[#00F0FF] bg-[#00F0FF]/10',
+    info: 'text-brand-gold bg-brand-gold/10',
   };
   return (
-    <div className="flex items-center gap-4 p-3 bg-white/5 rounded-xl border border-white/5 group hover:border-[#00F0FF]/25 transition-all cursor-pointer">
+    <div className="flex items-center gap-4 p-3 bg-white/5 rounded-xl border border-white/5 group hover:border-brand-gold/25 transition-all cursor-pointer">
       <div className={`w-2 h-2 rounded-full shrink-0 ${colors[type].split(' ')[0]}`} />
       <div className="flex flex-col min-w-0">
         <span className="text-xs text-white/80 font-medium truncate">{title}</span>
-        <span className="text-[10px] text-[var(--color-text-dim)]">{time}</span>
+        <span className="text-[10px] text-slate-500">{time}</span>
       </div>
     </div>
   );
@@ -735,8 +735,8 @@ function PlanDetail({ label, value }: { label: string, value: string | number })
 function Input({ label, ...props }: any) {
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-xs font-black uppercase tracking-widest text-[var(--color-text-dim)]">{label}</label>
-      <input {...props} className="w-full bg-black/40 border border-[#121B2B] rounded-xl px-4 py-3 text-white focus:border-[#00F0FF] outline-none transition-colors" />
+      <label className="text-xs font-black uppercase tracking-widest text-slate-500">{label}</label>
+      <input {...props} className="w-full bg-black/40 border border-[#121B2B] rounded-xl px-4 py-3 text-white focus:border-brand-gold outline-none transition-colors" />
     </div>
   );
 }

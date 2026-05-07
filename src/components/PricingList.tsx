@@ -5,7 +5,7 @@ import { Cpu, HardDrive, MemoryStick, Activity, Network, Archive, LayoutTemplate
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext';
 import WorldMap from './WorldMap';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError } from '../lib/firebase';
 import { collection, query, orderBy, getDocs, getDoc, doc, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const LoadingMessages = ({ isSubmitting, isCreatingServer }: { isSubmitting: boolean, isCreatingServer: boolean }) => {
@@ -162,6 +162,8 @@ export default function PricingList() {
         }
       } catch (e) {
         console.warn("Live plans load failed, using fallbacks.");
+        setMinecraftPlans(fallbackMinecraftPlans);
+        setVpsPlans(fallbackVpsPlans);
       } finally {
         setLoading(false);
       }
@@ -310,25 +312,35 @@ export default function PricingList() {
         
         // Save Credentials if new
         if (!useExistingAccount && user?.uid) {
-           await setDoc(doc(db, "users", user.uid, "settings", "panel"), {
-             email: data.email,
-             username: data.username,
-             password: data.password,
-             updatedAt: serverTimestamp()
-           });
+           const path = `users/${user.uid}/settings/panel`;
+           try {
+             await setDoc(doc(db, "users", user.uid, "settings", "panel"), {
+               email: data.email,
+               username: data.username,
+               password: data.password,
+               updatedAt: serverTimestamp()
+             });
+           } catch (e) {
+             handleFirestoreError(e, 'write', path);
+           }
         }
 
         // Save Subscription Record
         if (user?.uid) {
-           await addDoc(collection(db, "users", user.uid, "subscriptions"), {
-             planId: selectedPlan.id,
-             planName: selectedPlan.name,
-             price: selectedPlan.price,
-             serverName: data.serverName,
-             status: 'active',
-             createdAt: serverTimestamp(),
-             panelUrl: serverResult.credentials?.panelUrl
-           });
+           const path = `users/${user.uid}/subscriptions`;
+           try {
+             await addDoc(collection(db, "users", user.uid, "subscriptions"), {
+               planId: selectedPlan.id,
+               planName: selectedPlan.name,
+               price: selectedPlan.price,
+               serverName: data.serverName,
+               status: 'active',
+               createdAt: serverTimestamp(),
+               panelUrl: serverResult.credentials?.panelUrl
+             });
+           } catch (e) {
+             handleFirestoreError(e, 'create', path);
+           }
         }
       } else {
         setVerificationResult({ error: serverResult.error || 'Server creation failed.' });
@@ -391,25 +403,35 @@ export default function PricingList() {
         
         // Save Credentials if new
         if (!useExistingAccount && user?.uid) {
-           await setDoc(doc(db, "users", user.uid, "settings", "panel"), {
-             email: payload.email,
-             username: payload.username,
-             password: payload.password,
-             updatedAt: serverTimestamp()
-           });
+           const path = `users/${user.uid}/settings/panel`;
+           try {
+             await setDoc(doc(db, "users", user.uid, "settings", "panel"), {
+               email: payload.email,
+               username: payload.username,
+               password: payload.password,
+               updatedAt: serverTimestamp()
+             });
+           } catch (e) {
+             handleFirestoreError(e, 'write', path);
+           }
         }
 
         // Save Subscription Record
         if (user?.uid) {
-           await addDoc(collection(db, "users", user.uid, "subscriptions"), {
-             planId: 'trial',
-             planName: 'Cloud Trial Server',
-             price: 0,
-             serverName: payload.serverName,
-             status: 'active',
-             createdAt: serverTimestamp(),
-             panelUrl: result.credentials?.panelUrl
-           });
+           const path = `users/${user.uid}/subscriptions`;
+           try {
+             await addDoc(collection(db, "users", user.uid, "subscriptions"), {
+               planId: 'trial',
+               planName: 'Cloud Trial Server',
+               price: 0,
+               serverName: payload.serverName,
+               status: 'active',
+               createdAt: serverTimestamp(),
+               panelUrl: result.credentials?.panelUrl
+             });
+           } catch (e) {
+             handleFirestoreError(e, 'create', path);
+           }
         }
       } else {
         setVerificationResult({ error: result.error || 'Verification failed.' });
@@ -427,46 +449,46 @@ export default function PricingList() {
   };
 
   return (
-    <section id="pricing" className="relative py-32 px-6 bg-[#050914] overflow-hidden min-h-screen">
+    <section id="pricing" className="relative py-32 px-6 bg-bg-dark overflow-hidden min-h-screen">
       {/* Background Decor */}
-      <div className="absolute inset-0 z-0 opacity-20">
+      <div className="absolute inset-0 z-0 opacity-10">
         <WorldMap selectedId={selectedLocation} onSelect={setSelectedLocation} />
       </div>
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand-cyan/20 to-transparent" />
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand-gold/20 to-transparent" />
       
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-24 animate-in fade-in slide-in-from-bottom-5 duration-1000">
-          <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight leading-none text-premium-gradient uppercase font-display text-glow-cyan">
-            Elite <span className="text-brand-cyan/80 font-semibold font-display">Infrastructure</span>
+          <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight leading-none text-premium-gradient uppercase font-display text-glow-gold">
+            Enterprise <span className="text-brand-gold/80 font-semibold font-display">Optimization</span>
           </h2>
-          <p className="text-slate-500 max-w-2xl mx-auto mb-16 text-sm font-semibold uppercase tracking-[0.4em] leading-relaxed">
-            Provision enterprise-grade nodes engineered for low-latency operations. 
+          <p className="text-slate-500 max-w-2xl mx-auto mb-16 text-xs font-bold uppercase tracking-[0.5em] leading-relaxed">
+            Scalable nodes engineered for high-availability enterprise operations. 
           </p>
           
           <div className="inline-flex p-1.5 bg-slate-900/50 border border-slate-800 rounded-3xl relative z-20 backdrop-blur-3xl mx-auto mb-16 shadow-2xl">
             <button
               onClick={() => { playClick(); setActiveTab('minecraft'); }}
-              className={`flex items-center justify-center gap-3 px-10 py-4 rounded-2xl font-bold text-[11px] tracking-widest transition-all duration-500 uppercase ${activeTab === 'minecraft' ? 'bg-brand-cyan text-slate-950 shadow-glow-cyan' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
+              className={`flex items-center justify-center gap-3 px-10 py-4 rounded-2xl font-bold text-[10px] tracking-widest transition-all duration-500 uppercase ${activeTab === 'minecraft' ? 'bg-brand-gold text-slate-950 shadow-glow-gold' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
             >
-              <Gamepad2 size={16} /> Minecraft Fleet
+              <Gamepad2 size={16} /> Gaming Clusters
             </button>
             <button
               onClick={() => { playClick(); setActiveTab('vps'); }}
-              className={`flex items-center justify-center gap-3 px-10 py-4 rounded-2xl font-bold text-[11px] tracking-widest transition-all duration-500 uppercase ${activeTab === 'vps' ? 'bg-brand-cyan text-slate-950 shadow-glow-cyan' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
+              className={`flex items-center justify-center gap-3 px-10 py-4 rounded-2xl font-bold text-[10px] tracking-widest transition-all duration-500 uppercase ${activeTab === 'vps' ? 'bg-brand-gold text-slate-950 shadow-glow-gold' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
             >
-              <Server size={16} /> VPS Cluster
+              <Server size={16} /> Virtual Compute
             </button>
           </div>
 
-          <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-xs font-mono tracking-widest text-zinc-500 uppercase max-w-3xl mx-auto mb-8">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-[10px] font-bold tracking-[0.3em] text-zinc-600 uppercase max-w-3xl mx-auto mb-8">
              <div className="flex items-center gap-2">
-               <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+               <div className="w-1.5 h-1.5 bg-green-500/50 rounded-full animate-pulse" />
                Global Regions: IN, US, DE, SG
              </div>
              <div className="hidden md:block w-px h-4 bg-white/10" />
              <div className="flex items-center gap-2">
-               <Shield size={14} className="text-brand-cyan" />
-               Anti-DDoS EdgeGuard Active
+               <Shield size={14} className="text-brand-gold/60" />
+               DDoS Protection Suite Active
              </div>
           </div>
         </div>
@@ -488,175 +510,187 @@ export default function PricingList() {
             ) : (
               <>
                 {activeTab === 'minecraft' ? (
-                  minecraftPlans.map((p, i) => (
-                    <motion.div
-                      key={`mc-${p.id}-${i}`}
-                      whileHover={{ y: -12, rotateX: 2, rotateY: -2, translateZ: 20 }}
-                      className={`group relative platinum-glass platinum-glass-hover ${p.highlight ? 'border-brand-cyan/60 shadow-glow-cyan-strong' : ''} rounded-[3rem] p-1.5 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-700 overflow-hidden backdrop-blur-3xl preserve-3d`}
-                    >
-                      {/* Visual Side */}
-                      <div className="relative w-full md:w-[380px] h-64 md:h-auto overflow-hidden shrink-0">
-                        <motion.img 
-                          src="https://cdn.discordapp.com/attachments/1414251304741638191/1496919234364706988/Download_Free_Minecraft_Wallpapers_and_Backgrounds.jpg?ex=69f5856c&is=69f433ec&hm=4c8910092041209010fde2ee1d46323b3cc01a1afbd1161d17e140b02c910576&"
-                          alt="" 
-                          className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-1000" 
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-r from-bg-dark/80 via-transparent to-transparent hidden md:block" />
-                        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-bg-dark to-transparent" />
-                        
-                        <div className="absolute inset-0 flex flex-col justify-end p-10">
-                           <div className="flex items-center gap-3 mb-2">
-                             <div className="w-8 h-px bg-brand-cyan/60 rounded-full" />
-                             <span className="text-[9px] font-bold text-brand-cyan uppercase tracking-[0.4em]">Node Cluster</span>
-                           </div>
-                           <h4 className="text-3xl font-bold text-white uppercase tracking-tight leading-none font-display text-premium-gradient">STERRO • {p.name}</h4>
-                        </div>
-                      </div>
-
-                      {/* Content Side */}
-                        <div className="flex-1 p-10 md:p-14 flex flex-col lg:flex-row items-center justify-between gap-10">
-                          <div className="flex-1 w-full space-y-10">
-                            <div className="hidden lg:block">
-                              <div className="flex items-center gap-4 mb-3">
-                                 <h4 className="text-4xl font-bold text-slate-100 uppercase tracking-tight group-hover:text-brand-cyan transition-colors duration-500 font-display">{p.name}</h4>
-                                 {p.highlight && (
-                                   <motion.span 
-                                     animate={{ opacity: [0.6, 1, 0.6] }}
-                                     transition={{ duration: 3, repeat: Infinity }}
-                                     className="bg-brand-cyan/10 border border-brand-cyan/20 text-brand-cyan text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-2"
-                                   >
-                                     <Star size={10} fill="currentColor" /> Premium
-                                   </motion.span>
-                                 )}
-                              </div>
-                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] flex items-center gap-2">
-                                <Zap size={14} className="text-brand-cyan/60" />
-                                Enterprise Distributed Cluster
-                              </p>
-                            </div>
-
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                              {[
-                                { icon: MemoryStick, label: "Core Memory", value: p.ram },
-                                { icon: Cpu, label: "Host vCore", value: p.cpu },
-                                { icon: HardDrive, label: "NVMe Raid", value: p.storage || p.ssd },
-                                { icon: Network, label: "Latency", value: "Ultra-Low" },
-                              ].map((spec, idx) => (
-                                <div key={idx} className="relative p-6 rounded-2xl bg-white/[0.01] border border-white/5 transition-all duration-300 hover:border-brand-cyan/20">
-                                  <div className="flex items-center gap-2 text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-3">
-                                    <spec.icon size={12} className="text-brand-cyan/60" />
-                                    {spec.label}
-                                  </div>
-                                  <div className="text-xl font-bold text-white tracking-tight">{spec.value}</div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="w-full lg:w-auto flex flex-col items-center lg:items-end gap-8 shrink-0">
-                            <div className="text-center lg:text-right">
-                               <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">Service Rate</div>
-                               <div className="text-5xl font-bold text-white tracking-tight leading-none">
-                                 ₹{p.price}
-                                 <span className="text-xs font-semibold text-slate-500 tracking-widest ml-2">/ month</span>
-                               </div>
-                            </div>
-                            
-                            <button 
-                              onClick={() => { playClick(); p.type === 'vps' ? window.open('https://discord.gg/b2PqWqSEU3', '_blank') : setSelectedPlan(p); }}
-                              className={`w-full lg:w-64 h-20 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-3 group/btn shadow-xl ${p.highlight ? 'bg-brand-cyan text-slate-950 px-8' : 'bg-slate-900 text-slate-100 hover:bg-slate-800 px-8'}`}
-                            >
-                              {p.isTrial ? 'Deploy Sandbox' : 'Provision Instance'}
-                              <ChevronRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
-                            </button>
-                          </div>
-                        </div>
-                    </motion.div>
-                  ))
-                ) : (
-                  vpsPlans.map((p, i) => (
-                    <motion.div
-                      key={`vps-${p.id}-${i}`}
-                      whileHover={{ y: -5 }}
-                      className={`group relative platinum-glass platinum-glass-hover ${p.highlight ? 'border-brand-cyan/40 shadow-glow-cyan' : ''} rounded-3xl p-1.5 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-500 overflow-hidden backdrop-blur-3xl`}
-                    >
-                       {/* Visual Side */}
-                       <div className="relative w-full md:w-[320px] h-64 md:h-auto overflow-hidden shrink-0 border-r border-white/5">
-                         <motion.img 
-                           src={p.id.includes(' Xeon') ? "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1200" : "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200"} 
-                           alt="" 
-                           className="w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-all duration-1000" 
-                         />
-                         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg-dark z-10" />
-                         
-                         <div className="absolute inset-0 flex flex-col justify-center items-center p-8 z-20">
-                            <div className="flex flex-col items-center">
-                              <span className="text-[9px] font-bold text-brand-cyan uppercase tracking-[0.4em] mb-3">Enterprise Cloud</span>
-                              <h4 className="text-4xl font-bold text-white uppercase tracking-tight leading-none font-display text-center drop-shadow-2xl">{p.name}</h4>
-                            </div>
-                         </div>
-                       </div>
-
-                       {/* Content Side */}
-                       <div className="flex-1 p-10 md:p-14 flex flex-col lg:flex-row items-center justify-between gap-10 bg-white/[0.01]">
-                         <div className="flex-1 w-full space-y-10">
-                           <div className="hidden lg:block">
-                             <div className="flex items-center gap-4 mb-3">
-                                <h4 className="text-4xl font-bold text-slate-100 uppercase tracking-tight group-hover:text-brand-cyan transition-colors duration-500 font-display">{p.name}</h4>
-                                {p.highlight && (
-                                  <motion.span 
-                                    animate={{ opacity: [0.6, 1, 0.6] }}
-                                    transition={{ duration: 3, repeat: Infinity }}
-                                    className="bg-brand-cyan/10 border border-brand-cyan/20 text-brand-cyan text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-2"
-                                  >
-                                    <Star size={10} fill="currentColor" /> Premium
-                                  </motion.span>
-                                )}
+                  minecraftPlans.length > 0 ? (
+                    minecraftPlans.map((p, i) => (
+                      <motion.div
+                        key={`mc-${p.id}-${i}`}
+                        whileHover={{ y: -12, rotateX: 2, rotateY: -2, translateZ: 20 }}
+                        className={`group relative platinum-glass platinum-glass-hover ${p.highlight ? 'border-brand-gold/60 shadow-glow-gold-strong' : ''} rounded-[3rem] p-1.5 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-700 overflow-hidden backdrop-blur-3xl preserve-3d`}
+                      >
+                        {/* Visual Side */}
+                        <div className="relative w-full md:w-[380px] h-64 md:h-auto overflow-hidden shrink-0">
+                          <motion.img 
+                            src="https://cdn.discordapp.com/attachments/1414251304741638191/1496919234364706988/Download_Free_Minecraft_Wallpapers_and_Backgrounds.jpg?ex=69f5856c&is=69f433ec&hm=4c8910092041209010fde2ee1d46323b3cc01a1afbd1161d17e140b02c910576&"
+                            alt="" 
+                            className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:scale-105 group-hover:opacity-100 transition-all duration-1000" 
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-r from-bg-dark/80 via-transparent to-transparent hidden md:block" />
+                          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-bg-dark to-transparent" />
+                          
+                          <div className="absolute inset-0 flex flex-col justify-end p-10">
+                             <div className="flex items-center gap-3 mb-2">
+                               <div className="w-8 h-px bg-brand-gold/60 rounded-full" />
+                               <span className="text-[9px] font-bold text-brand-gold uppercase tracking-[0.4em]">Infrastructure Unit</span>
                              </div>
-                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] flex items-center gap-2">
-                               <Zap size={14} className="text-brand-cyan/60" />
-                               Quantum Series • Cloud Architecture
-                             </p>
-                           </div>
+                             <h4 className="text-3xl font-bold text-white uppercase tracking-tight leading-none font-display text-premium-gradient">STERRO • {p.name}</h4>
+                          </div>
+                        </div>
 
-                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                             {[
-                               { icon: MemoryStick, label: "Core Memory", value: p.ram },
-                               { icon: Cpu, label: "KVM Compute", value: p.cpu },
-                               { icon: HardDrive, label: "NVMe Raid", value: p.storage },
-                               { icon: Network, label: "Uplink", value: "2 Gbps" },
-                             ].map((spec, idx) => (
-                               <div key={idx} className="relative p-6 rounded-2xl bg-white/[0.01] border border-white/5 transition-all duration-300 hover:border-brand-cyan/20">
-                                 <div className="flex items-center gap-2 text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-3">
-                                   <spec.icon size={12} className="text-brand-cyan/60" />
-                                   {spec.label}
+                        {/* Content Side */}
+                          <div className="flex-1 p-10 md:p-14 flex flex-col lg:flex-row items-center justify-between gap-10">
+                            <div className="flex-1 w-full space-y-10">
+                              <div className="hidden lg:block">
+                                <div className="flex items-center gap-4 mb-3">
+                                   <h4 className="text-4xl font-bold text-slate-100 uppercase tracking-tight group-hover:text-brand-gold transition-colors duration-500 font-display">{p.name}</h4>
+                                   {p.highlight && (
+                                     <motion.span 
+                                       animate={{ opacity: [0.6, 1, 0.6] }}
+                                       transition={{ duration: 3, repeat: Infinity }}
+                                       className="bg-brand-gold/10 border border-brand-gold/20 text-brand-gold text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-2"
+                                     >
+                                       <Star size={10} fill="currentColor" /> Enterprise
+                                     </motion.span>
+                                   )}
+                                </div>
+                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.3em] flex items-center gap-2">
+                                  <Zap size={14} className="text-brand-gold/60" />
+                                  Tier-1 High-Availability Cluster
+                                </p>
+                              </div>
+
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                                {[
+                                  { icon: MemoryStick, label: "Allocated Memory", value: p.ram },
+                                  { icon: Cpu, label: "vCore Compute", value: p.cpu },
+                                  { icon: HardDrive, label: "Enterprise NVMe", value: p.storage || p.ssd },
+                                  { icon: Network, label: "Bandwidth", value: "Gigabit" },
+                                ].map((spec, idx) => (
+                                  <div key={idx} className="relative p-6 rounded-2xl bg-white/[0.01] border border-white/5 transition-all duration-300 hover:border-brand-gold/20">
+                                    <div className="flex items-center gap-2 text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+                                      <spec.icon size={12} className="text-brand-gold/60" />
+                                      {spec.label}
+                                    </div>
+                                    <div className="text-xl font-bold text-white tracking-tight">{spec.value}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="w-full lg:w-auto flex flex-col items-center lg:items-end gap-8 shrink-0">
+                              <div className="text-center lg:text-right">
+                                 <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Service Fee</div>
+                                 <div className="text-5xl font-bold text-white tracking-tight leading-none">
+                                   ₹{p.price}
+                                   <span className="text-xs font-semibold text-slate-500 tracking-widest ml-2">/ billing cycle</span>
                                  </div>
-                                 <div className="text-xl font-bold text-white tracking-tight">{spec.value}</div>
-                               </div>
-                             ))}
-                           </div>
-                         </div>
-
-                         <div className="w-full lg:w-auto flex flex-col items-center lg:items-end gap-8 shrink-0">
-                           <div className="text-center lg:text-right">
-                              <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">Service Rate</div>
-                              <div className="text-5xl font-bold text-white tracking-tight leading-none">
-                                ₹{p.price}
-                                <span className="text-xs font-semibold text-slate-500 tracking-widest ml-2">/ month</span>
+                              </div>
+                              
+                              <button 
+                                onClick={() => { playClick(); p.type === 'vps' ? window.open('https://discord.gg/b2PqWqSEU3', '_blank') : setSelectedPlan(p); }}
+                                className={`w-full lg:w-64 h-20 rounded-2xl font-bold text-[10px] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-3 group/btn shadow-xl ${p.highlight ? 'bg-brand-gold text-slate-950 px-8' : 'bg-slate-900 text-slate-100 hover:bg-slate-800 px-8'}`}
+                              >
+                                {p.isTrial ? 'Claim Sandbox' : 'Provision Resource'}
+                                <ChevronRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
+                              </button>
+                            </div>
+                          </div>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <div className="text-center py-20 bg-white/5 rounded-3xl border border-white/10">
+                       <p className="text-sm font-bold text-slate-500 uppercase tracking-[0.5em]">No Game Clusters Available</p>
+                    </div>
+                  )
+                ) : (
+                  vpsPlans.length > 0 ? (
+                    vpsPlans.map((p, i) => (
+                      <motion.div
+                        key={`vps-${p.id}-${i}`}
+                        whileHover={{ y: -5 }}
+                        className={`group relative platinum-glass platinum-glass-hover ${p.highlight ? 'border-brand-gold/40 shadow-glow-gold' : ''} rounded-3xl p-1.5 flex flex-col md:flex-row items-stretch gap-0 transition-all duration-500 overflow-hidden backdrop-blur-3xl`}
+                      >
+                         {/* Visual Side */}
+                         <div className="relative w-full md:w-[320px] h-64 md:h-auto overflow-hidden shrink-0 border-r border-white/5">
+                           <motion.img 
+                             src={p.id.includes(' Xeon') ? "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1200" : "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200"} 
+                             alt="" 
+                             className="w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-all duration-1000" 
+                           />
+                           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg-dark z-10" />
+                           
+                           <div className="absolute inset-0 flex flex-col justify-center items-center p-8 z-20">
+                              <div className="flex flex-col items-center">
+                                <span className="text-[9px] font-bold text-brand-gold uppercase tracking-[0.4em] mb-3">Enterprise Cloud</span>
+                                <h4 className="text-4xl font-bold text-white uppercase tracking-tight leading-none font-display text-center drop-shadow-2xl">{p.name}</h4>
                               </div>
                            </div>
-                           
-                           <button 
-                             onClick={() => { playClick(); p.type === 'vps' ? window.open('https://discord.gg/b2PqWqSEU3', '_blank') : setSelectedPlan(p); }}
-                             className={`w-full lg:w-64 h-20 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-3 group/btn shadow-xl ${p.highlight ? 'bg-brand-cyan text-slate-950 px-8' : 'bg-slate-900 text-slate-100 hover:bg-slate-800 px-8'}`}
-                           >
-                             Deploy Cloud
-                             <ChevronRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
-                           </button>
                          </div>
-                       </div>
-                    </motion.div>
-                  ))
+
+                         {/* Content Side */}
+                         <div className="flex-1 p-10 md:p-14 flex flex-col lg:flex-row items-center justify-between gap-10 bg-white/[0.01]">
+                           <div className="flex-1 w-full space-y-10">
+                             <div className="hidden lg:block">
+                               <div className="flex items-center gap-4 mb-3">
+                                  <h4 className="text-4xl font-bold text-slate-100 uppercase tracking-tight group-hover:text-brand-gold transition-colors duration-500 font-display">{p.name}</h4>
+                                  {p.highlight && (
+                                    <motion.span 
+                                      animate={{ opacity: [0.6, 1, 0.6] }}
+                                      transition={{ duration: 3, repeat: Infinity }}
+                                      className="bg-brand-gold/10 border border-brand-gold/20 text-brand-gold text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-2"
+                                    >
+                                      <Star size={10} fill="currentColor" /> Premium
+                                    </motion.span>
+                                  )}
+                               </div>
+                               <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] flex items-center gap-2">
+                                 <Zap size={14} className="text-brand-gold/60" />
+                                 Quantum Series • Cloud Architecture
+                               </p>
+                             </div>
+
+                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                               {[
+                                 { icon: MemoryStick, label: "Core Memory", value: p.ram },
+                                 { icon: Cpu, label: "KVM Compute", value: p.cpu },
+                                 { icon: HardDrive, label: "NVMe Raid", value: p.storage },
+                                 { icon: Network, label: "Uplink", value: "2 Gbps" },
+                               ].map((spec, idx) => (
+                                 <div key={idx} className="relative p-6 rounded-2xl bg-white/[0.01] border border-white/5 transition-all duration-300 hover:border-brand-gold/20">
+                                   <div className="flex items-center gap-2 text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+                                     <spec.icon size={12} className="text-brand-gold/60" />
+                                     {spec.label}
+                                   </div>
+                                   <div className="text-xl font-bold text-white tracking-tight">{spec.value}</div>
+                                 </div>
+                               ))}
+                             </div>
+                           </div>
+
+                           <div className="w-full lg:w-auto flex flex-col items-center lg:items-end gap-8 shrink-0">
+                             <div className="text-center lg:text-right">
+                                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">Service Rate</div>
+                                <div className="text-5xl font-bold text-white tracking-tight leading-none">
+                                  ₹{p.price}
+                                  <span className="text-xs font-semibold text-slate-500 tracking-widest ml-2">/ month</span>
+                                </div>
+                             </div>
+                             
+                             <button 
+                               onClick={() => { playClick(); p.type === 'vps' ? window.open('https://discord.gg/b2PqWqSEU3', '_blank') : setSelectedPlan(p); }}
+                               className={`w-full lg:w-64 h-20 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-3 group/btn shadow-xl ${p.highlight ? 'bg-brand-gold text-slate-950 px-8' : 'bg-slate-900 text-slate-100 hover:bg-slate-800 px-8'}`}
+                             >
+                               Deploy Cloud
+                               <ChevronRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
+                             </button>
+                           </div>
+                         </div>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <div className="text-center py-20 bg-white/5 rounded-3xl border border-white/10">
+                       <p className="text-sm font-bold text-slate-500 uppercase tracking-[0.5em]">No VPS Clusters Available</p>
+                    </div>
+                  )
                 )}
               </>
             )}
@@ -696,9 +730,9 @@ export default function PricingList() {
                     {!verificationResult && !selectedPlan.isTrial && (
                       <div className="flex items-center justify-between mb-10 max-w-sm mx-auto">
                          <StepItem active={billingStep >= 1} completed={billingStep > 1} label="Config" icon={<Settings size={14}/>} />
-                         <div className={`flex-1 h-px mx-4 ${billingStep > 1 ? 'bg-[#00F0FF]' : 'bg-white/10'}`} />
+                         <div className={`flex-1 h-px mx-4 ${billingStep > 1 ? 'bg-brand-gold' : 'bg-white/10'}`} />
                          <StepItem active={billingStep >= 2} completed={billingStep > 2} label="Payment" icon={<CreditCard size={14}/>} />
-                         <div className={`flex-1 h-px mx-4 ${billingStep > 2 ? 'bg-[#00F0FF]' : 'bg-white/10'}`} />
+                         <div className={`flex-1 h-px mx-4 ${billingStep > 2 ? 'bg-brand-gold' : 'bg-white/10'}`} />
                          <StepItem active={billingStep >= 3} completed={billingStep > 3} label="Finish" icon={<CheckCircle2 size={14}/>} />
                       </div>
                     )}
@@ -717,24 +751,24 @@ export default function PricingList() {
                               </>
                             ) : (
                               <>
-                                <div className="w-20 h-20 bg-[#00F0FF]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[#00F0FF]/30">
-                                  <CheckCircle2 size={40} className="text-[#00F0FF]" />
+                                <div className="w-20 h-20 bg-brand-gold/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-brand-gold/30">
+                                  <CheckCircle2 size={40} className="text-brand-gold" />
                                 </div>
                                 <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tighter">Node Provisioned!</h3>
-                                <p className="text-[var(--color-text-dim)] mb-8 font-medium">Your high-performance server is ready for deployment.</p>
+                                <p className="text-slate-400 mb-8 font-medium">Your high-performance server is ready for deployment.</p>
                               </>
                             )}
                             
                             {verificationResult.serverDetails && (
-                              <div className="bg-[#080C14] border border-[#00F0FF]/20 rounded-2xl p-6 text-left mb-4 flex flex-col gap-2">
-                                 <div className="text-[10px] font-black uppercase tracking-widest text-[#00F0FF] mb-2 border-b border-white/5 pb-2">Server Details</div>
+                              <div className="bg-[#080C14] border border-brand-gold/20 rounded-2xl p-6 text-left mb-4 flex flex-col gap-2">
+                                 <div className="text-[10px] font-black uppercase tracking-widest text-brand-gold mb-2 border-b border-white/5 pb-2">Server Details</div>
                                  <div className="flex items-center justify-between pb-2">
                                      <span className="text-sm font-medium text-white/60">Server Name</span>
                                      <span className="text-sm font-bold text-white">{verificationResult.serverDetails.serverName}</span>
                                  </div>
                                  <div className="flex items-center justify-between pb-2">
                                      <span className="text-sm font-medium text-white/60">Plan</span>
-                                     <span className="text-sm font-bold text-[#00F0FF]">{verificationResult.serverDetails.plan}</span>
+                                     <span className="text-sm font-bold text-brand-gold">{verificationResult.serverDetails.plan}</span>
                                  </div>
                                  {verificationResult.serverDetails.ram && (
                                    <div className="flex items-center justify-between">
@@ -747,8 +781,8 @@ export default function PricingList() {
 
                             <div className="bg-[#080C14] border border-[#121B2B] rounded-2xl p-6 text-left mb-8 space-y-4">
                               <div className="flex justify-between items-center pb-4 border-b border-white/5">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-[#00F0FF]">Access Credentials</span>
-                                <button className="text-[10px] font-bold text-white/40 hover:text-[#00F0FF] flex items-center gap-1"><Copy size={10}/> Copy All</button>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-brand-gold">Access Credentials</span>
+                                <button className="text-[10px] font-bold text-white/40 hover:text-brand-gold flex items-center gap-1"><Copy size={10}/> Copy All</button>
                               </div>
                               <CredentialItem label="Panel URL" value={verificationResult.credentials?.panelUrl} />
                               <CredentialItem label="Username" value={verificationResult.credentials?.username} />
@@ -773,7 +807,7 @@ export default function PricingList() {
                             <p className="text-red-400 bg-red-500/10 p-5 rounded-2xl border border-red-500/20 text-sm mb-8 font-mono shadow-[inset_0_0_20px_rgba(239,68,68,0.05)] leading-relaxed">
                               {verificationResult.error}
                             </p>
-                            <button onClick={() => setVerificationResult(null)} className="w-full py-4 bg-[#00F0FF] text-black font-black rounded-xl uppercase tracking-widest">
+                            <button onClick={() => setVerificationResult(null)} className="w-full py-4 bg-brand-gold text-black font-black rounded-xl uppercase tracking-widest">
                               Try Again
                             </button>
                           </div>
@@ -785,7 +819,7 @@ export default function PricingList() {
  <div className="flex flex-col gap-4">
  <div className="bg-[#121B2B]/50 border border-[#1a1f2e] p-6 rounded-2xl w-full max-w-md mx-auto mb-4">
  <div className="text-center mb-6">
- <h3 className="text-xl font-bold text-[#00F0FF] mb-2 uppercase tracking-widest">Creating Server...</h3>
+ <h3 className="text-xl font-bold text-brand-gold mb-2 uppercase tracking-widest">Creating Server...</h3>
  <LoadingMessages isSubmitting={false} isCreatingServer={true} />
  </div>
  </div>
@@ -814,7 +848,7 @@ export default function PricingList() {
                          ) : (
                             <form onSubmit={handleSubmit(handleClaimTrial)} className="space-y-6">
                                <div className="text-center">
-                                  <h3 className="text-2xl font-black text-[#00F0FF] mb-2 uppercase tracking-tighter">HUMAN VERIFICATION</h3>
+                                  <h3 className="text-2xl font-black text-brand-gold mb-2 uppercase tracking-tighter">HUMAN VERIFICATION</h3>
                                   <p className="text-sm text-[var(--color-text-dim)]">Create your account to claim trial.</p>
                                </div>
                                <div className="grid grid-cols-2 gap-4">
@@ -822,7 +856,7 @@ export default function PricingList() {
                                      <label className="text-xs font-black uppercase tracking-widest text-white/60">Server Software</label>
                                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                                         {EGG_OPTIONS.map((egg) => (
-                                           <div key={egg.id} onClick={() => setValue("eggId", egg.id)} className={`px-3 py-2 border rounded-xl text-xs font-bold cursor-pointer transition-all text-center flex items-center justify-center ${currentEggId === egg.id ? 'bg-[#00F0FF] text-black border-[#00F0FF]' : 'bg-black/50 border-[#121B2B] text-white/70 hover:border-[#00F0FF]/50 hover:text-white'}`}>
+                                           <div key={egg.id} onClick={() => setValue("eggId", egg.id)} className={`px-3 py-2 border rounded-xl text-xs font-bold cursor-pointer transition-all text-center flex items-center justify-center ${currentEggId === egg.id ? 'bg-brand-gold text-black border-brand-gold' : 'bg-black/50 border-[#121B2B] text-white/70 hover:border-brand-gold/50 hover:text-white'}`}>
                                               {egg.name}
                                            </div>
                                         ))}
@@ -848,10 +882,10 @@ export default function PricingList() {
                                    </div>
                                    <span className="font-medium text-white">I am human</span>
                                  </div>
-                                 <Shield className="text-[#00F0FF]/50" size={24} />
+                                 <Shield className="text-brand-gold/50" size={24} />
                                </div>
 
-                               <button type="submit" disabled={isSkeletonLoading || !isHumanVerified} className="w-full h-14 bg-[#00F0FF] disabled:opacity-50 text-black font-black rounded-xl flex items-center justify-center gap-2 uppercase tracking-widest shadow-3d hover:bg-[#00D8E6]">
+                               <button type="submit" disabled={isSkeletonLoading || !isHumanVerified} className="w-full h-14 bg-brand-gold disabled:opacity-50 text-black font-black rounded-xl flex items-center justify-center gap-2 uppercase tracking-widest shadow-3d hover:shadow-glow-gold">
                                   {isSkeletonLoading ? <Loader2 className="animate-spin" /> : 'Claim Trial Server'}
                                 </button>
                             </form>
@@ -861,38 +895,38 @@ export default function PricingList() {
                       <div className="max-w-2xl mx-auto">
                          {billingStep === 1 && (
                            <div className="space-y-8">
-                             <div className="flex justify-between items-center bg-[#00F0FF]/5 border border-[#00F0FF]/20 rounded-[2rem] p-8">
+                             <div className="flex justify-between items-center bg-brand-gold/5 border border-brand-gold/20 rounded-[2rem] p-8">
                                 <div>
                                    <h3 className="text-xl font-bold text-white mb-1">{selectedPlan.name}</h3>
                                    <div className="flex items-baseline gap-2">
-                                      <span className="text-3xl font-black text-[#00F0FF]">₹{selectedPlan.price}</span>
-                                      <span className="text-xs text-[var(--color-text-dim)]">/Month</span>
+                                      <span className="text-3xl font-black text-brand-gold">₹{selectedPlan.price}</span>
+                                      <span className="text-xs text-slate-500">/Month</span>
                                    </div>
                                 </div>
                                 <div className="text-right">
                                    <div className="text-[10px] font-black uppercase text-white/40 tracking-widest mb-2">Infrastructure</div>
                                    <div className="flex items-center gap-3 text-xs font-bold text-white">
-                                      <span className="flex items-center gap-1"><Cpu size={12} className="text-[#00F0FF]"/> {selectedPlan.cpu}</span>
-                                      <span className="flex items-center gap-1"><MemoryStick size={12} className="text-[#00F0FF]"/> {selectedPlan.ram}</span>
+                                      <span className="flex items-center gap-1"><Cpu size={12} className="text-brand-gold"/> {selectedPlan.cpu}</span>
+                                      <span className="flex items-center gap-1"><MemoryStick size={12} className="text-brand-gold"/> {selectedPlan.ram}</span>
                                    </div>
                                 </div>
                              </div>
 
                              <div className="space-y-6">
                                 <div className="space-y-3">
-                                   <label className="text-xs font-black uppercase tracking-widest text-[#00F0FF] flex items-center gap-2">
+                                   <label className="text-xs font-black uppercase tracking-widest text-brand-gold flex items-center gap-2">
                                       <MapPin size={14} /> Server Software
                                    </label>
                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                        {EGG_OPTIONS.map((egg) => (
-                                          <div key={egg.id} onClick={() => setValue("eggId", egg.id)} className={`p-3 border rounded-xl text-sm font-bold cursor-pointer transition-all text-center flex items-center justify-center ${currentEggId === egg.id ? 'bg-[#00F0FF] text-black border-[#00F0FF]' : 'bg-[#080C14] border-[#121B2B] text-white/70 hover:border-[#00F0FF]/50 hover:text-white shadow-3d'}`}>
+                                          <div key={egg.id} onClick={() => setValue("eggId", egg.id)} className={`p-3 border rounded-xl text-sm font-bold cursor-pointer transition-all text-center flex items-center justify-center ${currentEggId === egg.id ? 'bg-brand-gold text-black border-brand-gold' : 'bg-[#080C14] border-[#121B2B] text-white/70 hover:border-brand-gold/50 hover:text-white shadow-3d'}`}>
                                              {egg.name}
                                           </div>
                                        ))}
                                    </div>
                                 </div>
                                 <div className="space-y-3 mt-4">
-                                   <label className="text-xs font-black uppercase tracking-widest text-[#00F0FF] flex items-center gap-2">
+                                   <label className="text-xs font-black uppercase tracking-widest text-brand-gold flex items-center gap-2">
                                       <MapPin size={14} /> Deployment Node Location
                                    </label>
                                    <WorldMap selectedId={currentNodeLocation} onSelect={(id) => setValue("nodeLocation", id)} />
@@ -904,9 +938,9 @@ export default function PricingList() {
                                    </div>
                                    
                                    {savedCreds && (
-                                     <div className="col-span-2 p-4 bg-brand-cyan/5 border border-brand-cyan/20 rounded-2xl flex items-center justify-between mb-2">
+                                     <div className="col-span-2 p-4 bg-brand-gold/5 border border-brand-gold/20 rounded-2xl flex items-center justify-between mb-2">
                                        <div className="flex items-center gap-3">
-                                         <div className="w-10 h-10 rounded-xl bg-brand-cyan/10 flex items-center justify-center text-brand-cyan">
+                                         <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
                                            <Users size={18} />
                                          </div>
                                          <div>
@@ -917,7 +951,7 @@ export default function PricingList() {
                                        <button 
                                          type="button"
                                          onClick={() => setUseExistingAccount(!useExistingAccount)}
-                                         className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${useExistingAccount ? 'bg-brand-cyan text-bg-dark' : 'bg-white/5 text-white/60'}`}
+                                         className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${useExistingAccount ? 'bg-brand-gold text-bg-dark' : 'bg-white/5 text-white/60'}`}
                                        >
                                          {useExistingAccount ? 'USING SAVED' : 'CREATE NEW'}
                                        </button>
@@ -942,7 +976,7 @@ export default function PricingList() {
 
                              <button 
                                onClick={() => setBillingStep(2)}
-                               className="w-full h-14 bg-[#00F0FF] text-black font-black rounded-2xl shadow-3d hover:shadow-[0_0_30px_rgba(0,240,255,0.3)] transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                               className="w-full h-14 bg-brand-gold text-black font-black rounded-2xl shadow-3d hover:shadow-glow-gold transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
                              >
                                Proceed to Payment <ChevronRight size={18} />
                              </button>
@@ -954,7 +988,7 @@ export default function PricingList() {
                               {(isSubmitting || isCreatingServer) ? (
                                 <div className="bg-[#121B2B]/50 border border-[#1a1f2e] p-6 rounded-2xl w-full max-w-2xl mx-auto mt-4">
                                   <div className="text-center mb-6">
-                                    <h3 className="text-xl font-bold text-[#00F0FF] mb-2 uppercase tracking-widest">{isSubmitting ? 'Verifying Payment...' : 'Creating Server...'}</h3>
+                                    <h3 className="text-xl font-bold text-brand-gold mb-2 uppercase tracking-widest">{isSubmitting ? 'Verifying Payment...' : 'Creating Server...'}</h3>
                                     <LoadingMessages isSubmitting={isSubmitting} isCreatingServer={isCreatingServer} />
                                   </div>
                                   <div className="animate-pulse flex space-x-4">
@@ -983,8 +1017,8 @@ export default function PricingList() {
                               ) : (
                             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
                               <div className="bg-[#080C14] border border-[#121B2B] rounded-3xl p-8 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-[#00F0FF]/10 blur-3xl -z-10" />
-                                <h4 className="text-xs font-black text-[#00F0FF] uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/10 blur-3xl -z-10" />
+                                <h4 className="text-xs font-black text-brand-gold uppercase tracking-widest mb-4 flex items-center gap-2">
                                    <CreditCard size={14} /> UPI Payment Gateway
                                 </h4>
                                 <div className="flex flex-col md:flex-row gap-8 items-center">
@@ -996,10 +1030,10 @@ export default function PricingList() {
                                       <div className="flex items-center gap-2 justify-center md:justify-start">
                                          <span className="text-2xl font-black text-white tracking-widest">ayushlegit@fam</span>
                                          <button type="button" onClick={() => navigator.clipboard.writeText('ayushlegit@fam')} className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
-                                            <Copy size={16} className="text-[#00F0FF]" />
+                                            <Copy size={16} className="text-brand-gold" />
                                          </button>
                                       </div>
-                                      <p className="text-[10px] text-[#00F0FF] font-black mt-2 uppercase tracking-widest">Amount: ₹{selectedPlan.price}</p>
+                                      <p className="text-[10px] text-brand-gold font-black mt-2 uppercase tracking-widest">Amount: ₹{selectedPlan.price}</p>
                                    </div>
                                 </div>
                              </div>
@@ -1013,28 +1047,28 @@ export default function PricingList() {
                              </div>
 
                              <div className="space-y-4">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-[#00F0FF] flex items-center gap-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-brand-gold flex items-center gap-2">
                                    <Paperclip size={14} /> Attach Payment Proof
                                 </label>
-                                <label className={`block w-full border-2 border-dashed ${previewUrl ? 'border-[#00F0FF] bg-[#00F0FF]/5' : 'border-[#121B2B] bg-[#080C14]'} rounded-2xl p-6 text-center cursor-pointer transition-all hover:border-[#00F0FF]/40 group`}>
+                                <label className={`block w-full border-2 border-dashed ${previewUrl ? 'border-brand-gold bg-brand-gold/5' : 'border-[#121B2B] bg-[#080C14]'} rounded-2xl p-6 text-center cursor-pointer transition-all hover:border-brand-gold/40 group`}>
                                    <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                                    {previewUrl ? (
                                      <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-4 text-left">
-                                           <img src={previewUrl} alt="Preview" className="w-16 h-16 rounded-lg object-cover border border-[#00F0FF]/30" />
+                                           <img src={previewUrl} alt="Preview" className="w-16 h-16 rounded-lg object-cover border border-brand-gold/30" />
                                            <div>
                                               <p className="text-sm font-bold text-white">Image Attached</p>
-                                              <p className="text-[10px] text-[#00F0FF] uppercase font-black">Click to change</p>
+                                              <p className="text-[10px] text-brand-gold uppercase font-black">Click to change</p>
                                            </div>
                                         </div>
-                                        <div className="w-8 h-8 rounded-full bg-[#00F0FF]/10 flex items-center justify-center text-[#00F0FF]">
+                                        <div className="w-8 h-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
                                            <CheckCircle2 size={16} />
                                         </div>
                                      </div>
                                    ) : (
                                      <div className="flex flex-col items-center gap-3">
-                                        <div className="w-12 h-12 rounded-full bg-white/5 group-hover:bg-[#00F0FF]/10 flex items-center justify-center transition-colors">
-                                           <Folder size={24} className="text-white/40 group-hover:text-[#00F0FF] transition-colors" />
+                                        <div className="w-12 h-12 rounded-full bg-white/5 group-hover:bg-brand-gold/10 flex items-center justify-center transition-colors">
+                                           <Folder size={24} className="text-white/40 group-hover:text-brand-gold transition-colors" />
                                         </div>
                                         <div className="flex flex-col items-center">
                                            <span className="text-sm font-bold text-white mb-1">Select File / From Folder</span>
@@ -1052,7 +1086,7 @@ export default function PricingList() {
                                 <button 
                                   type="submit"
                                   disabled={isSubmitting || (!screenshot && !isBypassUtr)}
-                                  className="flex-1 h-14 bg-[#00F0FF] text-black font-black rounded-xl shadow-3d hover:bg-[#00D8E6] transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                                  className="flex-1 h-14 bg-brand-gold text-black font-black rounded-xl shadow-3d hover:shadow-glow-gold transition-all flex items-center justify-center gap-2 uppercase tracking-widest disabled:opacity-50"
                                 >
                                   {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : 'Finalize Verification'}
                                 </button>
@@ -1078,7 +1112,7 @@ function Input({ label, error, className = "", ...props }: any) {
     <div className="space-y-1.5 flex-1">
       <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-1">{label}</label>
       <input 
-        className={`w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#00F0FF] outline-none transition-all placeholder:text-white/10 ${className}`}
+        className={`w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-gold outline-none transition-all placeholder:text-white/10 ${className}`}
         {...props}
       />
       {error && <span className="text-[10px] text-red-500 font-bold ml-1">{error}</span>}
@@ -1090,9 +1124,9 @@ function StepItem({ active, completed, label, icon }: any) {
   return (
     <div className="flex flex-col items-center gap-2 group">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 transition-all ${
-        completed ? 'bg-[#00F0FF] border-[#00F0FF] text-black shadow-[0_0_15px_rgba(0,240,255,0.4)]' : 
-        active ? 'bg-[#00F0FF]/10 border-[#00F0FF] text-[#00F0FF]' : 
-        'bg-white/5 border-white/10 text-white/20'
+        completed ? 'bg-brand-gold border-brand-gold text-black shadow-glow-gold' : 
+        active ? 'bg-brand-gold/10 border-brand-gold text-brand-gold' : 
+        'bg-white/5 border-white/10 text-white/40'
       }`}>
         {completed ? <CheckCircle2 size={18} /> : icon}
       </div>
@@ -1116,7 +1150,7 @@ function CredentialItem({ label, value, isPassword }: any) {
                 {show ? <X size={14}/> : <Activity size={14}/>}
              </button>
            )}
-           <button onClick={() => navigator.clipboard.writeText(value)} className="p-1.5 text-white/40 hover:text-[#00F0FF]">
+           <button onClick={() => navigator.clipboard.writeText(value)} className="p-1.5 text-white/40 hover:text-brand-gold">
               <Copy size={14} />
            </button>
         </div>
@@ -1127,7 +1161,7 @@ function CredentialItem({ label, value, isPassword }: any) {
 
 function PlanSkeleton({ highlight }: { highlight: boolean }) {
   return (
-    <div className={`relative bg-white/[0.02] border ${highlight ? 'border-brand-cyan/20 shadow-[0_0_20px_rgba(0,240,255,0.05)]' : 'border-white/5'} rounded-[2.5rem] p-8 md:p-12 mb-8 animate-skeleton min-h-[280px] flex flex-col md:flex-row gap-8 justify-between items-center overflow-hidden`}>
+    <div className={`relative bg-white/[0.02] border ${highlight ? 'border-brand-gold/20 shadow-glow-gold' : 'border-white/5'} rounded-[2.5rem] p-8 md:p-12 mb-8 animate-skeleton min-h-[280px] flex flex-col md:flex-row gap-8 justify-between items-center overflow-hidden`}>
       <div className="flex-1 w-full space-y-10">
          <div className="flex gap-4 items-center">
             <div className="w-48 h-10 rounded-xl bg-white/5" />

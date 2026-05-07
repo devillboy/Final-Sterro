@@ -166,7 +166,7 @@ export default function SupportChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="w-[320px] sm:w-[400px] h-[550px] bg-[#050914] border border-[#00F0FF]/20 rounded-2xl shadow-[0_20px_80px_-20px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden backdrop-blur-xl"
+            className="w-[320px] sm:w-[400px] h-[550px] bg-[#050914] border border-brand-gold/20 rounded-2xl shadow-[0_20px_80px_-20px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden backdrop-blur-xl"
           >
             {/* Header */}
             <div className="bg-white/[0.03] border-b border-white/10 p-6 flex items-center justify-between">
@@ -219,9 +219,9 @@ export default function SupportChat() {
 
             {/* Verification Helper (If Guest) */}
             {!firebaseUser && (
-              <div className="px-4 py-2 bg-[#00F0FF]/5 border-t border-[#00F0FF]/10 flex items-center justify-between">
+              <div className="px-4 py-2 bg-brand-gold/5 border-t border-brand-gold/10 flex items-center justify-between">
                 <span className="text-[10px] text-zinc-400">Login to enable account sync</span>
-                <button onClick={loginGoogle} className="text-[10px] text-[#00F0FF] font-bold uppercase hover:underline">Login Now</button>
+                <button onClick={loginGoogle} className="text-[10px] text-brand-gold font-bold uppercase hover:underline">Login Now</button>
               </div>
             )}
             {firebaseUser && !firebaseUser.emailVerified && (
@@ -243,7 +243,7 @@ export default function SupportChat() {
                   exit={{ opacity: 0, y: 10 }}
                   className="px-4 py-2 border-t border-white/5 bg-[#050914] flex items-center justify-between"
                 >
-                  <div className="flex items-center gap-2 text-xs text-[#00F0FF] bg-[#00F0FF]/10 px-2 py-1 rounded-lg">
+                  <div className="flex items-center gap-2 text-xs text-brand-gold bg-brand-gold/10 px-2 py-1 rounded-lg">
                     <FileIcon size={12} />
                     <span className="truncate max-w-[200px]">{attachedFile.name}</span>
                   </div>
@@ -265,7 +265,7 @@ export default function SupportChat() {
                 />
                 <button
                   onClick={handleFileClick}
-                  className="p-3 bg-white/5 border border-white/10 rounded-xl text-zinc-400 hover:text-[#00F0FF] hover:border-[#00F0FF]/50 transition-all"
+                  className="p-3 bg-white/5 border border-white/10 rounded-xl text-zinc-400 hover:text-brand-gold hover:border-brand-gold/50 transition-all"
                 >
                   <Paperclip size={18} />
                 </button>
@@ -276,12 +276,12 @@ export default function SupportChat() {
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                     placeholder="Describe your issue..."
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-4 pr-12 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#00F0FF]/50 transition-colors"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-4 pr-12 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-brand-gold/50 transition-colors"
                   />
                   <button
                     onClick={handleSend}
                     disabled={(!inputValue.trim() && !attachedFile) || isTyping}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[#00F0FF] text-black rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#00b8cc] transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-brand-gold text-black rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-brand-gold-muted transition-colors"
                   >
                     <Send size={16} />
                   </button>
@@ -300,9 +300,9 @@ export default function SupportChat() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-16 h-16 bg-gradient-to-tr from-[#00F0FF] to-[#00b8cc] rounded-full shadow-[0_8px_30px_rgba(0,240,255,0.4)] flex items-center justify-center text-[#050914] transition-all relative group"
+        className="w-16 h-16 bg-gradient-to-tr from-brand-gold to-brand-gold-muted rounded-full shadow-glow-gold flex items-center justify-center text-bg-dark transition-all relative group"
       >
-        <div className="absolute inset-0 rounded-full bg-[#00F0FF] animate-ping opacity-20 group-hover:hidden"></div>
+        <div className="absolute inset-0 rounded-full bg-brand-gold animate-ping opacity-20 group-hover:hidden"></div>
         {isOpen ? <X size={28} /> : <MessageCircle size={28} className="fill-current" />}
       </motion.button>
     </div>

@@ -16,11 +16,11 @@ export default function Protection() {
 
   return (
     <section id="locations" className="py-32 px-6 bg-bg-dark relative overflow-hidden">
-      <div className="absolute inset-0 visible-grid-cyan opacity-[0.03] pointer-events-none" />
+      <div className="absolute inset-0 visible-grid-gold opacity-[0.02] pointer-events-none" />
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-24">
-          <h2 className="text-5xl md:text-6xl font-black mb-8 tracking-tighter text-white uppercase italic font-display text-glow-cyan">
-             Global <span className="text-brand-cyan not-italic antialiased">Infrastructure</span> Nodes
+          <h2 className="text-5xl md:text-6xl font-bold mb-8 tracking-tighter text-white uppercase font-display text-glow-gold">
+             Global <span className="text-brand-gold antialiased">Infrastructure</span> Nodes
           </h2>
           <p className="text-zinc-500 max-w-2xl mx-auto font-bold uppercase tracking-[0.4em] text-sm leading-relaxed">
             Ultra-low latency delivery via our geo-distributed edge architecture.
@@ -35,24 +35,24 @@ export default function Protection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.1 }}
-              className="platinum-glass rounded-[3rem] p-12 flex flex-col hover:border-brand-cyan/20 transition-all duration-700 relative overflow-hidden preserve-3d"
+              className="platinum-glass rounded-[3rem] p-12 flex flex-col hover:border-brand-gold/20 transition-all duration-700 relative overflow-hidden preserve-3d"
             >
-              <div className="absolute top-0 right-0 w-80 h-80 bg-brand-cyan/5 rounded-full blur-[100px] pointer-events-none" />
+              <div className="absolute top-0 right-0 w-80 h-80 bg-brand-gold/5 rounded-full blur-[100px] pointer-events-none" />
               
-              <h3 className="text-4xl font-black mb-10 tracking-tighter text-white font-display italic uppercase relative z-10">{region.continent}</h3>
+              <h3 className="text-4xl font-bold mb-10 tracking-tighter text-white font-display uppercase relative z-10">{region.continent}</h3>
               
               <ul className="space-y-8 relative z-10">
                 {region.locations.map((loc, i) => (
                   <li key={i} className="flex items-center gap-6 group/loc">
-                    <div className="w-14 h-14 rounded-2xl border border-white/5 bg-white/[0.02] flex items-center justify-center shrink-0 shadow-3d-sm group-hover/loc:bg-brand-cyan/10 group-hover/loc:border-brand-cyan/30 transition-all duration-500">
-                      <MapPin size={24} className="text-brand-cyan" />
+                    <div className="w-14 h-14 rounded-2xl border border-white/5 bg-white/[0.02] flex items-center justify-center shrink-0 shadow-3d-sm group-hover/loc:bg-brand-gold/10 group-hover/loc:border-brand-gold/30 transition-all duration-500">
+                      <MapPin size={24} className="text-brand-gold" />
                     </div>
                     <div>
                       <div className="flex items-center gap-3">
-                        <span className="block text-white text-2xl font-black tracking-tighter italic uppercase font-display">{loc}</span>
+                        <span className="block text-white text-2xl font-bold tracking-tighter uppercase font-display">{loc}</span>
                         <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                       </div>
-                      <span className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-black">Connected Active Node</span>
+                      <span className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold">Connected Active Node</span>
                     </div>
                   </li>
                 ))}

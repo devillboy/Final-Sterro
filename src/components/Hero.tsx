@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useNavigate } from "react-router-dom";
 import { useSounds } from "../utils/sounds";
 import { ChevronRight } from "lucide-react";
 import { db } from "../lib/firebase";
@@ -26,6 +27,7 @@ const HERO_SLIDES = [
 ];
 
 export default function Hero() {
+  const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const { firebaseUser, loginGoogle } = useAuth();
   const { playClick } = useSounds();
@@ -42,7 +44,12 @@ export default function Hero() {
     if (!firebaseUser) {
       loginGoogle();
     } else {
-      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+      const pricingEl = document.getElementById('pricing');
+      if (pricingEl) {
+        pricingEl.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        navigate('/pricing');
+      }
     }
   };
 
@@ -85,7 +92,7 @@ export default function Hero() {
               className="relative z-10"
             >
               <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 leading-[1.1] text-white font-display text-premium-gradient">
-                {slide.title}<span className="text-brand-cyan/60 font-medium ml-2"> {slide.highlight}</span>
+                {slide.title}<span className="text-brand-gold/60 font-medium ml-2"> {slide.highlight}</span>
               </h1>
               
               <p className="text-lg md:text-xl text-slate-400 max-w-2xl mb-12 leading-relaxed">
@@ -96,19 +103,19 @@ export default function Hero() {
                 <div className="flex flex-col sm:flex-row items-center gap-6">
                   <button 
                     onClick={() => { playClick(); handleGetStarted(); }}
-                    className="px-12 py-5 bg-brand-cyan text-slate-950 font-bold rounded-2xl transition-all uppercase tracking-widest flex items-center gap-3 shadow-glow-cyan-strong hover:scale-[1.02] active:scale-[0.98] group/btn"
+                    className="px-12 py-5 bg-brand-gold text-slate-950 font-bold rounded-2xl transition-all uppercase tracking-widest flex items-center gap-3 shadow-glow-gold-strong hover:scale-[1.02] active:scale-[0.98] group/btn"
                   >
-                    Start Deployment
+                    Deploy Node
                     <ChevronRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
                   </button>
                   <button 
-                    onClick={() => { playClick(); document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }); }}
+                    onClick={() => { playClick(); navigate('/features'); }}
                     className="px-10 py-5 bg-slate-900/50 border border-slate-800 text-slate-300 font-bold rounded-2xl transition-all uppercase tracking-widest backdrop-blur-md hover:bg-slate-800 hover:text-white"
                   >
-                    Infrastructure
+                    Technology Stack
                   </button>
                   <div className="flex flex-col pl-4 border-l border-slate-800">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Starting at</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Entry Rate</span>
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl font-bold text-white tracking-tight">{slide.price}</span>
                       <span className="text-xs text-slate-500 font-medium lowercase"> / mo</span>
@@ -145,7 +152,7 @@ export default function Hero() {
           <button
             key={idx}
             onClick={() => setCurrentSlide(idx)}
-            className={`h-1.5 transition-all duration-500 rounded-full ${currentSlide === idx ? 'w-12 bg-brand-cyan shadow-glow-cyan' : 'w-6 bg-white/20 hover:bg-white/40'}`}
+            className={`h-1.5 transition-all duration-500 rounded-full ${currentSlide === idx ? 'w-12 bg-brand-gold shadow-glow-gold' : 'w-6 bg-white/20 hover:bg-white/40'}`}
           />
         ))}
       </div>
