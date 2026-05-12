@@ -26,24 +26,12 @@ interface Plan {
   players?: string;
 }
 
-const fallbackMinecraftPlans: Plan[] = [
-  { id: 'trial', name: "Dev Sandbox", price: "0", ram: "4GB RAM", storage: "100GB SSD", cpu: "150% CPU", ports: "1 Additional Port", backups: "0 Backup Limit", db: "1 Database", ddos: "Standard", players: "Testing Only", isTrial: true, type: 'minecraft', order: 0 },
-  { id: 'p1', name: "Core-01", price: "130", ram: "2GB RAM", storage: "75GB SSD", cpu: "100% CPU (4.0GHz)", ports: "2 Additional Ports", backups: "1 Backup Limit", db: "1 Database", ddos: "10 Gbps EdgeGuard", players: "10-20 Players", type: 'minecraft', order: 1 },
-  { id: 'p2', name: "Core-02", price: "260", ram: "4GB RAM", storage: "100GB SSD", cpu: "150% CPU", ports: "2 Additional Ports", backups: "1 Backup Limit", db: "1 Database", ddos: "10 Gbps Protection", players: "20-35 Players", type: 'minecraft', order: 2 },
-  { id: 'p3', name: "Sigma Pro", price: "390", ram: "6GB RAM", storage: "125GB SSD", cpu: "200% CPU", ports: "2 Additional Ports", backups: "2 Backup Limits", db: "2 Databases", ddos: "10 Gbps Protection", players: "30-50 Players", highlight: true, type: 'minecraft', order: 3 }
-];
-
-const fallbackVpsPlans: Plan[] = [
-  { id: 'v1', name: "D-Node Alpha", price: "240", ram: "4GB RAM", cpu: "200% CPU", type: 'vps', storage: '50GB', ports: '1', order: 0 },
-  { id: 'v2', name: "D-Node Beta", price: "480", ram: "8GB RAM", cpu: "400% CPU", type: 'vps', storage: '100GB', ports: '1', order: 1 },
-  { id: 'v3', name: "D-Node Xeon Pro", price: "960", ram: "16GB RAM", cpu: "800% CPU", highlight: true, type: 'vps', storage: '200GB', ports: '1', order: 2 }
-];
-
+import { VPS_PLANS, MINECRAFT_PLANS, Plan } from '../constants/plans';
 
 export default function PricingList() {
   const [activeTab, setActiveTab] = useState<'minecraft' | 'vps'>('minecraft');
-  const [minecraftPlans, setMinecraftPlans] = useState<Plan[]>(fallbackMinecraftPlans);
-  const [vpsPlans, setVpsPlans] = useState<Plan[]>(fallbackVpsPlans);
+  const [minecraftPlans, setMinecraftPlans] = useState<Plan[]>(MINECRAFT_PLANS);
+  const [vpsPlans, setVpsPlans] = useState<Plan[]>(VPS_PLANS);
   const [loading, setLoading] = useState(true);
   const { playClick } = useSounds();
   const navigate = useNavigate();
@@ -58,10 +46,10 @@ export default function PricingList() {
           const allPlans = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Plan));
           
           let fetchedMcPlans = allPlans.filter(p => p.type === 'minecraft');
-          if (fetchedMcPlans.length === 0) fetchedMcPlans = fallbackMinecraftPlans;
+          if (fetchedMcPlans.length === 0) fetchedMcPlans = MINECRAFT_PLANS;
 
           if (!fetchedMcPlans.some(p => p.isTrial)) {
-            const defaultTrial = fallbackMinecraftPlans.find(p => p.isTrial);
+            const defaultTrial = MINECRAFT_PLANS.find(p => p.isTrial);
             if (defaultTrial) {
                fetchedMcPlans = [defaultTrial, ...fetchedMcPlans];
             }
@@ -69,16 +57,15 @@ export default function PricingList() {
           
           setMinecraftPlans(fetchedMcPlans);
           const fetchedVpsPlans = allPlans.filter(p => p.type === 'vps');
-          setVpsPlans(fetchedVpsPlans.length > 0 ? fetchedVpsPlans : fallbackVpsPlans);
+          setVpsPlans(fetchedVpsPlans.length > 0 ? fetchedVpsPlans : VPS_PLANS);
         } else {
-          // If snap is empty, we already have fallbacks in state, but let's be explicit
-          setMinecraftPlans(fallbackMinecraftPlans);
-          setVpsPlans(fallbackVpsPlans);
+          setMinecraftPlans(MINECRAFT_PLANS);
+          setVpsPlans(VPS_PLANS);
         }
       } catch (e) {
         console.warn("Live plans load failed, using fallbacks.");
-        setMinecraftPlans(fallbackMinecraftPlans);
-        setVpsPlans(fallbackVpsPlans);
+        setMinecraftPlans(MINECRAFT_PLANS);
+        setVpsPlans(VPS_PLANS);
       } finally {
         setLoading(false);
       }
@@ -94,8 +81,8 @@ export default function PricingList() {
       
       <div className="max-w-7xl mx-auto relative z-10 overflow-visible">
         <div className="text-center mb-32 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-          <h2 className="text-6xl md:text-8xl font-black mb-10 tracking-tighter leading-none text-premium-gradient uppercase font-display text-glow-gold drop-shadow-2xl">
-            Enterprise <span className="text-brand-gold/90 font-semibold font-display">Optimization</span>
+          <h2 className="text-6xl md:text-8xl font-black mb-10 tracking-tighter leading-none text-white uppercase font-display drop-shadow-2xl">
+            Enterprise <span className="text-brand-gold antialiased">Optimization</span>
           </h2>
           <p className="text-zinc-500 max-w-2xl mx-auto mb-20 text-xs font-black uppercase tracking-[0.6em] leading-relaxed opacity-70">
             Scalable nodes engineered for high-availability enterprise operations. 
@@ -159,9 +146,10 @@ export default function PricingList() {
                         {/* Visual Side */}
                         <div className="relative w-full md:w-[420px] h-72 md:h-auto overflow-hidden shrink-0">
                           <motion.img 
-                            src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000&auto=format&fit=crop"
+                            src="https://cdn.discordapp.com/attachments/1414251304741638191/1496919234364706988/Download_Free_Minecraft_Wallpapers_and_Backgrounds.jpg?ex=69fd6e6c&is=69fc1cec&hm=d6e957a8daff31c254deb2a7212d7761be538ac58eff2819317259294e2f7d1d&"
                             alt="" 
                             className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:scale-110 group-hover:opacity-70 transition-all duration-1000" 
+                            referrerPolicy="no-referrer"
                           />
                           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent hidden md:block" />
                           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black to-transparent" />
@@ -254,9 +242,10 @@ export default function PricingList() {
                          {/* Visual Side */}
                          <div className="relative w-full md:w-[320px] h-64 md:h-auto overflow-hidden shrink-0 border-r border-white/5">
                            <motion.img 
-                             src="https://images.unsplash.com/photo-1558494949-ef010cbdcc51?q=80&w=1200&auto=format&fit=crop" 
+                             src="https://cdn.discordapp.com/attachments/1414251304741638191/1497103165689167923/qHFzGKFBz7kvxiVyjoe6JJ-1024-80.jpg.webp?ex=69fd70f9&is=69fc1f79&hm=e4e7fae7a3bc571675731dcf155f8334df1ecae822df8aec30f940b976e0b46e&" 
                              alt="" 
                              className="w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-all duration-1000" 
+                             referrerPolicy="no-referrer"
                            />
                            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg-dark z-10" />
                            

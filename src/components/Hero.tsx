@@ -8,89 +8,66 @@ import { useAuth } from "../contexts/AuthContext";
 const HERO_SLIDES = [
   {
     id: "minecraft",
-    title: "Minecraft",
-    highlight: "Optimization",
-    description: "Unleash your creativity on our ultra-low latency nodes. Powered by Ryzen 9 series processors for the ultimate block-building experience.",
+    title: "Forge Your Kingdom",
+    highlight: "Minecraft Elite",
+    description: "Unleash the full potential of your Minecraft world on our high-performance Xeon infrastructure. Zero lag, absolute dominion.",
     price: "₹90",
     bgUrl: "https://cdn.discordapp.com/attachments/1414251304741638191/1496919234364706988/Download_Free_Minecraft_Wallpapers_and_Backgrounds.jpg?ex=69fd6e6c&is=69fc1cec&hm=d6e957a8daff31c254deb2a7212d7761be538ac58eff2819317259294e2f7d1d&",
-    illustrationUrl: "https://images.unsplash.com/photo-1627398113743-bc0f3c473174?q=80&w=1000&auto=format&fit=crop"
+    illustrationUrl: "https://images.unsplash.com/photo-1627398242454-45a1465c2479?q=80&w=1000&auto=format&fit=crop"
   },
   {
     id: "vps",
-    title: "Cloud VPS",
-    highlight: "Performance",
-    description: "Enterprise-grade KVM virtualization with dedicated NVMe storage. Deploy your most demanding projects with absolute confidence.",
+    title: "Cloud Infrastructure",
+    highlight: "KVM Dedicated",
+    description: "Enterprise-grade KVM virtualization with dedicated NVMe storage. Deploy your most demanding projects with absolute hardware isolation.",
     price: "₹240",
     bgUrl: "https://cdn.discordapp.com/attachments/1414251304741638191/1497103165689167923/qHFzGKFBz7kvxiVyjoe6JJ-1024-80.jpg.webp?ex=69fd70f9&is=69fc1f79&hm=e4e7fae7a3bc571675731dcf155f8334df1ecae822df8aec30f940b976e0b46e&",
-    illustrationUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc48?q=80&w=1000&auto=format&fit=crop"
+    illustrationUrl: "/src/assets/images/regenerated_image_1778300953384.png"
   }
 ];
 
 const CloudRainEffect = () => {
-  const particles = useMemo(() => {
-    return Array.from({ length: 60 }).map((_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      delay: Math.random() * 5,
-      duration: 2 + Math.random() * 3,
-      opacity: 0.1 + Math.random() * 0.4,
-      size: 1 + Math.random() * 2,
-    }));
-  }, []);
-
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
-      <AnimatePresence>
-        {particles.map((p) => (
+    <div className="absolute inset-0 z-[1] pointer-events-none overflow-hidden scale-110">
+      {/* Cinematic Fog Layers */}
+      <motion.div 
+        animate={{ 
+          x: [-20, 20],
+          opacity: [0.1, 0.2, 0.1]
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute inset-0 bg-gradient-to-tr from-brand-gold/5 via-brand-gold/10 to-transparent blur-[120px] mix-blend-screen"
+      />
+      <motion.div 
+        animate={{ 
+          x: [20, -20],
+          opacity: [0.05, 0.15, 0.05]
+        }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 5 }}
+        className="absolute inset-0 bg-gradient-to-bl from-brand-gold/10 via-transparent to-brand-gold/5 blur-[100px] mix-blend-screen"
+      />
+      
+      {/* Minecraft Rain Elements */}
+      <div className="absolute inset-0 opacity-20">
+        {[...Array(60)].map((_, i) => (
           <motion.div
-            key={p.id}
-            initial={{ y: -100, opacity: 0 }}
+            key={i}
+            initial={{ y: -50, x: Math.random() * 100 + "%", opacity: 0 }}
             animate={{ 
-              y: ['0vh', '110vh'],
-              opacity: [0, p.opacity, 0]
+              y: ["0vh", "120vh"],
+              opacity: [0, 1, 1, 0],
+              height: ["2px", "100px", "100px", "2px"]
             }}
             transition={{
-              duration: p.duration,
+              duration: Math.random() * 0.5 + 0.5,
               repeat: Infinity,
-              delay: p.delay,
+              delay: Math.random() * 2,
               ease: "linear"
             }}
-            style={{
-              position: 'absolute',
-              left: p.left,
-              width: `${p.size}px`,
-              height: `${p.size * 25}px`,
-              background: 'linear-gradient(to bottom, transparent, rgba(255, 193, 7, 0.4))',
-              borderRadius: '100px',
-              filter: 'blur(1px)',
-            }}
+            className="absolute w-[1px] bg-brand-gold shadow-[0_0_10px_rgba(0,245,255,0.5)]"
           />
         ))}
-      </AnimatePresence>
-      {/* Cinematic Clouds */}
-      <motion.div 
-        animate={{ 
-          x: [-100, 100], 
-          y: [-20, 20],
-          scale: [1, 1.1, 1]
-        }}
-        transition={{ duration: 20, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
-        className="absolute -top-20 left-0 opacity-[0.03] blur-[120px]"
-      >
-        <div className="w-[800px] h-[500px] bg-brand-gold rounded-full" />
-      </motion.div>
-      <motion.div 
-        animate={{ 
-          x: [100, -100], 
-          y: [20, -20],
-          scale: [1.1, 1, 1.1]
-        }}
-        transition={{ duration: 25, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
-        className="absolute -bottom-40 right-0 opacity-[0.03] blur-[150px]"
-      >
-        <div className="w-[1000px] h-[600px] bg-brand-gold rounded-full" />
-      </motion.div>
+      </div>
     </div>
   );
 };
@@ -251,47 +228,54 @@ export default function Hero() {
                 {/* 3D Floating elements */}
                 <motion.div 
                   animate={{ 
-                    y: [0, -30, 0],
-                    rotateZ: [0, 10, 0],
-                    translateZ: [0, 50, 0]
+                    y: [0, -40, 0],
+                    rotateZ: [0, 15, 0],
+                    rotateX: [0, -10, 0],
+                    translateZ: [0, 80, 0]
                   }}
                   transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-                  className="absolute -top-12 -right-12 w-36 h-36 platinum-glass border border-white/20 rounded-[2rem] p-5 shadow-3d-lg z-20 flex items-center justify-center translate-z-50"
-                  style={{ transform: 'translateZ(50px)' }}
+                  className="absolute -top-16 -right-16 w-40 h-40 platinum-glass border border-white/20 rounded-[2.5rem] p-6 shadow-3d-lg z-20 flex items-center justify-center translate-z-80"
+                  style={{ transform: 'translateZ(80px)' }}
                 >
-                  <div className="w-full h-full bg-brand-gold/20 rounded-2xl flex items-center justify-center">
-                    <Zap className="text-brand-gold drop-shadow-glow" size={40} />
+                  <div className="w-full h-full bg-brand-gold/20 rounded-3xl flex items-center justify-center relative group/inner">
+                    <div className="absolute inset-0 bg-brand-gold/20 blur-2xl rounded-full opacity-0 group-hover/inner:opacity-100 transition-opacity" />
+                    <Zap className="text-brand-gold drop-shadow-glow" size={48} />
                   </div>
                 </motion.div>
 
                 <motion.div 
                   animate={{ 
-                    y: [0, 30, 0],
-                    rotateZ: [0, -5, 0],
-                    translateZ: [0, 80, 0]
+                    y: [0, 40, 0],
+                    rotateZ: [0, -10, 0],
+                    rotateX: [0, 5, 0],
+                    translateZ: [0, 110, 0]
                   }}
-                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                  className="absolute -bottom-12 -left-12 w-48 h-48 platinum-glass border border-white/20 rounded-[2rem] p-8 shadow-3d-lg z-20 translate-z-80"
-                  style={{ transform: 'translateZ(80px)' }}
+                  transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                  className="absolute -bottom-16 -left-16 w-56 h-56 platinum-glass border border-white/20 rounded-[2.5rem] p-10 shadow-3d-lg z-20 translate-z-110"
+                  style={{ transform: 'translateZ(110px)' }}
                 >
-                  <div className="space-y-5">
-                     <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden">
+                  <div className="space-y-6">
+                     <div className="flex justify-between items-center mb-1">
+                        <span className="text-[9px] font-black text-brand-gold/60 uppercase tracking-[0.3em]">Node Load</span>
+                        <span className="text-[10px] font-bold text-white">42%</span>
+                     </div>
+                     <div className="h-4 w-full bg-white/5 rounded-full overflow-hidden p-1 border border-white/5">
                         <motion.div 
-                          animate={{ width: ['0%', '85%', '85%'] }}
-                          transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                          className="h-full bg-brand-gold shadow-glow-gold" 
+                          animate={{ width: ['20%', '85%', '42%'] }}
+                          transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
+                          className="h-full bg-brand-gold shadow-glow-gold rounded-full" 
                         />
                      </div>
-                     <div className="h-3 w-3/4 bg-white/5 rounded-full overflow-hidden">
+                     <div className="h-4 w-5/6 bg-white/5 rounded-full overflow-hidden p-1 border border-white/5">
                         <motion.div 
-                          animate={{ width: ['0%', '65%', '65%'] }}
-                          transition={{ duration: 2, repeat: Infinity, repeatDelay: 3, delay: 0.2 }}
-                          className="h-full bg-brand-gold shadow-glow-gold" 
+                          animate={{ width: ['10%', '65%', '31%'] }}
+                          transition={{ duration: 3, repeat: Infinity, repeatDelay: 2, delay: 0.2 }}
+                          className="h-full bg-brand-gold shadow-glow-gold rounded-full" 
                         />
                      </div>
-                     <div className="flex justify-between items-end mt-6">
-                        <div className="text-[11px] font-black text-brand-gold uppercase tracking-[0.2em]">Efficiency</div>
-                        <div className="text-2xl font-bold text-white tracking-tighter">99<span className="text-brand-gold">.</span>9<span className="text-[12px] opacity-40 ml-1">%</span></div>
+                     <div className="flex justify-between items-end mt-8">
+                        <div className="text-[11px] font-black text-brand-gold uppercase tracking-[0.2em]">Uptime</div>
+                        <div className="text-3xl font-bold text-white tracking-tighter">99<span className="text-brand-gold">.</span>99<span className="text-[12px] opacity-40 ml-1">%</span></div>
                      </div>
                   </div>
                 </motion.div>

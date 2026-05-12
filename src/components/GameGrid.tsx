@@ -13,9 +13,9 @@ export default function GameGrid() {
       key: "MC_THUMB"
     },
     { 
-      name: "VPS Hosting", 
+      name: "Cloud VPS", 
       icon: Server, 
-      imgUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1000&auto=format&fit=crop&q=80",
+      imgUrl: "https://cdn.discordapp.com/attachments/1414251304741638191/1497103165689167923/qHFzGKFBz7kvxiVyjoe6JJ-1024-80.jpg.webp?ex=69fd70f9&is=69fc1f79&hm=e4e7fae7a3bc571675731dcf155f8334df1ecae822df8aec30f940b976e0b46e&",
       key: "VPS_THUMB"
     },
   ]);
@@ -43,7 +43,7 @@ export default function GameGrid() {
       <div className="absolute inset-0 cinematic-vignette opacity-50 z-0" />
       
       <div className="max-w-7xl mx-auto text-center relative z-10">
-        <h2 className="text-5xl md:text-7xl font-bold mb-6 tracking-tighter text-white uppercase font-display text-glow-gold">
+        <h2 className="text-5xl md:text-7xl font-bold mb-6 tracking-tighter text-white uppercase font-display">
           Regional <span className="text-brand-gold antialiased">Orchestration</span> Fleet
         </h2>
         <p className="text-zinc-500 mb-20 max-w-2xl mx-auto text-xs font-bold uppercase tracking-[0.6em] leading-relaxed">

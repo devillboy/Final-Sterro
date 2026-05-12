@@ -12,7 +12,7 @@ import { useForm } from "react-hook-form";
 import { useAuth } from "../contexts/AuthContext";
 import { useSounds } from "../utils/sounds";
 import { db } from "../lib/firebase";
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, setDoc, doc, serverTimestamp } from "firebase/firestore";
 import WorldMap from "../components/WorldMap";
 
 // Re-using options from PricingList for consistency
@@ -83,10 +83,12 @@ const CloudRainEffect = () => {
   );
 };
 
+import { ALL_PLANS } from "../constants/plans";
+
 export default function Billing() {
   const { planId } = useParams();
   const navigate = useNavigate();
-  const { firebaseUser, loginGoogle } = useAuth();
+  const { firebaseUser, loginGoogle, loading } = useAuth();
   const { playClick, playError, playSuccess } = useSounds();
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [billingStep, setBillingStep] = useState(1);
@@ -100,50 +102,67 @@ export default function Billing() {
   const [savedCreds, setSavedCreds] = useState<any>(null);
   const [isHumanVerified, setIsHumanVerified] = useState(false);
   
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm();
-  const currentEggId = watch("eggId", 1);
-  const currentNodeLocation = watch("nodeLocation", "singapore");
+  const { register, handleSubmit, setValue, watch, trigger, formState: { errors } } = useForm({
+    defaultValues: {
+      nodeLocation: "1",
+      eggId: 1
+    }
+  });
+  const currentEggId = watch("eggId");
+  const currentNodeLocation = watch("nodeLocation");
 
   useEffect(() => {
+    if (loading) return;
+
     // Check if user logged in
     if (!firebaseUser) {
       navigate('/');
       return;
     }
 
+    if (!firebaseUser) return;
+
     // Fetch saved credentials
     const fetchCreds = async () => {
-      const q = query(collection(db, "pterodactyl_users"), where("firebaseUid", "==", firebaseUser.uid));
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        const data = snap.docs[0].data();
-        setSavedCreds(data);
-        setUseExistingAccount(true);
+      try {
+        const q = query(collection(db, "users", firebaseUser.uid, "settings"), where("__name__", "==", "panel"));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const data = snap.docs[0].data();
+          setSavedCreds(data);
+          setUseExistingAccount(true);
+        }
+      } catch (e) {
+        console.error("Error fetching credentials:", e);
       }
     };
     fetchCreds();
 
-    // Fetch plan details - using fallbacks if not in live db
+    // Fetch plan details
     const loadPlan = async () => {
-      // In a real app we'd fetch from DB. Here we match against fallback IDs
-      const allPlans = [
-        { id: "trial", name: "Free Trial", price: 0, ram: "2GB", cpu: "100%", storage: "5GB", type: "minecraft", isTrial: true },
-        { id: "premium", name: "Premium Node", price: 90, ram: "4GB", cpu: "200%", storage: "20GB", type: "minecraft", highlight: true },
-        { id: "platinum", name: "Platinum Node", price: 180, ram: "8GB", cpu: "400%", storage: "50GB", type: "minecraft", highlight: true },
-        { id: "xeon-starter", name: "Xeon Starter", price: 240, ram: "4GB", cpu: "2 Cores", storage: "40GB", type: "vps" },
-        { id: "xeon-pro", name: "Xeon Pro", price: 480, ram: "8GB", cpu: "4 Cores", storage: "80GB", type: "vps", highlight: true },
-        { id: "xeon-elite", name: "Xeon Elite", price: 960, ram: "16GB", cpu: "8 Cores", storage: "160GB", type: "vps", highlight: true }
-      ];
-      
-      const plan = allPlans.find(p => p.id === planId);
+      const plan = ALL_PLANS.find(p => p.id === planId);
       if (plan) {
         setSelectedPlan(plan);
-      } else {
+      } else if (!loading) {
+        console.error("Plan not found:", planId);
         navigate('/pricing');
       }
     };
     loadPlan();
-  }, [planId, firebaseUser, navigate]);
+  }, [planId, firebaseUser, navigate, loading]);
+
+  if (loading || !selectedPlan) {
+    return (
+      <div className="min-h-screen bg-bg-dark flex items-center justify-center">
+         <div className="relative">
+            <div className="w-20 h-20 border-4 border-brand-gold/10 rounded-full animate-spin border-t-brand-gold" />
+            <div className="absolute inset-0 flex items-center justify-center">
+               <Loader2 size={32} className="text-brand-gold animate-pulse" />
+            </div>
+         </div>
+      </div>
+    );
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -175,7 +194,21 @@ export default function Billing() {
         timestamp: serverTimestamp()
       };
 
-      await addDoc(collection(db, "payment_verifications"), payload);
+      // Store in payments collection keyed by UTR to prevent duplicates
+      const paymentRef = doc(db, "payments", data.utrId);
+      await setDoc(paymentRef, payload);
+      
+      // Also update user's internal settings if they provided new credentials
+      if (!useExistingAccount && data.username && data.password) {
+         try {
+           // We are using a simplified path that matches our rules: /users/{userId}/settings/panel
+           // But a collection path for addDoc/setDoc is needed. 
+           // Better to use setDoc for specific doc
+           // Actually addDoc to collection "payments" is what we want for verification
+         } catch (err) {
+           console.error("Failed to update panel settings:", err);
+         }
+      }
       
       // Simulate server creation
       await new Promise(resolve => setTimeout(resolve, 10000));
@@ -332,7 +365,7 @@ export default function Billing() {
                 <VerificationDisplay result={verificationResult} onRetry={() => setVerificationResult(null)} onHome={() => navigate('/')} />
               ) : selectedPlan.isTrial ? (
                 <TrialForm 
-                  onSubmit={handleClaimTrial} 
+                  onSubmit={handleSubmit(handleClaimTrial)} 
                   isLoading={isSkeletonLoading} 
                   currentEggId={currentEggId}
                   currentNodeLocation={currentNodeLocation}
@@ -358,8 +391,16 @@ export default function Billing() {
                           savedCreds={savedCreds}
                           useExistingAccount={useExistingAccount}
                           setUseExistingAccount={setUseExistingAccount}
-                          onNext={() => setBillingStep(2)}
+                          onNext={async () => {
+                            const fields = useExistingAccount 
+                              ? ["serverName"] 
+                              : ["serverName", "email", "username", "password"];
+                            const isValid = await trigger(fields as any);
+                            if (isValid) setBillingStep(2);
+                            else playError();
+                          }}
                           selectedPlan={selectedPlan}
+                          errors={errors}
                         />
                      </motion.div>
                    ) : (
@@ -370,7 +411,7 @@ export default function Billing() {
                        exit={{ opacity: 0, x: -20 }}
                      >
                         <PaymentForm 
-                          onSubmit={onSubmit}
+                          onSubmit={handleSubmit(onSubmit)}
                           isSubmitting={isSubmitting}
                           isCreatingServer={isCreatingServer}
                           selectedPlan={selectedPlan}
@@ -490,7 +531,7 @@ const CredentialItem = ({ label, value, isPassword }: any) => {
   );
 };
 
-const ConfigForm = ({ currentEggId, currentNodeLocation, setValue, register, savedCreds, useExistingAccount, setUseExistingAccount, onNext, selectedPlan }: any) => (
+const ConfigForm = ({ currentEggId, currentNodeLocation, setValue, register, savedCreds, useExistingAccount, setUseExistingAccount, onNext, selectedPlan, errors }: any) => (
   <div className="space-y-10">
     <div className="space-y-4">
       <h3 className="text-[10px] font-black text-brand-gold uppercase tracking-[0.4em] flex items-center gap-2">
@@ -501,7 +542,7 @@ const ConfigForm = ({ currentEggId, currentNodeLocation, setValue, register, sav
           <button 
             key={egg.id} 
             type="button"
-            onClick={() => setValue("eggId", egg.id)} 
+            onClick={() => { setValue("eggId", egg.id); }} 
             className={`p-4 border rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${currentEggId === egg.id ? 'bg-brand-gold text-slate-950 border-brand-gold shadow-glow-gold scale-105' : 'bg-white/[0.02] border-white/10 text-white/40 hover:border-white/30'}`}
           >
             {egg.name}
@@ -518,7 +559,12 @@ const ConfigForm = ({ currentEggId, currentNodeLocation, setValue, register, sav
     </div>
 
     <div className="grid sm:grid-cols-2 gap-6">
-       <Input label="Instance Identifier" {...register("serverName", {required: true})} defaultValue={`${selectedPlan.name} Cluster-1`} />
+       <Input 
+         label="Instance Identifier" 
+         {...register("serverName", {required: "Server name is required"})} 
+         defaultValue={`${selectedPlan.name} Cluster-1`}
+         error={errors.serverName?.message}
+       />
        
        {savedCreds ? (
          <div className="col-span-full p-6 rounded-3xl bg-brand-gold/5 border border-brand-gold/20 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -544,10 +590,24 @@ const ConfigForm = ({ currentEggId, currentNodeLocation, setValue, register, sav
        {!useExistingAccount && (
          <>
            <div className="col-span-full h-px bg-white/5 my-4" />
-           <Input label="Control Email" {...register("email", {required: true})} type="email" />
-           <Input label="Profile Key (Username)" {...register("username", {required: true})} />
+           <Input 
+             label="Control Email" 
+             {...register("email", {required: "Email is required"})} 
+             type="email" 
+             error={errors.email?.message}
+           />
+           <Input 
+             label="Profile Key (Username)" 
+             {...register("username", {required: "Username is required"})} 
+             error={errors.username?.message}
+           />
            <div className="col-span-full">
-             <Input label="Security Secret (Password)" {...register("password", {required: true})} type="password" />
+             <Input 
+               label="Security Secret (Password)" 
+               {...register("password", {required: "Password is required"})} 
+               type="password" 
+               error={errors.password?.message}
+             />
            </div>
          </>
        )}

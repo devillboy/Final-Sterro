@@ -38,12 +38,12 @@ export default function Navbar() {
                   <div className="absolute inset-0 bg-brand-gold/5 blur-xl rounded-full scale-0 group-hover:scale-150 transition-transform duration-700" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xl font-bold tracking-tight text-white leading-none font-display uppercase text-premium-gradient">
-                    STERRO<span className="font-medium text-brand-gold/80 ml-0.5">CLOUD</span>
+                  <span className="text-xl font-bold tracking-tight text-white leading-none font-display uppercase">
+                    STERRO<span className="font-medium text-brand-gold ml-0.5">CLOUD</span>
                   </span>
-                  <span className="text-[8px] font-semibold text-slate-500 uppercase tracking-[0.3em] mt-1 flex items-center gap-2">
-                    <span className="w-3 h-px bg-slate-800" />
-                    Premium Infrastructure
+                  <span className="text-[8px] font-black text-slate-600 uppercase tracking-[0.4em] mt-1.5 flex items-center gap-2">
+                    <span className="w-4 h-[1px] bg-brand-gold/30" />
+                    Elite Infrastructure
                   </span>
                 </div>
               </Link>

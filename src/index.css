@@ -6,25 +6,25 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --font-display: "Outfit", sans-serif;
   
-  --color-brand-gold: #FFC107;
-  --color-brand-gold-muted: #D97706;
+  --color-brand-gold: #00F5FF;
+  --color-brand-gold-muted: #00B5BD;
   --color-brand-blue: #0066FF;
-  --color-platinum: #E5E7EB;
-  --color-bg-dark: #030303; 
-  --color-bg-card: #080808; 
-  --color-primary: #FFC107;
-  --color-primary-hover: #D97706;
-  --color-bg-main: #030303;
-  --color-surface: #080808; 
-  --color-surface-hover: #101010; 
-  --color-border: #151515; 
-  --color-text-dim: #71717a;
+  --color-platinum: #E2E8F0;
+  --color-bg-dark: #020617; 
+  --color-bg-card: #0F172A; 
+  --color-primary: #00F5FF;
+  --color-primary-hover: #22D3EE;
+  --color-bg-main: #020617;
+  --color-surface: #0F172A; 
+  --color-surface-hover: #1E293B; 
+  --color-border: #1E293B; 
+  --color-text-dim: #94A3B8;
 
-  --shadow-glow-gold: 0 0 20px rgba(255, 193, 7, 0.15);
-  --shadow-glow-gold-strong: 0 0 40px rgba(255, 193, 7, 0.25);
+  --shadow-glow-gold: 0 0 20px rgba(0, 245, 255, 0.2);
+  --shadow-glow-gold-strong: 0 0 40px rgba(0, 245, 255, 0.4);
   --shadow-glow-blue: 0 0 20px rgba(0, 102, 255, 0.1);
-  --shadow-3d-lg: 0 10px 30px rgba(0,0,0,0.8), 0 20px 40px rgba(0,0,0,0.6);
-  --shadow-3d-hover: 0 30px 60px rgba(0,0,0,0.9), 0 0 30px rgba(212, 175, 55, 0.05);
+  --shadow-3d-lg: 0 30px 60px rgba(0,0,0,0.9), 0 0 40px rgba(0, 245, 255, 0.05);
+  --shadow-3d-hover: 0 50px 100px rgba(0,0,0,1), 0 0 60px rgba(0, 245, 255, 0.25);
 }
 
 @layer base {
@@ -34,13 +34,13 @@
   body {
     @apply bg-bg-dark text-slate-300 font-sans antialiased selection:bg-brand-gold selection:text-bg-dark;
     background-image: 
-      radial-gradient(circle at 50% -20%, rgba(212, 175, 55, 0.03) 0%, transparent 60%),
-      radial-gradient(circle at 100% 100%, rgba(30, 30, 30, 0.5) 0%, transparent 50%);
+      radial-gradient(circle at 50% -20%, rgba(0, 245, 255, 0.05) 0%, transparent 60%),
+      radial-gradient(circle at 100% 100%, rgba(15, 23, 42, 0.5) 0%, transparent 50%);
     background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply tracking-tight font-display font-medium leading-tight;
+    @apply tracking-tight font-display font-bold leading-tight;
   }
 }
 
@@ -50,20 +50,20 @@
   }
 
   .platinum-glass {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.005) 100%);
-    backdrop-filter: blur(40px) saturate(1.5);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+    backdrop-filter: blur(40px) saturate(1.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 
       0 15px 40px rgba(0, 0, 0, 0.9),
-      inset 0 0 0 1px rgba(255, 193, 7, 0.03);
+      inset 0 0 0 1px rgba(0, 245, 255, 0.05);
   }
 
   .platinum-glass-hover {
-    @apply transition-all duration-700 hover:border-brand-gold/30 hover:bg-white/[0.02] hover:shadow-3d-hover hover:scale-[1.01];
+    @apply transition-all duration-1000 hover:border-brand-gold/40 hover:bg-white/[0.03] hover:shadow-3d-hover hover:scale-[1.02];
   }
 
   .cinematic-vignette {
-    background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.4) 100%);
+    background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.6) 100%);
   }
 
   .grain-overlay {
@@ -74,34 +74,34 @@
 
   @keyframes ken-burns {
     0% { transform: scale(1) translate(0, 0); }
-    50% { transform: scale(1.15) translate(-2%, -2%); }
+    50% { transform: scale(1.1) translate(-1%, -1%); }
     100% { transform: scale(1) translate(0, 0); }
   }
 
   .animate-ken-burns {
-    animation: ken-burns 40s ease-in-out infinite;
+    animation: ken-burns 30s ease-in-out infinite;
   }
   
   .btn-primary {
-    @apply px-6 py-3 bg-brand-gold text-slate-950 font-bold rounded-xl hover:bg-white transition-all hover:scale-[1.02] active:scale-[0.98] shadow-glow-gold;
+    @apply px-8 py-4 bg-brand-gold text-slate-950 font-black rounded-2xl hover:bg-white transition-all hover:scale-[1.05] active:scale-[0.95] shadow-glow-gold-strong uppercase tracking-widest text-[11px];
   }
 
   .admin-badge {
-    @apply text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-brand-gold/10 text-brand-gold border border-brand-gold/20;
+    @apply text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-brand-gold/10 text-brand-gold border border-brand-gold/30;
   }
 }
 
 @layer utilities {
   .text-primary-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB];
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#00F5FF] to-[#22D3EE];
   }
   
   .glow-primary {
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+    box-shadow: 0 0 20px rgba(0, 245, 255, 0.15);
   }
 
   .glow-primary-strong {
-    box-shadow: 0 0 40px rgba(212, 175, 55, 0.2);
+    box-shadow: 0 0 40px rgba(0, 245, 255, 0.3);
   }
 
   .perspective-2000 {
@@ -110,24 +110,24 @@
 
   .shadow-3d {
     box-shadow: 
-      0 4px 6px -1px rgba(0, 0, 0, 0.2), 
-      0 2px 4px -1px rgba(0, 0, 0, 0.1),
-      inset 0 1px 1px rgba(255, 255, 255, 0.02);
+      0 4px 6px -1px rgba(0, 0, 0, 0.3), 
+      0 2px 4px -1px rgba(0, 0, 0, 0.2),
+      inset 0 1px 1px rgba(255, 255, 255, 0.05);
   }
 
   .shadow-3d-lg {
     box-shadow: 
-      0 20px 25px -5px rgba(0, 0, 0, 0.5), 
-      0 10px 10px -5px rgba(0, 0, 0, 0.4),
-      inset 0 1px 1px rgba(255, 255, 255, 0.02);
+      0 30px 60px -12px rgba(0, 0, 0, 0.8), 
+      0 18px 36px -18px rgba(0, 0, 0, 0.9),
+      inset 0 1px 1px rgba(255, 255, 255, 0.05);
   }
 
   .text-glow-gold {
-    text-shadow: 0 0 20px rgba(212, 175, 55, 0.3), 0 0 40px rgba(212, 175, 55, 0.1);
+    text-shadow: 0 0 20px rgba(0, 245, 255, 0.4), 0 0 40px rgba(0, 245, 255, 0.1);
   }
 
   .text-premium-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-br from-white via-white/90 to-zinc-600;
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-white via-white/90 to-zinc-500;
   }
 
   .preserve-3d {
@@ -135,32 +135,32 @@
   }
 
   .hover-3d:hover {
-    transform: rotateX(2deg) rotateY(2deg) translateZ(10px);
+    transform: rotateX(4deg) rotateY(4deg) translateZ(20px);
   }
 
   .text-3d-gold {
     text-shadow: 
-      0 1px 0 #B8860B,
-      0 2px 0 #8B6508,
-      0 10px 20px rgba(212, 175, 55, 0.2);
+      0 1px 0 #00B5BD,
+      0 2px 0 #008A91,
+      0 10px 20px rgba(0, 245, 255, 0.2);
   }
 
   .visible-grid {
     background-image: 
-      linear-gradient(to right, rgba(255,255,255,0.01) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255,255,255,0.01) 1px, transparent 1px);
-    background-size: 40px 40px;
+      linear-gradient(to right, rgba(0, 245, 255,0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 245, 255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
   }
 
   .visible-grid-gold {
     background-image: 
-      linear-gradient(to right, rgba(212,175,55,0.02) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(212,175,55,0.02) 1px, transparent 1px);
-    background-size: 20px 20px;
+      linear-gradient(to right, rgba(0, 245, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 245, 255, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
   }
 
   .animate-skeleton {
-    @apply relative overflow-hidden bg-white/[0.03];
+    @apply relative overflow-hidden bg-white/[0.05];
   }
 
   .animate-skeleton::after {
@@ -169,10 +169,18 @@
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(255, 255, 255, 0.03),
+      rgba(0, 245, 255, 0.05),
       transparent
     );
-    animation: shimmer 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: shimmer 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .shadow-glow-gold {
+    box-shadow: 0 0 15px rgba(0, 245, 255, 0.2);
+  }
+
+  .shadow-glow-gold-strong {
+    box-shadow: 0 0 30px rgba(0, 245, 255, 0.4);
   }
 
   @keyframes shimmer {

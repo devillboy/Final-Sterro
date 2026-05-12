@@ -60,7 +60,7 @@ export default function Protection() {
             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-gold">Real-Time Infrastructure Sync</span>
           </motion.div>
           
-          <h2 className="text-6xl md:text-8xl font-black mb-8 tracking-tighter text-white uppercase font-display text-glow-gold">
+          <h2 className="text-6xl md:text-8xl font-black mb-8 tracking-tighter text-white uppercase font-display">
              Global <span className="text-brand-gold antialiased">Command</span> Grid
           </h2>
           <p className="text-zinc-500 max-w-3xl mx-auto font-black uppercase tracking-[0.5em] text-xs leading-relaxed opacity-60">
