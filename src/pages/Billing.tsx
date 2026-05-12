@@ -140,7 +140,23 @@ export default function Billing() {
 
     // Fetch plan details
     const loadPlan = async () => {
-      const plan = ALL_PLANS.find(p => p.id === planId);
+      // First check hardcoded plans
+      let plan = ALL_PLANS.find(p => p.id === planId);
+      
+      if (!plan && planId) {
+        // Try to fetch from Firestore if not in hardcoded list
+        try {
+          const { getDoc } = await import("firebase/firestore");
+          const planRef = doc(db, "plans", planId);
+          const planSnap = await getDoc(planRef);
+          if (planSnap.exists()) {
+            plan = { id: planSnap.id, ...planSnap.data() } as any;
+          }
+        } catch (e) {
+          console.error("Error fetching plan from Firestore:", e);
+        }
+      }
+
       if (plan) {
         setSelectedPlan(plan);
       } else if (!loading) {
