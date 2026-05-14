@@ -185,21 +185,36 @@ export default function PricingList() {
                                 </p>
                               </div>
 
-                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
                                 {[
-                                  { icon: MemoryStick, label: "Memory", value: p.ram },
-                                  { icon: Cpu, label: "Compute", value: p.cpu },
-                                  { icon: HardDrive, label: "Storage", value: p.storage || p.ssd },
-                                  { icon: Network, label: "Network", value: "Gigabit+" },
+                                  { icon: MemoryStick, label: "Core RAM", value: p.ram, detail: "DDR4 ECC 3200MHz" },
+                                  { icon: Cpu, label: "Processing", value: p.cpu, detail: "High-Freq Xeon" },
+                                  { icon: HardDrive, label: "NVMe Raid", value: p.storage || p.ssd, detail: "Gen4 Read/Write" },
+                                  { icon: Network, label: "Uplink", value: "Gigabit+", detail: "Burstable 2Gbps" },
                                 ].map((spec, idx) => (
-                                  <div key={idx} className="relative p-8 rounded-[2rem] bg-white/[0.03] border border-white/5 transition-all duration-700 hover:border-brand-gold/40 hover:bg-white/[0.08] group/spec shadow-3d overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-brand-gold/5 via-transparent to-transparent opacity-0 group-hover/spec:opacity-100 transition-opacity duration-1000" />
+                                  <div key={idx} className="relative p-7 md:p-9 rounded-[2.5rem] bg-white/[0.03] border border-white/5 transition-all duration-700 hover:border-brand-gold/40 hover:bg-white/[0.08] hover:shadow-3d group/spec shadow-3d-lg overflow-hidden flex flex-col justify-between">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-brand-gold/10 via-transparent to-transparent opacity-0 group-hover/spec:opacity-100 transition-opacity duration-1000" />
+                                    
                                     <div className="relative z-10">
-                                      <div className="flex items-center gap-3 text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-4 transition-colors group-hover/spec:text-brand-gold">
-                                        <spec.icon size={14} className="text-brand-gold/80 group-hover/spec:scale-125 transition-transform duration-500" />
-                                        {spec.label}
+                                      <div className="flex items-center justify-between mb-6">
+                                        <div className="p-3 bg-brand-gold/10 rounded-2xl group-hover/spec:bg-brand-gold group-hover/spec:text-slate-950 transition-all duration-500">
+                                          <spec.icon size={20} className="text-brand-gold group-hover/spec:text-inherit transition-transform duration-500 group-hover/spec:scale-110" />
+                                        </div>
+                                        <div className="text-[7px] font-black text-brand-gold/40 uppercase tracking-[0.4em] transform rotate-90 origin-right">MODULE_{idx+1}</div>
                                       </div>
-                                      <div className="text-2xl font-black text-white tracking-tighter group-hover/spec:scale-105 transition-transform duration-500">{spec.value}</div>
+                                      
+                                      <div className="space-y-1">
+                                        <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest transition-colors group-hover/spec:text-brand-gold/80">
+                                          {spec.label}
+                                        </div>
+                                        <div className="text-2xl md:text-3xl font-black text-white tracking-tighter group-hover/spec:translate-x-1 transition-transform duration-500">
+                                          {spec.value}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="relative z-10 mt-6 pt-4 border-t border-white/5 opacity-0 group-hover/spec:opacity-100 transition-all duration-700 translate-y-2 group-hover/spec:translate-y-0">
+                                      <span className="text-[8px] font-bold text-zinc-600 uppercase tracking-widest">{spec.detail}</span>
                                     </div>
                                   </div>
                                 ))}
@@ -279,19 +294,37 @@ export default function PricingList() {
                                </p>
                              </div>
 
-                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                                {[
-                                 { icon: MemoryStick, label: "Core Memory", value: p.ram },
-                                 { icon: Cpu, label: "KVM Compute", value: p.cpu },
-                                 { icon: HardDrive, label: "NVMe Raid", value: p.storage },
-                                 { icon: Network, label: "Uplink", value: "2 Gbps" },
+                                 { icon: MemoryStick, label: "ECC Memory", value: p.ram, detail: "DDR4 Stable" },
+                                 { icon: Cpu, label: "vCore Compute", value: p.cpu, detail: "Isolated Treads" },
+                                 { icon: HardDrive, label: "Storage Node", value: p.storage, detail: "NVMe Gen4" },
+                                 { icon: Network, label: "Bandwidth", value: "2 Gbps", detail: "Global Mesh" },
                                ].map((spec, idx) => (
-                                 <div key={idx} className="relative p-6 rounded-2xl bg-white/[0.02] border border-white/5 transition-all duration-300 hover:border-brand-gold/40 hover:bg-white/[0.05] group/spec">
-                                   <div className="flex items-center gap-2 text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-3 transition-colors group-hover/spec:text-brand-gold/80">
-                                     <spec.icon size={12} className="text-brand-gold/60 group-hover/spec:scale-110 transition-transform" />
-                                     {spec.label}
+                                 <div key={idx} className="relative p-6 md:p-8 rounded-[2rem] bg-white/[0.02] border border-white/5 transition-all duration-500 hover:border-brand-gold/40 hover:bg-white/[0.05] group/spec shadow-3d overflow-hidden flex flex-col justify-between">
+                                   <div className="absolute inset-0 bg-gradient-to-br from-brand-gold/5 via-transparent to-transparent opacity-0 group-hover/spec:opacity-100 transition-opacity duration-1000" />
+                                   
+                                   <div className="relative z-10">
+                                     <div className="flex items-center justify-between mb-5">
+                                       <div className="p-2.5 bg-brand-gold/10 rounded-xl group-hover/spec:bg-brand-gold group-hover/spec:text-slate-950 transition-all duration-500">
+                                         <spec.icon size={16} className="text-brand-gold group-hover/spec:text-inherit transition-transform duration-500" />
+                                       </div>
+                                       <div className="text-[6px] font-black text-brand-gold/30 uppercase tracking-[0.4em]">NODE_{idx+1}</div>
+                                     </div>
+
+                                     <div className="space-y-1">
+                                       <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest transition-colors group-hover/spec:text-brand-gold/80">
+                                         {spec.label}
+                                       </div>
+                                       <div className="text-xl md:text-2xl font-bold text-white tracking-tight">
+                                         {spec.value}
+                                       </div>
+                                     </div>
                                    </div>
-                                   <div className="text-xl font-bold text-white tracking-tight">{spec.value}</div>
+
+                                   <div className="relative z-10 mt-5 pt-3 border-t border-white/5 opacity-0 group-hover/spec:opacity-100 transition-all duration-500 translate-y-1 group-hover/spec:translate-y-0">
+                                     <span className="text-[7px] font-bold text-slate-600 uppercase tracking-widest">{spec.detail}</span>
+                                   </div>
                                  </div>
                                ))}
                              </div>
